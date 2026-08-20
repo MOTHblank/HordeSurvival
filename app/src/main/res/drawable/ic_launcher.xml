@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#0D0D2B"
+        android:pathData="M54,54m-52,0a52,52 0,1 1,104 0a52,52 0,1 1,-104 0"/>
+
+    <!-- Outer glow ring -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,54m-50,0a50,50 0,1 1,100 0a50,50 0,1 1,-100 0"
+        android:strokeColor="#6BB6FF"
+        android:strokeWidth="2"
+        android:alpha="0.4"/>
+
+    <!-- Shield shape -->
+    <path
+        android:fillColor="#2A3A6F"
+        android:pathData="M54,18 L80,30 L80,54 C80,72 68,82 54,88 C40,82 28,72 28,54 L28,30 Z"/>
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,18 L80,30 L80,54 C80,72 68,82 54,88 C40,82 28,72 28,54 L28,30 Z"
+        android:strokeColor="#6BB6FF"
+        android:strokeWidth="2"/>
+
+    <!-- Sword blade -->
+    <path
+        android:fillColor="#B0DFFF"
+        android:pathData="M54,24 L59,48 L54,54 L49,48 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,26 L57,46 L54,50 L51,46 Z"
+        android:alpha="0.5"/>
+
+    <!-- Sword guard -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M44,48 L64,48 L64,52 L44,52 Z"/>
+
+    <!-- Sword handle -->
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M51,52 L57,52 L57,62 L51,62 Z"/>
+
+    <!-- Gem on shield — red -->
+    <path
+        android:fillColor="#FF4444"
+        android:pathData="M54,40 L59,45 L54,50 L49,45 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,42 L57,45 L54,48 L51,45 Z"
+        android:alpha="0.5"/>
+
+    <!-- Accent dots — more vibrant -->
+    <path android:fillColor="#6BB6FF" android:pathData="M26,26 A3,3 0 1 1 26.01,26" android:alpha="0.8"/>
+    <path android:fillColor="#B19CD9" android:pathData="M82,26 A3,3 0 1 1 82.01,26" android:alpha="0.8"/>
+    <path android:fillColor="#AAE6BA" android:pathData="M26,82 A2,2 0 1 1 26.01,82" android:alpha="0.7"/>
+    <path android:fillColor="#FFD700" android:pathData="M82,82 A2,2 0 1 1 82.01,82" android:alpha="0.7"/>
+
+    <!-- Cross accent on sword -->
+    <path android:fillColor="#FFD700" android:alpha="0.6"
+        android:pathData="M48,45 L60,45 L60,46 L48,46 Z"/>
+</vector>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horde Survival — Official Promo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #06060F;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── Hero Section ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(107, 182, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(177, 156, 217, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(255, 110, 64, 0.04) 0%, transparent 50%);
+    animation: bgFloat 20s ease-in-out infinite;
+  }
+
+  @keyframes bgFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(2%, -1%) rotate(1deg); }
+    66% { transform: translate(-1%, 2%) rotate(-1deg); }
+  }
+
+  /* Floating particles */
+  .particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: float linear infinite;
+  }
+
+  @keyframes float {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
+
+  .hero-content {
+    text-align: center;
+    z-index: 10;
+    animation: fadeInUp 1.2s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(107, 182, 255, 0.3)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 40px rgba(107, 182, 255, 0.5)); }
+  }
+
+  .hero h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(36px, 8vw, 72px);
+    font-weight: 900;
+    letter-spacing: 8px;
+    background: linear-gradient(135deg, #6BB6FF, #B19CD9, #6BB6FF);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s ease-in-out infinite;
+    margin-bottom: 8px;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .hero-sub {
+    font-size: clamp(14px, 3vw, 20px);
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 4px;
+    font-weight: 300;
+    margin-bottom: 40px;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+
+  .badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid;
+    animation: fadeInUp 1.2s ease-out both;
+  }
+
+  .badge:nth-child(1) { border-color: rgba(107, 182, 255, 0.4); color: #6BB6FF; background: rgba(107, 182, 255, 0.08); animation-delay: 0.2s; }
+  .badge:nth-child(2) { border-color: rgba(177, 156, 217, 0.4); color: #B19CD9; background: rgba(177, 156, 217, 0.08); animation-delay: 0.3s; }
+  .badge:nth-child(3) { border-color: rgba(255, 215, 0, 0.4); color: #FFD700; background: rgba(255, 215, 0, 0.08); animation-delay: 0.4s; }
+  .badge:nth-child(4) { border-color: rgba(255, 110, 64, 0.4); color: #FF6E40; background: rgba(255, 110, 64, 0.08); animation-delay: 0.5s; }
+
+  .cta-btn {
+    display: inline-block;
+    padding: 16px 48px;
+    border-radius: 16px;
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(135deg, rgba(107, 182, 255, 0.8), rgba(177, 156, 217, 0.6));
+    border: 1px solid rgba(107, 182, 255, 0.3);
+    transition: all 0.3s;
+    animation: fadeInUp 1.2s ease-out 0.6s both;
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 40px rgba(107, 182, 255, 0.3);
+  }
+
+  /* ── Features Section ── */
+  .features {
+    padding: 80px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(24px, 5vw, 40px);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 60px;
+    color: #6BB6FF;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .feature-card {
+    background: linear-gradient(135deg, rgba(26, 26, 63, 0.8), rgba(15, 15, 40, 0.9));
+    border: 1px solid rgba(107, 182, 255, 0.1);
+    border-radius: 16px;
+    padding: 28px;
+    transition: all 0.3s;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  .feature-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(107, 182, 255, 0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .feature-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .feature-card h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+
+  .feature-card p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.6;
+  }
+
+  /* ── Weapons Showcase ── */
+  .weapons {
+    padding: 80px 20px;
+    text-align: center;
+  }
+
+  .weapons-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .weapon-card {
+    min-width: 140px;
+    padding: 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(26, 26, 63, 0.8), rgba(15, 15, 40, 0.9));
+    border: 1px solid rgba(107, 182, 255, 0.1);
+    transition: all 0.3s;
+  }
+
+  .weapon-card:hover {
+    border-color: rgba(107, 182, 255, 0.4);
+    transform: scale(1.05);
+  }
+
+  .weapon-emoji { font-size: 32px; margin-bottom: 8px; }
+  .weapon-name { font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700; color: #6BB6FF; }
+
+  /* ── Stats Section ── */
+  .stats {
+    padding: 60px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 48px;
+    font-weight: 900;
+    color: #6BB6FF;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 4px;
+  }
+
+  /* ── Download Section ── */
+  .download {
+    padding: 80px 20px;
+    text-align: center;
+  }
+
+  .download h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .download p {
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 30px;
+  }
+
+  .download-links {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .dl-btn {
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 15px;
+    transition: all 0.3s;
+  }
+
+  .dl-btn.primary {
+    background: linear-gradient(135deg, #6BB6FF, #4A90D9);
+    color: #fff;
+  }
+
+  .dl-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .dl-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(107, 182, 255, 0.2); }
+
+  /* ── Footer ── */
+  footer {
+    padding: 40px 20px;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  footer p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  footer a { color: rgba(107, 182, 255, 0.5); text-decoration: none; }
+
+  /* ── Enemy Showcase ── */
+  .enemies {
+    padding: 60px 20px;
+    text-align: center;
+  }
+
+  .enemy-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 30px;
+  }
+
+  .enemy-item {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  .enemy-item:hover { transform: scale(1.15); }
+  .enemy-item .name {
+    position: absolute;
+    bottom: -20px;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+  }
+
+  /* Animated gameplay preview */
+  .gameplay-preview {
+    width: 100%;
+    max-width: 600px;
+    height: 300px;
+    margin: 40px auto;
+    border-radius: 16px;
+    background: #0a0a1f;
+    border: 1px solid rgba(107, 182, 255, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gp-player {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    background: #6BB6FF;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px rgba(107, 182, 255, 0.5);
+    z-index: 5;
+  }
+
+  .gp-enemy {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    animation: enemyApproach 4s linear infinite;
+  }
+
+  @keyframes enemyApproach {
+    0% { opacity: 0; transform: scale(0.5); }
+    10% { opacity: 1; transform: scale(1); }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .gp-projectile {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #FFD700;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    animation: shoot 1.5s linear infinite;
+  }
+
+  @keyframes shoot {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--tx), var(--ty)); }
+  }
+
+  .gp-xp {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #AAE6BA;
+    transform: rotate(45deg);
+    animation: xpFloat 3s ease-in-out infinite;
+  }
+
+  @keyframes xpFloat {
+    0%, 100% { opacity: 0.3; transform: rotate(45deg) translateY(0); }
+    50% { opacity: 1; transform: rotate(45deg) translateY(-5px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="particles" id="particles"></div>
+  <div class="hero-content">
+    <div class="hero-icon">⚔️</div>
+    <h1>HORDE SURVIVAL</h1>
+    <p class="hero-sub">SURVIVE THE ENDLESS HORDE</p>
+    <div class="hero-badges">
+      <span class="badge">🎮 8 Weapons</span>
+      <span class="badge">👹 Boss Fights</span>
+      <span class="badge">💎 Relics & Loot</span>
+      <span class="badge">🏆 Achievements</span>
+    </div>
+    <a href="https://github.com/niksiratforex-ux/HordeSurvival/releases/download/v1.2.3/HordeSurvival-v1.2.3-debug.apk" class="cta-btn">⬇ DOWNLOAD APK</a>
+  </div>
+</section>
+
+<!-- ═══ GAMEPLAY PREVIEW ═══ -->
+<section style="padding: 40px 20px; text-align: center;">
+  <div class="gameplay-preview" id="gameplay">
+    <div class="gp-player"></div>
+  </div>
+  <p style="color: rgba(255,255,255,0.3); font-size: 13px; margin-top: 12px;">Auto-attack • Level up • Evolve weapons • Survive</p>
+</section>
+
+<!-- ═══ STATS ═══ -->
+<section class="stats">
+  <div class="stat"><div class="stat-num">8</div><div class="stat-label">Weapons</div></div>
+  <div class="stat"><div class="stat-num">11</div><div class="stat-label">Enemy Types</div></div>
+  <div class="stat"><div class="stat-num">12</div><div class="stat-label">Passives</div></div>
+  <div class="stat"><div class="stat-num">14</div><div class="stat-label">Achievements</div></div>
+  <div class="stat"><div class="stat-num">6</div><div class="stat-label">Languages</div></div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features">
+  <h2 class="section-title">🎮 FEATURES</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">⚔️</div>
+      <h3>8 Unique Weapons</h3>
+      <p>Magic Missile, Fireball, Ice Shard, Lightning Ring, Poison Cloud, Boomerang Dagger, Orbiting Shield, Divine Spear — each with 5 upgrade tiers.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✨</div>
+      <h3>Weapon Evolution</h3>
+      <p>Combine max-tier weapons with passives to unlock powerful evolutions: Holy Bible, Hellfire, Blizzard, Thunderstorm, and more.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👹</div>
+      <h3>Boss Phases</h3>
+      <p>Bosses have 4 phases with increasing difficulty. Each phase spawns minions and gets faster. Defeat them for special loot chests.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>Elite Enemies</h3>
+      <p>Elites have special abilities: Teleport near you, activate shields, or explode on death. Watch out!</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💎</div>
+      <h3>Relic System</h3>
+      <p>Find passive relics on the map: Crown (+XP), Wings (+Speed), Armor (+Defense), Clover (+Luck), Ring (+Damage), Amulet (+Regen).</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💥</div>
+      <h3>Character Abilities</h3>
+      <p>Each weapon type has a unique active skill: Shield, AOE Blast, Dash, Lightning Storm, or Heal. 15s cooldown.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🗺️</div>
+      <h3>8 Background Themes</h3>
+      <p>Grid, Stars, Nebula, Checkerboard, Persian, Roman, Egyptian, and Solid Dark — each with parallax scrolling.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌐</div>
+      <h3>6 Languages</h3>
+      <p>English, فارسی, 中文, 日本語, 한국어, Español — full localization for weapons, upgrades, and UI.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WEAPONS ═══ -->
+<section class="weapons">
+  <h2 class="section-title">⚔️ WEAPONS</h2>
+  <div class="weapons-scroll">
+    <div class="weapon-card"><div class="weapon-emoji">🔮</div><div class="weapon-name">Magic Missile</div></div>
+    <div class="weapon-card"><div class="weapon-emoji">⚡</div><div class="weapon-name">Lightning Ring</div></div>
+    <div class="weapon-card"><div class="weapon-emoji">🔥</div><div class="weapon-name">Fireball</div></div>
+    <div class="weapon-card"><div class="weapon-emoji">❄️</div><div class="weapon-name">Ice Shard</div></div>
+    <div class="weapon-card"><div class="weapon-emoji">☠️</div><div class="weapon-name">Poison Cloud</div></div>
+    <div class="weapon-card"><div class="weapon-emoji">🗡️</div><div class="weapon-name">Boomerang</div></div>
+    <div class="weapon-card"><div class="weapon-emoji">🛡️</div><div class="weapon-name">Orbit Shield</div></div>
+    <div class="weapon-card"><div class="weapon-emoji">🔱</div><div class="weapon-name">Divine Spear</div></div>
+  </div>
+</section>
+
+<!-- ═══ ENEMIES ═══ -->
+<section class="enemies">
+  <h2 class="section-title">👹 ENEMIES</h2>
+  <div class="enemy-row">
+    <div class="enemy-item" style="background: rgba(176, 190, 197, 0.15);"><span>⬡</span><span class="name">Drone</span></div>
+    <div class="enemy-item" style="background: rgba(206, 147, 216, 0.15);"><span>◇</span><span class="name">Wisp</span></div>
+    <div class="enemy-item" style="background: rgba(141, 110, 99, 0.15);"><span>■</span><span class="name">Golem</span></div>
+    <div class="enemy-item" style="background: rgba(255, 204, 128, 0.15);"><span>⬠</span><span class="name">Turret</span></div>
+    <div class="enemy-item" style="background: rgba(239, 83, 80, 0.15);"><span>▼</span><span class="name">Bat</span></div>
+    <div class="enemy-item" style="background: rgba(144, 164, 174, 0.15);"><span>🛡</span><span class="name">Knight</span></div>
+    <div class="enemy-item" style="background: rgba(179, 157, 219, 0.15);"><span>👻</span><span class="name">Ghost</span></div>
+    <div class="enemy-item" style="background: rgba(255, 171, 145, 0.15);"><span>⭐</span><span class="name">Boss</span></div>
+    <div class="enemy-item" style="background: rgba(165, 214, 167, 0.15);"><span>◆</span><span class="name">Splitter</span></div>
+    <div class="enemy-item" style="background: rgba(244, 143, 177, 0.15);"><span>✚</span><span class="name">Healer</span></div>
+    <div class="enemy-item" style="background: rgba(126, 87, 194, 0.15);"><span>🧙</span><span class="name">Mage</span></div>
+  </div>
+</section>
+
+<!-- ═══ DOWNLOAD ═══ -->
+<section class="download">
+  <h2>⬇ DOWNLOAD</h2>
+  <p>Free • No ads (for now) • Open source</p>
+  <div class="download-links">
+    <a href="https://github.com/niksiratforex-ux/HordeSurvival/releases/download/v1.2.3/HordeSurvival-v1.2.3-debug.apk" class="dl-btn primary">⬇ APK v1.2.3</a>
+    <a href="https://github.com/niksiratforex-ux/HordeSurvival" class="dl-btn secondary">🐙 GitHub</a>
+  </div>
+  <p style="margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.2);">Bug reports: niksirat.forex@gmail.com</p>
+</section>
+
+<footer>
+  <p>Made with ❤️ and Kotlin • <a href="https://github.com/niksiratforex-ux/HordeSurvival">github.com/niksiratforex-ux/HordeSurvival</a></p>
+</footer>
+
+<script>
+// Generate particles
+const particles = document.getElementById('particles');
+for (let i = 0; i < 30; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.animationDuration = (5 + Math.random() * 10) + 's';
+  p.style.animationDelay = Math.random() * 10 + 's';
+  p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
+  particles.appendChild(p);
+}
+
+// Animate gameplay preview
+const gp = document.getElementById('gameplay');
+const colors = ['#EF5350', '#CE93D8', '#8D6E63', '#FFCC80', '#80CBC4', '#7E57C2'];
+for (let i = 0; i < 6; i++) {
+  const enemy = document.createElement('div');
+  enemy.className = 'gp-enemy';
+  const angle = (i / 6) * Math.PI * 2;
+  const dist = 120 + Math.random() * 60;
+  enemy.style.left = (50 + Math.cos(angle) * dist / 3) + '%';
+  enemy.style.top = (50 + Math.sin(angle) * dist / 3) + '%';
+  enemy.style.background = colors[i % colors.length];
+  enemy.style.animationDelay = (i * 0.6) + 's';
+  enemy.style.setProperty('--ex', Math.cos(angle) * 50 + '%');
+  enemy.style.setProperty('--ey', Math.sin(angle) * 50 + '%');
+  gp.appendChild(enemy);
+}
+
+for (let i = 0; i < 3; i++) {
+  const proj = document.createElement('div');
+  proj.className = 'gp-projectile';
+  const angle = (i / 3) * Math.PI * 2 + Math.random();
+  proj.style.left = '50%';
+  proj.style.top = '50%';
+  proj.style.setProperty('--tx', Math.cos(angle) * 150 + 'px');
+  proj.style.setProperty('--ty', Math.sin(angle) * 150 + 'px');
+  proj.style.animationDelay = (i * 0.5) + 's';
+  gp.appendChild(proj);
+}
+
+for (let i = 0; i < 8; i++) {
+  const xp = document.createElement('div');
+  xp.className = 'gp-xp';
+  xp.style.left = (20 + Math.random() * 60) + '%';
+  xp.style.top = (20 + Math.random() * 60) + '%';
+  xp.style.animationDelay = (Math.random() * 3) + 's';
+  gp.appendChild(xp);
+}
+
+// Scroll animation for feature cards
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.feature-card').forEach((card, i) => {
+  card.style.transitionDelay = (i * 0.1) + 's';
+  observer.observe(card);
+});
+</script>
+
+</body>
+</html>

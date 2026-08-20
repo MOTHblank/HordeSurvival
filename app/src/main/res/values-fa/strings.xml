@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">بقای هورد</string>
+    <string name="play">بازی</string>
+    <string name="characters">شخصیت‌ها</string>
+    <string name="upgrades">ارتقاها</string>
+    <string name="settings">تنظیمات</string>
+    <string name="survival_mode">حالت بقا</string>
+    <string name="quest_mode">حالت مأموریت</string>
+    <string name="daily_challenge">چالش روزانه</string>
+    <string name="game_over">پایان بازی</string>
+    <string name="play_again">دوباره بازی کن</string>
+    <string name="main_menu">منوی اصلی</string>
+    <string name="time_survived">زمان بقا</string>
+    <string name="enemies_killed">دشمنان کشته شده</string>
+    <string name="level_reached">سطح رسیده</string>
+    <string name="gold_earned">طلای کسب شده</string>
+    <string name="choose_upgrade">یک ارتقا انتخاب کن</string>
+    <string name="music_volume">صدا</string>
+    <string name="sfx_volume">جلوه‌های صوتی</string>
+    <string name="vibration">لرزش</string>
+    <string name="language">زبان</string>
+    <string name="pause">مکث</string>
+    <string name="resume">ادامه</string>
+    <string name="quit">خروج</string>
+</resources>
