@@ -17,8 +17,8 @@
 
         <!-- AdMob App ID (replace with real ID before release) -->
         <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:name="123"
+            android:value="123" />
 
         <activity
             android:name=".SplashActivity"
