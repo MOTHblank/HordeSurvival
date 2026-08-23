@@ -1,5 +1,7 @@
-```
 # Build artifacts
+build/
+app/build/
+**/build/
 *.o
 *.obj
 *.so
@@ -61,4 +63,3 @@ Thumbs.db
 *.Z
 *.lz
 *.lzo
-```
