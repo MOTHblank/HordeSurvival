@@ -30,7 +30,7 @@ class GameEngine {
             it.active = false
             it.tag = ""
             it.age = 0f
-            it.components.clear()  // Components become GC-eligible
+            it.clearComponents()  // Components become GC-eligible
         },
         initialSize = 128
     )
@@ -75,7 +75,7 @@ class GameEngine {
         val entity = entityPool.obtain()
         entity.active = true
         entity.tag = tag
-        entity.components.clear()
+        entity.clearComponents()
         entity.id = nextEntityId.getAndIncrement()
         entitiesToAdd.add(entity)
         return entity
