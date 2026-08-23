@@ -7,6 +7,9 @@ app/build/
 .gradle/**
 
 # Build artifacts
+build/
+app/build/
+**/build/
 *.o
 *.obj
 *.so

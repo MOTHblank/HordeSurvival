@@ -65,6 +65,7 @@ fun GameRenderer(
         else -> 300 // High: render all
     }
     val textMeasurer = rememberTextMeasurer()
+    val emojiCache = remember { mutableMapOf<Pair<String, Int>, TextLayoutResult>() }
 
     val entities = remember(frameTick) { engine.getActiveEntities() }
 
@@ -233,8 +234,8 @@ fun GameRenderer(
             val w = s.width * s.scaleX; val h = s.height * s.scaleY
 
             when (e.tag) {
-                "player" -> drawPlayer(sx, sy, w, engine.gameTime)
-                "enemy" -> drawEnemy(e, sx, sy, w, h, color, engine.gameTime)
+                "player" -> drawPlayer(sx, sy, w, engine.gameTime, textMeasurer, emojiCache)
+                "enemy" -> drawEnemy(e, sx, sy, w, h, color, engine.gameTime, textMeasurer, emojiCache)
                 "projectile" -> drawProjectile(e, sx, sy, w, h, color)
                 "xp_gem" -> {
                     val isMagnetized = e.get<XpGemComponent>()?.magnetized == true
@@ -326,7 +327,11 @@ fun GameRenderer(
 // PLAYER — Noto Color Emoji (🧙 Mage with blue glow)
 // Uses Noto Color Emoji font by Google (SIL OFL 1.1 + Apache 2.0)
 // ═══════════════════════════════════════════════════════════════════
-private fun DrawScope.drawPlayer(x: Float, y: Float, size: Float, time: Float) {
+private fun DrawScope.drawPlayer(
+    x: Float, y: Float, size: Float, time: Float,
+    textMeasurer: TextMeasurer,
+    emojiCache: MutableMap<Pair<String, Int>, TextLayoutResult>
+) {
     val pulse = 1f + 0.06f * sin(time * 5f)
     drawCircle(
         brush = Brush.radialGradient(
@@ -337,8 +342,24 @@ private fun DrawScope.drawPlayer(x: Float, y: Float, size: Float, time: Float) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// ENEMY — distinct shapes per type with HP bar
+// ENEMY — Noto Color Emoji per type with HP bar
+// Uses Noto Color Emoji font by Google (SIL OFL 1.1 + Apache 2.0)
 // ═══════════════════════════════════════════════════════════════════
+private fun getEnemyEmoji(type: EnemyType?): String = when (type) {
+    EnemyType.BASIC_DRONE -> "🤖"
+    EnemyType.FLYING_WISP -> "👻"
+    EnemyType.TANK_GOLEM -> "🗿"
+    EnemyType.SHOOTER_TURRET -> "🎯"
+    EnemyType.SWARM_BAT -> "🦇"
+    EnemyType.ELITE_KNIGHT -> "⚔️"
+    EnemyType.GHOST -> "👻"
+    EnemyType.BOSS -> "🐲"
+    EnemyType.SPLITTER -> "🦠"
+    EnemyType.HEALER -> "💖"
+    EnemyType.MAGE -> "🔮"
+    null -> "👾"
+}
+
 private fun DrawScope.drawEnemy(
     entity: Entity,
     x: Float, y: Float, w: Float, h: Float, color: Color, time: Float
@@ -486,6 +507,10 @@ private fun DrawScope.drawEnemy(
         }
         null -> drawGeneric(x, y, w, h, color, SpriteShape.CIRCLE)
     }
+    drawText(
+        textLayoutResult = textResult,
+        topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
+    )
 
     enemy?.let { e ->
         if (e.burnTimer > 0f) drawCircle(Color(0xFFFFCC80).copy(alpha = 0.35f), radius = w / 2f + 4f, center = Offset(x, y))
