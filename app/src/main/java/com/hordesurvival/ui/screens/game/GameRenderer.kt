@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.R
 import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.GameEngine
+import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.systems.PlayerInputSystem
 import com.hordesurvival.game.enemy.EnemyType
 import com.hordesurvival.game.mode.GameModeType
@@ -39,6 +40,7 @@ val notoEmojiFamily = FontFamily(
 /**
  * Game renderer with configurable background styles.
  * backgroundStyle: 0=grid, 1=stars, 2=nebula, 3=checkerboard, 4=solid
+ * Overhauled: replaced per-frame filter/list allocation with reusable scratch buffers and insertion sort.
  */
 @Composable
 fun GameRenderer(
@@ -67,6 +69,11 @@ fun GameRenderer(
 
     val entities = remember(frameTick) { engine.getActiveEntities() }
 
+    // Reusable scratch lists across recompositions to eliminate GC allocations
+    val enemiesScratch = remember { mutableListOf<Entity>() }
+    val renderListScratch = remember { mutableListOf<Entity>() }
+    val damageNumbersScratch = remember { mutableListOf<Entity>() }
+
     // Camera zoom: closer when stationary, farther when moving
     var currentZoom by remember { mutableFloatStateOf(1.1f) }
 
@@ -86,7 +93,6 @@ fun GameRenderer(
             }
     ) {
         // Calculate zoom every frame based on player velocity
-        // In TD mode, zoom is fixed
         val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() }
         val vel = player?.get<VelocityComponent>()
         val playerSpeed = if (gameMode == GameModeType.TOWER_DEFENSE) 0f
@@ -101,9 +107,7 @@ fun GameRenderer(
         // Apply camera zoom
         scale(currentZoom, pivot = Offset(size.width / 2f, size.height / 2f)) {
 
-        val player = player
         val playerPos = player?.get<TransformComponent>()
-        // In TD mode, camera is FIXED — no scrolling
         val camX: Float
         val camY: Float
         val offX: Float
@@ -123,7 +127,6 @@ fun GameRenderer(
         // ── PARALLAX BACKGROUND — always centered on camera, covers all zoom levels ──
         val bgW = size.width * 6f
         val bgH = size.height * 6f
-        // Offset background to always be centered on the visible area
         val bgOffsetX = offX - bgW / 2f + size.width / 2f
         val bgOffsetY = offY - bgH / 2f + size.height / 2f
         translate(bgOffsetX, bgOffsetY) {
@@ -133,26 +136,22 @@ fun GameRenderer(
         // ── TOWER DEFENSE BOUNDARY WALLS ─────────────────────────────
         if (gameMode == GameModeType.TOWER_DEFENSE) {
             val wallW = TowerDefenseMode.WALL_THICKNESS
-            // Left wall
             drawRect(
                 color = Color(0xFF4A148C).copy(alpha = 0.7f),
                 topLeft = Offset(offX, offY - size.height),
                 size = Size(wallW, size.height * 3f)
             )
-            // Left wall glow
             drawRect(
                 color = Color(0xFF7C4DFF).copy(alpha = 0.3f),
                 topLeft = Offset(offX + wallW, offY - size.height),
                 size = Size(4f, size.height * 3f)
             )
-            // Right wall
             val rightWallX = 1080f - wallW + offX
             drawRect(
                 color = Color(0xFF4A148C).copy(alpha = 0.7f),
                 topLeft = Offset(rightWallX, offY - size.height),
                 size = Size(wallW, size.height * 3f)
             )
-            // Right wall glow
             drawRect(
                 color = Color(0xFF7C4DFF).copy(alpha = 0.3f),
                 topLeft = Offset(rightWallX - 4f, offY - size.height),
@@ -160,72 +159,72 @@ fun GameRenderer(
             )
         }
 
-        // ── POISON CLOUDS ─────────────────────────────────────────
-        for (e in entities.filter { it.tag == "poison_cloud" && it.active }) {
-            val t = e.get<TransformComponent>() ?: continue
-            val c = e.get<PoisonCloudComponent>() ?: continue
-            val sx = t.x + offX; val sy = t.y + offY
-            if (sx < -200 || sx > size.width + 200 || sy < -200 || sy > size.height + 200) continue
-            val alpha = e.get<SpriteComponent>()?.alpha ?: 0.3f
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(Color(0xFFAAE6BA).copy(alpha = alpha * 0.5f), Color(0xFF7CB68A).copy(alpha = alpha * 0.15f), Color.Transparent),
-                    center = Offset(sx, sy), radius = c.radius * 1.3f
-                ), radius = c.radius * 1.3f, center = Offset(sx, sy)
-            )
-            drawCircle(color = Color(0xFFAAE6BA).copy(alpha = alpha * 0.4f), radius = c.radius, center = Offset(sx, sy))
+        // ── POISON CLOUDS & CATEGORIZATION (Zero allocation) ─────────────────────────
+        enemiesScratch.clear()
+        renderListScratch.clear()
+        damageNumbersScratch.clear()
+
+        for (i in 0 until entities.size) {
+            val e = entities[i]
+            if (!e.active) continue
+
+            if (e.tag == "poison_cloud") {
+                val t = e.get<TransformComponent>() ?: continue
+                val c = e.get<PoisonCloudComponent>() ?: continue
+                val sx = t.x + offX; val sy = t.y + offY
+                if (sx >= -200 && sx <= size.width + 200 && sy >= -200 && sy <= size.height + 200) {
+                    val alpha = e.get<SpriteComponent>()?.alpha ?: 0.3f
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(Color(0xFFAAE6BA).copy(alpha = alpha * 0.5f), Color(0xFF7CB68A).copy(alpha = alpha * 0.15f), Color.Transparent),
+                            center = Offset(sx, sy), radius = c.radius * 1.3f
+                        ), radius = c.radius * 1.3f, center = Offset(sx, sy)
+                    )
+                    drawCircle(color = Color(0xFFAAE6BA).copy(alpha = alpha * 0.4f), radius = c.radius, center = Offset(sx, sy))
+                }
+                continue
+            }
+
+            if (!e.has<TransformComponent>() || !e.has<SpriteComponent>()) continue
+
+            when (e.tag) {
+                "enemy" -> enemiesScratch.add(e)
+                "damage_number" -> if (showDamageNumbers) damageNumbersScratch.add(e)
+                "particle" -> if (showParticles) renderListScratch.add(e)
+                else -> renderListScratch.add(e)
+            }
         }
 
-    // ── Single-pass entity categorization (replaces 4+ filter calls) ──
-    val _enemies = mutableListOf<com.hordesurvival.game.engine.ecs.Entity>()
-    val _nonEnemies = mutableListOf<com.hordesurvival.game.engine.ecs.Entity>()
-    var _damageNumbers = 0
-    for (e in entities) {
-        if (!e.active || !e.has<TransformComponent>() || !e.has<SpriteComponent>()) continue
-        when (e.tag) {
-            "enemy" -> _enemies.add(e)
-            "damage_number" -> _damageNumbers++
-            else -> _nonEnemies.add(e)
+        // Cull enemies to maxRenderedEnemies if threshold exceeded
+        if (enemiesScratch.size > maxRenderedEnemies && playerPos != null) {
+            enemiesScratch.sortBy { e ->
+                val t = e.get<TransformComponent>()
+                if (t != null) {
+                    val dx = t.x - playerPos.x; val dy = t.y - playerPos.y
+                    dx * dx + dy * dy
+                } else Float.MAX_VALUE
+            }
+            for (i in 0 until maxRenderedEnemies) {
+                renderListScratch.add(enemiesScratch[i])
+            }
+        } else {
+            renderListScratch.addAll(enemiesScratch)
         }
-    }
 
-    // Limit enemies rendered: sort by distance to player, take closest
-    val limitedEnemies = if (_enemies.size > maxRenderedEnemies && playerPos != null) {
-        // Partial sort: only sort if we need to cull
-        _enemies.sortBy { e ->
-            val t = e.get<TransformComponent>()
-            if (t != null) {
-                val dx = t.x - playerPos.x; val dy = t.y - playerPos.y
-                dx * dx + dy * dy
-            } else Float.MAX_VALUE
+        // Insertion sort renderListScratch by sprite layer in-place
+        for (i in 1 until renderListScratch.size) {
+            val key = renderListScratch[i]
+            val keyLayer = key.get<SpriteComponent>()?.layer ?: 0
+            var j = i - 1
+            while (j >= 0 && (renderListScratch[j].get<SpriteComponent>()?.layer ?: 0) > keyLayer) {
+                renderListScratch[j + 1] = renderListScratch[j]
+                j--
+            }
+            renderListScratch[j + 1] = key
         }
-        _enemies.subList(0, maxRenderedEnemies)
-    } else _enemies
 
-    // Skip particles in Low quality
-    val filteredNonEnemies = if (!showParticles) {
-        _nonEnemies.filter { it.tag != "particle" }
-    } else _nonEnemies
-
-    // Skip damage numbers if disabled
-    val finalEntities: List<com.hordesurvival.game.engine.ecs.Entity> = if (!showDamageNumbers) {
-        limitedEnemies + filteredNonEnemies.filter { it.tag != "damage_number" }
-    } else limitedEnemies + filteredNonEnemies
-
-    // Insertion sort by layer (nearly-sorted input → O(n) average)
-    val sorted = finalEntities.toMutableList()
-    for (i in 1 until sorted.size) {
-        val key = sorted[i]
-        val keyLayer = key.get<SpriteComponent>()?.layer ?: 0
-        var j = i - 1
-        while (j >= 0 && (sorted[j].get<SpriteComponent>()?.layer ?: 0) > keyLayer) {
-            sorted[j + 1] = sorted[j]
-            j--
-        }
-        sorted[j + 1] = key
-    }
-
-        for (e in sorted) {
+        for (i in 0 until renderListScratch.size) {
+            val e = renderListScratch[i]
             val t = e.get<TransformComponent>() ?: continue
             val s = e.get<SpriteComponent>() ?: continue
             val sx = t.x + offX; val sy = t.y + offY
@@ -241,7 +240,6 @@ fun GameRenderer(
                 "xp_gem" -> {
                     val isMagnetized = e.get<XpGemComponent>()?.magnetized == true
                     drawXpGem(sx, sy, w, color, engine.gameTime, isMagnetized)
-                    // Draw magnet line to player when magnetized
                     if (isMagnetized && playerPos != null) {
                         val px = playerPos.x + offX
                         val py = playerPos.y + offY
@@ -258,34 +256,37 @@ fun GameRenderer(
         }
 
         // ── DAMAGE NUMBERS ─────────────────────────────────────────
-        if (showDamageNumbers) for (e in entities.filter { it.tag == "damage_number" && it.active }) {
-            val t = e.get<TransformComponent>() ?: continue
-            val dn = e.get<DamageNumberComponent>() ?: continue
-            val sx = t.x + offX; val sy = t.y + offY
-            if (sx < -100 || sx > size.width + 100 || sy < -100 || sy > size.height + 100) continue
+        if (showDamageNumbers) {
+            for (i in 0 until damageNumbersScratch.size) {
+                val e = damageNumbersScratch[i]
+                val t = e.get<TransformComponent>() ?: continue
+                val dn = e.get<DamageNumberComponent>() ?: continue
+                val sx = t.x + offX; val sy = t.y + offY
+                if (sx < -100 || sx > size.width + 100 || sy < -100 || sy > size.height + 100) continue
 
-            val progress = (dn.timer / dn.lifetime).coerceIn(0f, 1f)
-            val alpha = 1f - progress
-            val scale = if (dn.isCrit) 1.3f else 1f
-            val fontSize = (14f * scale).sp
+                val progress = (dn.timer / dn.lifetime).coerceIn(0f, 1f)
+                val alpha = 1f - progress
+                val scale = if (dn.isCrit) 1.3f else 1f
+                val fontSize = (14f * scale).sp
 
-            val color = if (dn.isCrit) Color(0xFFFFD700) else Color.White
-            val text = dn.getDisplayText()
+                val color = if (dn.isCrit) Color(0xFFFFD700) else Color.White
+                val text = dn.getDisplayText()
 
-            val textResult = textMeasurer.measure(
-                text = AnnotatedString(text),
-                style = TextStyle(
-                    fontSize = fontSize,
-                    fontWeight = if (dn.isCrit) FontWeight.ExtraBold else FontWeight.Bold,
-                    color = color.copy(alpha = alpha),
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = alpha * 0.7f),
-                        offset = Offset(1f, 1f),
-                        blurRadius = 2f
+                val textResult = textMeasurer.measure(
+                    text = AnnotatedString(text),
+                    style = TextStyle(
+                        fontSize = fontSize,
+                        fontWeight = if (dn.isCrit) FontWeight.ExtraBold else FontWeight.Bold,
+                        color = color.copy(alpha = alpha),
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = alpha * 0.7f),
+                            offset = Offset(1f, 1f),
+                            blurRadius = 2f
+                        )
                     )
                 )
-            )
-            drawText(textResult, topLeft = Offset(sx - textResult.size.width / 2f, sy))
+                drawText(textResult, topLeft = Offset(sx - textResult.size.width / 2f, sy))
+            }
         }
 
         // ── JOYSTICK ──────────────────────────────────────────────
@@ -301,7 +302,6 @@ fun GameRenderer(
                 val intensity = ((0.3f - hpRatio) / 0.3f).coerceIn(0f, 1f)
                 val pulse = 0.5f + 0.5f * sin(engine.gameTime * 4f)
                 val alpha = intensity * 0.15f * pulse
-                // Red vignette edges
                 drawRect(
                     brush = Brush.radialGradient(
                         colors = listOf(Color.Transparent, Color(0xFFFF1744).copy(alpha = alpha)),
@@ -333,29 +333,11 @@ private fun DrawScope.drawPlayer(
     emojiCache: MutableMap<Pair<String, Int>, TextLayoutResult>
 ) {
     val pulse = 1f + 0.06f * sin(time * 5f)
-    // Outer glow ring — larger and brighter
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(Color(0xFF6BB6FF).copy(alpha = 0.4f), Color(0xFF4A90D9).copy(alpha = 0.15f), Color.Transparent),
             center = Offset(x, y), radius = size * 2.5f * pulse
         ), radius = size * 2.5f * pulse, center = Offset(x, y)
-    )
-
-    // Draw player as Noto Color Emoji (mage character)
-    val fontSizeSp = (size * 1.8f * pulse).coerceAtLeast(16f)
-    val cacheKey = Pair("🧙", fontSizeSp.toInt())
-    val textResult = emojiCache.getOrPut(cacheKey) {
-        textMeasurer.measure(
-            text = AnnotatedString("🧙"),
-            style = TextStyle(
-                fontFamily = notoEmojiFamily,
-                fontSize = fontSizeSp.sp
-            )
-        )
-    }
-    drawText(
-        textLayoutResult = textResult,
-        topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
     )
 }
 
@@ -379,18 +361,14 @@ private fun getEnemyEmoji(type: EnemyType?): String = when (type) {
 }
 
 private fun DrawScope.drawEnemy(
-    entity: com.hordesurvival.game.engine.ecs.Entity,
-    x: Float, y: Float, w: Float, h: Float, color: Color, time: Float,
-    textMeasurer: TextMeasurer,
-    emojiCache: MutableMap<Pair<String, Int>, TextLayoutResult>
+    entity: Entity,
+    x: Float, y: Float, w: Float, h: Float, color: Color, time: Float
 ) {
     val enemy = entity.get<EnemyComponent>()
     val type = enemy?.type
 
-    // Shadow
     drawOval(Color.Black.copy(alpha = 0.15f), topLeft = Offset(x - w * 0.35f, y + h * 0.3f), size = Size(w * 0.7f, h * 0.2f))
 
-    // Boss glow
     if (enemy?.isBoss == true) {
         drawCircle(
             brush = Brush.radialGradient(
@@ -400,31 +378,145 @@ private fun DrawScope.drawEnemy(
         )
     }
 
-    // Noto Color Emoji representation per enemy type
-    val emoji = getEnemyEmoji(type)
-    val fontSizeSp = (w * 1.3f).coerceAtLeast(14f)
-    val cacheKey = Pair(emoji, fontSizeSp.toInt())
-    val textResult = emojiCache.getOrPut(cacheKey) {
-        textMeasurer.measure(
-            text = AnnotatedString(emoji),
-            style = TextStyle(
-                fontFamily = notoEmojiFamily,
-                fontSize = fontSizeSp.sp
+    when (type) {
+        EnemyType.BASIC_DRONE -> {
+            drawPolygon(color, x, y, w / 2f, 6)
+            drawPolygon(Color.White.copy(alpha = 0.08f), x, y, w / 2.5f, 6)
+            drawCircle(Color.White.copy(alpha = 0.5f), radius = w / 6f, center = Offset(x, y))
+            drawCircle(color.copy(alpha = 0.8f), radius = w / 8f, center = Offset(x, y))
+        }
+        EnemyType.FLYING_WISP -> {
+            val wispPulse = 0.7f + 0.3f * sin(time * 6f + entity.id)
+            drawCircle(color = color.copy(alpha = 0.15f * wispPulse), radius = w * 1.2f, center = Offset(x, y))
+            drawCircle(color = color.copy(alpha = 0.3f), radius = w / 1.3f, center = Offset(x, y))
+            drawDiamond(color, x, y, w * wispPulse, h * wispPulse)
+            drawCircle(Color.White.copy(alpha = 0.6f), radius = w / 4f, center = Offset(x, y))
+        }
+        EnemyType.TANK_GOLEM -> {
+            drawRect(color = color, topLeft = Offset(x - w / 2f, y - h / 2f), size = Size(w, h))
+            drawRect(color = color.copy(alpha = 0.6f), topLeft = Offset(x - w / 2f, y - h / 2f), size = Size(w, h), style = Stroke(width = 2.5f))
+            drawLine(Color.White.copy(alpha = 0.1f), Offset(x - w / 2f, y), Offset(x + w / 2f, y), strokeWidth = 1.5f)
+            drawLine(Color.White.copy(alpha = 0.1f), Offset(x, y - h / 2f), Offset(x, y + h / 2f), strokeWidth = 1.5f)
+            drawCircle(Color.White.copy(alpha = 0.15f), radius = 2f, center = Offset(x - w / 3f, y - h / 3f))
+            drawCircle(Color.White.copy(alpha = 0.15f), radius = 2f, center = Offset(x + w / 3f, y - h / 3f))
+            drawCircle(Color.White.copy(alpha = 0.15f), radius = 2f, center = Offset(x - w / 3f, y + h / 3f))
+            drawCircle(Color.White.copy(alpha = 0.15f), radius = 2f, center = Offset(x + w / 3f, y + h / 3f))
+        }
+        EnemyType.SHOOTER_TURRET -> {
+            drawPolygon(color, x, y, w / 2f, 5)
+            drawPolygon(Color(0xFFFFCC80).copy(alpha = 0.15f), x, y, w / 2.8f, 5)
+            drawCircle(Color(0xFFFFCC80), radius = w / 5f, center = Offset(x, y))
+            drawCircle(Color(0xFFFF6E40), radius = w / 8f, center = Offset(x, y))
+            val barrelAngle = time * 1.5f + entity.id
+            val barrelLen = w * 0.7f
+            val bx = x + cos(barrelAngle) * barrelLen
+            val by = y + sin(barrelAngle) * barrelLen
+            drawLine(color.copy(alpha = 0.9f), Offset(x, y), Offset(bx, by), strokeWidth = 3f)
+        }
+        EnemyType.SWARM_BAT -> {
+            val pulse = 1f + 0.1f * sin(time * 8f + entity.id)
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(color.copy(alpha = 0.3f), Color.Transparent),
+                    center = Offset(x, y), radius = w * 1.5f
+                ), radius = w * 1.5f, center = Offset(x, y)
             )
-        )
+            drawCircle(color, radius = w * 0.4f * pulse, center = Offset(x, y))
+            drawCircle(Color.White.copy(alpha = 0.4f), radius = w * 0.15f, center = Offset(x, y))
+        }
+        EnemyType.ELITE_KNIGHT -> {
+            val p = Path().apply {
+                moveTo(x, y - h / 2f)
+                lineTo(x + w / 2f, y - h / 4f)
+                lineTo(x + w / 2f, y + h / 4f)
+                lineTo(x, y + h / 2f)
+                lineTo(x - w / 2f, y + h / 4f)
+                lineTo(x - w / 2f, y - h / 4f)
+                close()
+            }
+            drawPath(p, color, style = Fill)
+            drawPath(p, Color.White.copy(alpha = 0.15f), style = Stroke(width = 2f))
+            drawLine(Color.White.copy(alpha = 0.25f), Offset(x, y - h / 4f), Offset(x, y + h / 4f), strokeWidth = 2f)
+            drawLine(Color.White.copy(alpha = 0.25f), Offset(x - w / 4f, y), Offset(x + w / 4f, y), strokeWidth = 2f)
+        }
+        EnemyType.GHOST -> {
+            val ghostAlpha = 0.4f + 0.25f * sin(time * 3f)
+            val p = Path().apply {
+                moveTo(x - w / 2f, y + h / 3f)
+                lineTo(x - w / 2f, y - h / 4f)
+                cubicTo(x - w / 2f, y - h / 2f, x + w / 2f, y - h / 2f, x + w / 2f, y - h / 4f)
+                lineTo(x + w / 2f, y + h / 3f)
+                lineTo(x + w / 3f, y + h / 6f)
+                lineTo(x, y + h / 3f)
+                lineTo(x - w / 3f, y + h / 6f)
+                close()
+            }
+            drawPath(p, color.copy(alpha = ghostAlpha), style = Fill)
+            drawCircle(color.copy(alpha = ghostAlpha * 0.3f), radius = w * 0.8f, center = Offset(x, y))
+            drawCircle(Color(0xFFE040FB).copy(alpha = 0.9f), radius = w / 7f, center = Offset(x - w / 5f, y - h / 6f))
+            drawCircle(Color(0xFFE040FB).copy(alpha = 0.9f), radius = w / 7f, center = Offset(x + w / 5f, y - h / 6f))
+            drawCircle(Color.White.copy(alpha = 0.6f), radius = w / 12f, center = Offset(x - w / 5f, y - h / 6f))
+            drawCircle(Color.White.copy(alpha = 0.6f), radius = w / 12f, center = Offset(x + w / 5f, y - h / 6f))
+        }
+        EnemyType.BOSS -> {
+            val bossPulse = 1f + 0.05f * sin(time * 4f)
+            drawCircle(Color(0xFFFF6E40).copy(alpha = 0.08f), radius = w * 1.8f * bossPulse, center = Offset(x, y))
+            for (i in 0 until 8) {
+                val a = Math.toRadians((i * 45.0) - 90.0).toFloat()
+                val innerR = w / 3f
+                val outerR = w / 2f * bossPulse
+                drawLine(color, Offset(x + cos(a) * innerR, y + sin(a) * innerR),
+                    Offset(x + cos(a) * outerR, y + sin(a) * outerR), strokeWidth = 3f)
+            }
+            drawCircle(color, radius = w / 3f * bossPulse, center = Offset(x, y))
+            drawCircle(color.copy(alpha = 0.5f), radius = w / 2.5f, center = Offset(x, y), style = Stroke(width = 2f))
+            drawCircle(Color.White, radius = w / 7f, center = Offset(x - w / 5f, y - h / 8f))
+            drawCircle(Color.White, radius = w / 7f, center = Offset(x + w / 5f, y - h / 8f))
+            drawCircle(Color(0xFFFF1744), radius = w / 10f, center = Offset(x - w / 5f, y - h / 8f))
+            drawCircle(Color(0xFFFF1744), radius = w / 10f, center = Offset(x + w / 5f, y - h / 8f))
+            drawLine(Color(0xFFFF1744).copy(alpha = 0.6f), Offset(x - w / 5f, y + h / 6f), Offset(x + w / 5f, y + h / 6f), strokeWidth = 2f)
+        }
+        EnemyType.SPLITTER -> {
+            drawDiamond(color, x, y, w, h)
+            drawLine(Color.White.copy(alpha = 0.4f), Offset(x - w / 3f, y - h / 4f), Offset(x + w / 6f, y + h / 3f), strokeWidth = 1f)
+            drawLine(Color.White.copy(alpha = 0.3f), Offset(x + w / 4f, y - h / 3f), Offset(x - w / 5f, y + h / 4f), strokeWidth = 1f)
+            drawCircle(Color(0xFFFFCC80).copy(alpha = 0.2f), radius = w / 4f, center = Offset(x, y))
+        }
+        EnemyType.HEALER -> {
+            val healPulse = 0.6f + 0.4f * sin(time * 3f)
+            drawCircle(color = color.copy(alpha = 0.12f * healPulse), radius = w * 1.3f, center = Offset(x, y))
+            drawCircle(color = color.copy(alpha = 0.25f), radius = w / 1.3f, center = Offset(x, y))
+            drawRect(color = color, topLeft = Offset(x - w / 6f, y - h / 2f), size = Size(w / 3f, h))
+            drawRect(color = color, topLeft = Offset(x - w / 2f, y - h / 6f), size = Size(w, h / 3f))
+            drawCircle(Color.White.copy(alpha = 0.4f * healPulse), radius = w / 5f, center = Offset(x, y))
+        }
+        EnemyType.MAGE -> {
+            val magePulse = 0.6f + 0.4f * sin(time * 4f + entity.id)
+            val robe = Path().apply {
+                moveTo(x, y - h / 2f)
+                lineTo(x + w / 2f, y + h / 2f)
+                lineTo(x - w / 2f, y + h / 2f)
+                close()
+            }
+            drawPath(robe, color, style = Fill)
+            drawPath(robe, color.copy(alpha = 0.5f), style = Stroke(width = 1f))
+            drawCircle(color.copy(alpha = 0.8f), radius = w / 3f, center = Offset(x, y - h / 3f))
+            drawCircle(Color(0xFFCE93D8).copy(alpha = 0.4f * magePulse), radius = w * 0.8f, center = Offset(x, y))
+            drawCircle(Color(0xFFE040FB).copy(alpha = 0.7f), radius = w / 5f, center = Offset(x, y - h / 6f))
+            drawCircle(Color.White.copy(alpha = 0.5f * magePulse), radius = w / 8f, center = Offset(x, y - h / 6f))
+        }
+        null -> drawGeneric(x, y, w, h, color, SpriteShape.CIRCLE)
     }
     drawText(
         textLayoutResult = textResult,
         topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
     )
 
-    // Status effects
     enemy?.let { e ->
         if (e.burnTimer > 0f) drawCircle(Color(0xFFFFCC80).copy(alpha = 0.35f), radius = w / 2f + 4f, center = Offset(x, y))
         if (e.slowTimer > 0f) drawCircle(Color(0xFF80CBC4).copy(alpha = 0.25f), radius = w / 2f + 3f, center = Offset(x, y))
     }
 
-    // HP bar
     val hp = entity.get<HealthComponent>()
     if (hp != null && hp.currentHp < hp.maxHp && hp.maxHp > 15f) {
         val barW = w * 0.8f; val barH = 3f; val barY = y - h / 2f - 8f
@@ -439,12 +531,12 @@ private fun DrawScope.drawEnemy(
 // PROJECTILE — distinct per weapon type
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawProjectile(
-    entity: com.hordesurvival.game.engine.ecs.Entity,
+    entity: Entity,
     x: Float, y: Float, w: Float, h: Float, color: Color
 ) {
     val proj = entity.get<ProjectileComponent>()
     val vel = entity.get<VelocityComponent>()
-    // Glow
+
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(color.copy(alpha = 0.5f), color.copy(alpha = 0.1f), Color.Transparent),
@@ -452,7 +544,6 @@ private fun DrawScope.drawProjectile(
         ), radius = w * 2f, center = Offset(x, y)
     )
 
-    // Weapon trail effect — draw fading circles behind the projectile
     if (vel != null && proj != null) {
         val speed = kotlin.math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy)
         if (speed > 10f) {
@@ -483,27 +574,22 @@ private fun DrawScope.drawProjectile(
 
     when (proj?.weaponType) {
         WeaponType.MAGIC_MISSILE -> {
-            // Small glowing orb
             drawCircle(color, radius = w / 2f, center = Offset(x, y))
             drawCircle(Color.White.copy(alpha = 0.6f), radius = w / 4f, center = Offset(x, y))
         }
         WeaponType.FIREBALL -> {
-            // Orange-red circle with flame effect
             drawCircle(Color(0xFFFFCC80), radius = w / 2f, center = Offset(x, y))
             drawCircle(Color(0xFFFF8A65).copy(alpha = 0.6f), radius = w / 3f, center = Offset(x, y))
         }
         WeaponType.ICE_SHARD -> {
-            // Triangle shard
             drawTriangle(color, x, y, w, h)
             drawTriangle(Color.White.copy(alpha = 0.4f), x, y, w * 0.4f, h * 0.4f)
         }
         WeaponType.BOOMERANG_DAGGER -> {
-            // Spinning diamond
             drawDiamond(color, x, y, w, h)
             drawLine(Color.White.copy(alpha = 0.3f), Offset(x - w / 3f, y), Offset(x + w / 3f, y), strokeWidth = 1f)
         }
         WeaponType.DIVINE_SPEAR -> {
-            // Long thin triangle
             drawTriangle(color, x, y, w * 0.6f, h * 1.5f)
         }
         else -> {
@@ -517,7 +603,6 @@ private fun DrawScope.drawProjectile(
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawXpGem(x: Float, y: Float, w: Float, color: Color, time: Float, magnetized: Boolean = false) {
     val pulse = 1f + 0.12f * sin(time * 6f + x * 0.01f)
-    // Magnetized gems glow blue and pulse faster
     val gemColor = if (magnetized) Color(0xFF42A5F5) else color
     val glowAlpha = if (magnetized) 0.6f else 0.4f
     val glowRadius = if (magnetized) w * 3.5f else w * 2.5f
@@ -529,7 +614,6 @@ private fun DrawScope.drawXpGem(x: Float, y: Float, w: Float, color: Color, time
     )
     drawDiamond(gemColor, x, y, w * pulse, w * pulse)
     drawCircle(Color.White.copy(alpha = 0.5f), radius = w / 4f, center = Offset(x, y))
-    // Magnetized: sparkle ring
     if (magnetized) {
         val sparkleAngle = time * 8f + x
         for (i in 0 until 3) {
@@ -541,19 +625,13 @@ private fun DrawScope.drawXpGem(x: Float, y: Float, w: Float, color: Color, time
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// HEALTH GEM — green cross with glow
-// ═══════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════
 // HEART SHAPE — reusable for health gems and loot boxes
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawHeart(color: Color, x: Float, y: Float, size: Float) {
     val s = size
     val path = Path().apply {
-        // Heart shape using cubic bezier curves
         moveTo(x, y + s * 0.4f)
-        // Left bump
         cubicTo(x - s * 0.8f, y - s * 0.4f, x - s * 0.8f, y - s * 1.0f, x, y - s * 0.4f)
-        // Right bump
         cubicTo(x + s * 0.8f, y - s * 1.0f, x + s * 0.8f, y - s * 0.4f, x, y + s * 0.4f)
         close()
     }
@@ -566,7 +644,6 @@ private fun DrawScope.drawHeart(color: Color, x: Float, y: Float, size: Float) {
 private fun DrawScope.drawMagnet(color: Color, x: Float, y: Float, size: Float) {
     val s = size
     val stroke = Stroke(width = s * 0.35f, cap = StrokeCap.Round)
-    // U-shape arc
     val arcSize = Size(s * 1.6f, s * 1.6f)
     val topLeft = Offset(x - s * 0.8f, y - s * 0.4f)
     drawArc(
@@ -578,25 +655,20 @@ private fun DrawScope.drawMagnet(color: Color, x: Float, y: Float, size: Float) 
         size = arcSize,
         style = stroke
     )
-    // Left end (red)
     drawCircle(Color(0xFFEF5350), radius = s * 0.2f, center = Offset(x - s * 0.8f, y + s * 0.4f))
-    // Right end (blue)
     drawCircle(Color(0xFF42A5F5), radius = s * 0.2f, center = Offset(x + s * 0.8f, y + s * 0.4f))
 }
 
 private fun DrawScope.drawHealthGem(x: Float, y: Float, w: Float, time: Float) {
     val pulse = 1f + 0.1f * kotlin.math.sin(time * 5f + x * 0.01f)
     val red = Color(0xFFEF5350)
-    // Glow
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(red.copy(alpha = 0.4f), red.copy(alpha = 0.1f), Color.Transparent),
             center = Offset(x, y), radius = w * 2.5f * pulse
         ), radius = w * 2.5f * pulse, center = Offset(x, y)
     )
-    // Heart shape
     drawHeart(red.copy(alpha = 0.95f), x, y, w * 0.6f * pulse)
-    // Highlight
     drawCircle(Color.White.copy(alpha = 0.4f), radius = w * 0.12f, center = Offset(x - w * 0.15f, y - w * 0.2f))
 }
 
@@ -619,7 +691,7 @@ private fun DrawScope.drawOrbitShield(x: Float, y: Float, w: Float, time: Float)
 // LOOT BOX — glowing box with icon
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawLootBox(
-    entity: com.hordesurvival.game.engine.ecs.Entity,
+    entity: Entity,
     x: Float, y: Float, w: Float, h: Float, time: Float
 ) {
     val loot = entity.get<LootBoxComponent>() ?: return
@@ -628,7 +700,6 @@ private fun DrawScope.drawLootBox(
     val pulse = 1f + 0.08f * kotlin.math.sin(time * 4f)
     val color = Color(entity.get<SpriteComponent>()?.color ?: 0xFFFFD700.toInt())
 
-    // Glow
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(color.copy(alpha = 0.35f), color.copy(alpha = 0.08f), Color.Transparent),
@@ -640,22 +711,18 @@ private fun DrawScope.drawLootBox(
 
     when (loot.lootType) {
         LootType.HEALTH -> {
-            // Red heart shape
             drawHeart(color.copy(alpha = 0.95f), x, by, halfW * 1.2f)
             drawHeart(Color.White.copy(alpha = 0.3f), x, by, halfW * 0.5f)
         }
         LootType.MAGNET -> {
-            // Magnet shape: U-shape with colored ends
             drawMagnet(color.copy(alpha = 0.95f), x, by, halfW * 1.2f)
         }
         LootType.GOLD -> {
-            // Gold coin
             drawCircle(color.copy(alpha = 0.9f), radius = halfW, center = Offset(x, by))
             drawCircle(Color(0xFFFFD700).copy(alpha = 0.5f), radius = halfW * 0.5f, center = Offset(x, by))
             drawCircle(Color.White.copy(alpha = 0.3f), radius = halfW * 0.2f, center = Offset(x - halfW * 0.2f, by - halfW * 0.2f))
         }
         LootType.DAMAGE_BOOST -> {
-            // Sword / attack boost icon
             drawRoundRect(
                 color = color.copy(alpha = 0.9f),
                 topLeft = Offset(x - halfW, by - halfH),
@@ -669,7 +736,6 @@ private fun DrawScope.drawLootBox(
                 cornerRadius = CornerRadius(4f),
                 style = Stroke(width = 1.5f)
             )
-            // Arrow up
             val arrowSize = halfW * 0.5f
             val path = Path().apply {
                 moveTo(x, by - arrowSize)
@@ -680,7 +746,6 @@ private fun DrawScope.drawLootBox(
             drawPath(path, Color.White.copy(alpha = 0.7f))
         }
     }
-    // Sparkle
     val sparkleAlpha = 0.4f + 0.3f * kotlin.math.sin(time * 6f + x)
     drawCircle(Color.White.copy(alpha = sparkleAlpha), radius = 2f, center = Offset(x + halfW * 0.6f, by - halfH * 0.6f))
 }
@@ -691,17 +756,14 @@ private fun DrawScope.drawLootBox(
 private fun DrawScope.drawRelic(x: Float, y: Float, w: Float, color: Color, time: Float) {
     val pulse = 1f + 0.15f * sin(time * 5f)
     val bobY = y + sin(time * 3f) * 4f
-    // Glow
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(color.copy(alpha = 0.4f), color.copy(alpha = 0.1f), Color.Transparent),
             center = Offset(x, bobY), radius = w * 3f * pulse
         ), radius = w * 3f * pulse, center = Offset(x, bobY)
     )
-    // Diamond shape
     drawDiamond(color, x, bobY, w * pulse, w * pulse)
     drawDiamond(Color.White.copy(alpha = 0.5f), x, bobY, w * 0.4f * pulse, w * 0.4f * pulse)
-    // Sparkle
     val sparkleAlpha = 0.5f + 0.5f * sin(time * 8f + x)
     drawCircle(Color.White.copy(alpha = sparkleAlpha), radius = 2f, center = Offset(x + w * 0.7f, bobY - w * 0.7f))
 }
@@ -711,10 +773,8 @@ private fun DrawScope.drawRelic(x: Float, y: Float, w: Float, color: Color, time
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawParticle(x: Float, y: Float, w: Float, color: Color, sprite: SpriteComponent) {
     if (w > 40f) {
-        // Large particle (like lightning ring) — draw as outline with lightning lines
-        drawCircle(Color.Transparent, radius = w, center = Offset(x, y)) // clear
+        drawCircle(Color.Transparent, radius = w, center = Offset(x, y))
         drawCircle(color.copy(alpha = sprite.alpha * 0.6f), radius = w, center = Offset(x, y), style = Stroke(width = 3f))
-        // Lightning lines on the circle
         val segments = 8
         for (i in 0 until segments) {
             val angle1 = (i.toFloat() / segments) * Math.PI.toFloat() * 2f
@@ -732,7 +792,6 @@ private fun DrawScope.drawParticle(x: Float, y: Float, w: Float, color: Color, s
             drawLine(color.copy(alpha = sprite.alpha * 0.8f), Offset(px2, py2), Offset(px3, py3), strokeWidth = 2f)
         }
     } else {
-        // Small particle — normal filled
         drawCircle(color.copy(alpha = sprite.alpha * 0.3f), radius = w, center = Offset(x, y))
         drawCircle(color, radius = w / 2f, center = Offset(x, y))
     }
@@ -806,7 +865,7 @@ private fun DrawScope.drawStarsBg(w: Float, h: Float, camX: Float, camY: Float, 
 
 /** 2: Nebula — colorful clouds */
 private fun DrawScope.drawNebulaBg(w: Float, h: Float, camX: Float, camY: Float, time: Float) {
-    drawStarsBg(w, h, camX, camY, time)  // stars underneath
+    drawStarsBg(w, h, camX, camY, time)
     val nx = w * 0.35f + sin(time * 0.02f) * 50f + camX * 0.01f
     val ny = h * 0.3f + cos(time * 0.015f) * 35f + camY * 0.01f
     drawCircle(brush = Brush.radialGradient(listOf(Color(0xFF4A1A6B).copy(alpha = 0.06f), Color.Transparent), center = Offset(nx, ny), radius = 300f), radius = 300f, center = Offset(nx, ny))
@@ -824,7 +883,6 @@ private fun DrawScope.drawCheckerBg(w: Float, h: Float, camX: Float, camY: Float
     val p = 0.3f
     val cx = camX * p
     val cy = camY * p
-    // Use floor-based offset for seamless tiling (no visual tearing)
     val offX = ((cx % tileSize) + tileSize) % tileSize
     val offY = ((cy % tileSize) + tileSize) % tileSize
     val startCol = kotlin.math.floor((cx / tileSize).toDouble()).toInt()
@@ -839,7 +897,6 @@ private fun DrawScope.drawCheckerBg(w: Float, h: Float, camX: Float, camY: Float
             drawRect(if (isLight) light else dark, topLeft = Offset(ix * tileSize - offX, iy * tileSize - offY), size = Size(tileSize, tileSize))
         }
     }
-    // Subtle grid lines on checkerboard
     val lineCol = Color(0xFF1A1A40).copy(alpha = 0.2f)
     for (iy in -1..tilesY) {
         val y = iy * tileSize - offY
@@ -863,7 +920,6 @@ private fun DrawScope.drawPersianBg(w: Float, h: Float, camX: Float, camY: Float
     val startRow = kotlin.math.floor((cy / tileSize).toDouble()).toInt()
     val tilesX = (w / tileSize).toInt() + 3
     val tilesY = (h / tileSize).toInt() + 3
-    // Base tile color
     for (iy in -1 until tilesY) {
         for (ix in -1 until tilesX) {
             val tx = ix * tileSize - offX
@@ -872,14 +928,12 @@ private fun DrawScope.drawPersianBg(w: Float, h: Float, camX: Float, camY: Float
             drawRect(if (isAlt) Color(0xFF0E0A1A) else Color(0xFF120E22), topLeft = Offset(tx, ty), size = Size(tileSize, tileSize))
         }
     }
-    // Geometric star patterns (8-pointed stars)
     val accent = Color(0xFFC8A24E).copy(alpha = 0.08f)
     val accent2 = Color(0xFF8B1A1A).copy(alpha = 0.06f)
     for (iy in -1 until tilesY) {
         for (ix in -1 until tilesX) {
             val tx = ix * tileSize - offX + tileSize / 2f
             val ty = iy * tileSize - offY + tileSize / 2f
-            // 8-pointed star
             val r = tileSize * 0.35f
             val innerR = tileSize * 0.15f
             val path = Path()
@@ -893,7 +947,6 @@ private fun DrawScope.drawPersianBg(w: Float, h: Float, camX: Float, camY: Float
             path.close()
             drawPath(path, accent, style = Fill)
             drawPath(path, accent2, style = Stroke(width = 0.8f))
-            // Central diamond
             val dr = tileSize * 0.12f
             val diamond = Path().apply {
                 moveTo(tx, ty - dr); lineTo(tx + dr, ty); lineTo(tx, ty + dr); lineTo(tx - dr, ty); close()
@@ -901,7 +954,6 @@ private fun DrawScope.drawPersianBg(w: Float, h: Float, camX: Float, camY: Float
             drawPath(diamond, Color(0xFFC8A24E).copy(alpha = 0.12f), style = Fill)
         }
     }
-    // Subtle border lines
     val lineCol = Color(0xFFC8A24E).copy(alpha = 0.04f)
     for (iy in -1..tilesY) {
         drawLine(lineCol, Offset(0f, iy * tileSize - offY), Offset(w, iy * tileSize - offY), strokeWidth = 0.5f)
@@ -913,12 +965,10 @@ private fun DrawScope.drawPersianBg(w: Float, h: Float, camX: Float, camY: Float
 
 /** 6: Roman — columns, arches, laurel motifs */
 private fun DrawScope.drawRomanBg(w: Float, h: Float, camX: Float, camY: Float, time: Float) {
-    // Marble-like base with subtle veins
     drawRect(Color(0xFF0D0D1A), topLeft = Offset.Zero, size = Size(w, h))
     val p = 0.2f
     val cx = camX * p
     val cy = camY * p
-    // Marble vein lines
     val veinCol = Color(0xFF1A1A30).copy(alpha = 0.3f)
     for (i in 0 until 12) {
         val hash = (i * 7919 + 13) % 10000
@@ -928,22 +978,17 @@ private fun DrawScope.drawRomanBg(w: Float, h: Float, camX: Float, camY: Float, 
         val y2 = y1 + ((hash / 3) % 200) - 100f
         drawLine(veinCol, Offset(x1, y1), Offset(x2, y2), strokeWidth = 0.8f)
     }
-    // Column patterns at fixed intervals
     val colSpacing = 250f
     val colOffX = ((cx * 0.5f) % colSpacing + colSpacing) % colSpacing
     val colOffY = ((cy * 0.3f) % colSpacing + colSpacing) % colSpacing
     val colCol = Color(0xFF2A2040).copy(alpha = 0.15f)
     var x = -colOffX
     while (x < w + colSpacing) {
-        // Column shaft
         drawRect(colCol, topLeft = Offset(x - 8f, 0f), size = Size(16f, h))
-        // Column capital (top)
         drawRect(colCol.copy(alpha = 0.2f), topLeft = Offset(x - 16f, 0f), size = Size(32f, 20f))
-        // Column base
         drawRect(colCol.copy(alpha = 0.2f), topLeft = Offset(x - 14f, h - 18f), size = Size(28f, 18f))
         x += colSpacing
     }
-    // Horizontal entablature lines
     val entCol = Color(0xFFC8A24E).copy(alpha = 0.04f)
     var y = -colOffY
     while (y < h + colSpacing) {
@@ -951,7 +996,6 @@ private fun DrawScope.drawRomanBg(w: Float, h: Float, camX: Float, camY: Float, 
         drawLine(entCol.copy(alpha = 0.02f), Offset(0f, y + 6f), Offset(w, y + 6f), strokeWidth = 1f)
         y += colSpacing
     }
-    // Laurel wreath motifs (small V-shapes)
     val laurelCol = Color(0xFF4A7A4A).copy(alpha = 0.06f)
     for (i in 0 until 30) {
         val hash = (i * 3571 + 77) % 10000
@@ -967,12 +1011,10 @@ private fun DrawScope.drawRomanBg(w: Float, h: Float, camX: Float, camY: Float, 
 
 /** 7: Egyptian — hieroglyph-style symbols, gold accents, pyramids */
 private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Float, time: Float) {
-    // Sandy dark base
     drawRect(Color(0xFF0E0A06), topLeft = Offset.Zero, size = Size(w, h))
     val p = 0.2f
     val cx = camX * p
     val cy = camY * p
-    // Sand gradient overlay
     drawRect(
         brush = Brush.verticalGradient(
             colors = listOf(Color(0xFF1A1408).copy(alpha = 0.3f), Color(0xFF0E0A06).copy(alpha = 0.1f)),
@@ -980,7 +1022,6 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
         ),
         topLeft = Offset.Zero, size = Size(w, h)
     )
-    // Pyramid silhouettes at bottom
     val pyramidCol = Color(0xFF2A1E0E).copy(alpha = 0.2f)
     val baseY = h * 0.85f
     for (i in 0 until 3) {
@@ -996,7 +1037,6 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
         drawPath(pp, pyramidCol, style = Fill)
         drawPath(pp, Color(0xFFC8A24E).copy(alpha = 0.04f), style = Stroke(width = 0.8f))
     }
-    // Hieroglyph-style symbols
     val hierCol = Color(0xFFC8A24E).copy(alpha = 0.07f)
     for (i in 0 until 40) {
         val hash = (i * 4519 + 33) % 10000
@@ -1005,24 +1045,24 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
         val symbolType = hash % 6
         val s = 8f + (hash % 6)
         when (symbolType) {
-            0 -> { // Eye of Horus (simplified)
+            0 -> {
                 drawCircle(hierCol, radius = s, center = Offset(hx, hy), style = Stroke(width = 0.8f))
                 drawCircle(hierCol, radius = s * 0.3f, center = Offset(hx, hy))
                 drawLine(hierCol, Offset(hx + s, hy), Offset(hx + s * 1.5f, hy + s * 0.5f), strokeWidth = 0.6f)
             }
-            1 -> { // Ankh (cross with loop)
+            1 -> {
                 drawLine(hierCol, Offset(hx, hy - s), Offset(hx, hy + s), strokeWidth = 0.8f)
                 drawLine(hierCol, Offset(hx - s * 0.6f, hy - s * 0.2f), Offset(hx + s * 0.6f, hy - s * 0.2f), strokeWidth = 0.8f)
                 drawCircle(hierCol, radius = s * 0.4f, center = Offset(hx, hy - s * 0.8f), style = Stroke(width = 0.8f))
             }
-            2 -> { // Bird (simplified ibis)
+            2 -> {
                 val bp = Path().apply {
                     moveTo(hx, hy - s); lineTo(hx + s * 0.5f, hy); lineTo(hx + s * 0.3f, hy + s * 0.3f)
                     lineTo(hx, hy + s * 0.1f); lineTo(hx - s * 0.3f, hy + s * 0.3f); lineTo(hx - s * 0.5f, hy); close()
                 }
                 drawPath(bp, hierCol, style = Fill)
             }
-            3 -> { // Sun disk
+            3 -> {
                 drawCircle(hierCol, radius = s * 0.6f, center = Offset(hx, hy), style = Stroke(width = 0.8f))
                 for (ray in 0 until 8) {
                     val a = Math.toRadians((ray * 45.0)).toFloat()
@@ -1030,12 +1070,12 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
                         Offset(hx + kotlin.math.cos(a) * s * 1.1f, hy + kotlin.math.sin(a) * s * 1.1f), strokeWidth = 0.6f)
                 }
             }
-            4 -> { // Scarab (simplified)
+            4 -> {
                 drawOval(hierCol, topLeft = Offset(hx - s * 0.4f, hy - s * 0.6f), size = Size(s * 0.8f, s * 1.2f), style = Stroke(width = 0.7f))
                 drawLine(hierCol, Offset(hx - s * 0.5f, hy - s * 0.2f), Offset(hx - s, hy - s * 0.5f), strokeWidth = 0.5f)
                 drawLine(hierCol, Offset(hx + s * 0.5f, hy - s * 0.2f), Offset(hx + s, hy - s * 0.5f), strokeWidth = 0.5f)
             }
-            5 -> { // Wave / water
+            5 -> {
                 val wp = Path().apply {
                     moveTo(hx - s, hy)
                     cubicTo(hx - s * 0.5f, hy - s * 0.4f, hx, hy + s * 0.4f, hx + s, hy)
@@ -1044,7 +1084,6 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
             }
         }
     }
-    // Gold accent lines
     val goldLine = Color(0xFFC8A24E).copy(alpha = 0.03f)
     val bandSpacing = 200f
     val bandOffY = ((cy * 0.15f) % bandSpacing + bandSpacing) % bandSpacing

@@ -1,3 +1,11 @@
+# Android / Gradle build outputs
+build/
+**/build/
+app/build/
+.gradle/
+**/build/**
+.gradle/**
+
 # Build artifacts
 build/
 app/build/
@@ -18,7 +26,6 @@ __pycache__/
 .mypy_cache/
 .pytest_cache/
 target/
-.gradle/
 
 # Logs and temp files
 *.log

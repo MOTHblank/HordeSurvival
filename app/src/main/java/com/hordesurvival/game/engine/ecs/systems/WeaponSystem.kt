@@ -15,7 +15,8 @@ import kotlin.math.sin
 
 /**
  * Auto-attack system: fires all player weapons automatically.
- * Each weapon has unique projectile behavior and targeting. Reuses Vector2 for random offsets.
+ * Each weapon has unique projectile behavior and targeting.
+ * Overhauled: uses GameEngine's SpatialGrid for targeting and enemy discovery.
  */
 class WeaponSystem(private val engine: GameEngine) : System() {
 
@@ -25,13 +26,17 @@ class WeaponSystem(private val engine: GameEngine) : System() {
     // Per-enemy cooldown for Lightning Ring to prevent per-wave damage stacking
     private val lightningHitCooldowns = mutableMapOf<Int, Float>()
 
+    // Scratch buffers for spatial queries
+    private val _enemyQueryResult = mutableListOf<Entity>()
+
     override fun update(dt: Float, entities: List<Entity>) {
         val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
         val playerTransform = player.get<TransformComponent>() ?: return
         val playerComp = player.get<PlayerComponent>() ?: return
 
         // Iterate all WeaponStateComponent entities owned by player
-        for (entity in entities) {
+        for (i in 0 until entities.size) {
+            val entity = entities[i]
             val ws = entity.get<WeaponStateComponent>() ?: continue
             if (entity.tag != "player") continue
 
@@ -112,7 +117,8 @@ class WeaponSystem(private val engine: GameEngine) : System() {
             if (newTime <= 0f) iter.remove() else entry.setValue(newTime)
         }
 
-        for (enemy in enemies) {
+        for (i in 0 until enemies.size) {
+            val enemy = enemies[i]
             val hp = enemy.get<HealthComponent>() ?: continue
             // Skip if this enemy was recently hit by lightning
             if (lightningHitCooldowns[enemy.id] != null && lightningHitCooldowns[enemy.id]!! > 0f) continue
@@ -235,24 +241,25 @@ class WeaponSystem(private val engine: GameEngine) : System() {
 
     private fun fireOrbitingShield(ws: WeaponStateComponent, pos: TransformComponent, player: PlayerComponent) {
         val count = ws.projectileCount + player.projectileBonus
-        val existing = engine.getActiveEntities().filter {
-            it.tag == "orbit_shield" && it.has<OrbitComponent>()
+        val activeEntities = engine.getActiveEntities()
+        var existingCount = 0
+        for (i in 0 until activeEntities.size) {
+            val e = activeEntities[i]
+            if (e.tag == "orbit_shield" && e.has<OrbitComponent>()) {
+                e.get<OrbitComponent>()?.let { it.radius = ws.area * player.area }
+                existingCount++
+            }
         }
 
         // Ensure correct number of shields
-        if (existing.size < count) {
-            for (i in existing.size until count) {
+        if (existingCount < count) {
+            for (i in existingCount until count) {
                 val angle = (i.toFloat() / count) * Math.PI.toFloat() * 2f
                 val orbitRadius = ws.area * player.area
                 spawnOrbitShield(pos.x, pos.y, orbitRadius,
                     angle, 2f, ws.baseDamage * player.might,
                     50f * (if (ws.tier >= 2) 1.2f else 1f))
             }
-        }
-
-        // Update orbit radius for existing shields when player.area changes
-        for (shield in existing) {
-            shield.get<OrbitComponent>()?.let { it.radius = ws.area * player.area }
         }
     }
 
@@ -370,17 +377,19 @@ class WeaponSystem(private val engine: GameEngine) : System() {
     }
 
     private fun findNearestEnemies(x: Float, y: Float, count: Int, maxDist: Float): List<Entity> {
-        val enemies = engine.getActiveEntities().filter { it.tag == "enemy" && it.has<HealthComponent>() }
-        return enemies
-            .mapNotNull { e ->
-                val t = e.get<TransformComponent>() ?: return@mapNotNull null
-                val dx = t.x - x; val dy = t.y - y
-                val dist = dx * dx + dy * dy
-                if (dist <= maxDist * maxDist) e to dist else null
-            }
-            .sortedBy { it.second }
-            .take(count)
-            .map { it.first }
+        _enemyQueryResult.clear()
+        engine.spatialGrid.queryRange(x, y, maxDist, "enemy", _enemyQueryResult)
+        if (_enemyQueryResult.size <= count) return _enemyQueryResult.toList()
+
+        _enemyQueryResult.sortBy { e ->
+            val t = e.get<TransformComponent>()
+            if (t != null) {
+                val dx = t.x - x
+                val dy = t.y - y
+                dx * dx + dy * dy
+            } else Float.MAX_VALUE
+        }
+        return _enemyQueryResult.take(count)
     }
 
     private fun getWeaponColor(type: WeaponType): Int = when (type) {
@@ -405,5 +414,3 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         WeaponType.DIVINE_SPEAR -> SpriteShape.TRIANGLE
     }
 }
-
-
