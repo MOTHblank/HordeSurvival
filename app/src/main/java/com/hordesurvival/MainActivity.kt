@@ -27,22 +27,10 @@ import com.hordesurvival.ui.screens.upgrades.UpgradesScreen
 import com.hordesurvival.ui.viewmodel.MainViewModel
 import com.hordesurvival.ui.viewmodel.GameViewModel
 import com.hordesurvival.ui.viewmodel.RunSummary
-import com.hordesurvival.game.ads.AdManager
-import com.hordesurvival.game.billing.BillingManager
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Initialize ads and billing
-        AdManager.preload(this)
-        BillingManager.initialize(this)
         setContent { HordeSurvivalGameNav() }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        AdManager.destroy()
-        BillingManager.destroy()
     }
 }
 

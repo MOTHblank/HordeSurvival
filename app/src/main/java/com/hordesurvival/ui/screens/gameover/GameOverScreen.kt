@@ -21,8 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.viewmodel.RunSummary
-import com.hordesurvival.game.ads.AdManager
-
 @Composable
 fun GameOverScreen(
     summary: RunSummary,
@@ -77,7 +75,7 @@ fun GameOverScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Continue button (free for now, ad placeholder for future)
+            // Continue button
             if (canContinue && !continueUsed) {
                 Column(Modifier.scale(bs), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
@@ -86,19 +84,11 @@ fun GameOverScreen(
                             .border(1.dp, Color(0xFF66BB6A).copy(alpha = 0.3f), RoundedCornerShape(16.dp))
                             .clickable {
                                 continueUsed = true
-                                // Try to show rewarded ad first
-                                val adShown = if (activity != null) {
-                                    AdManager.showRewardedAd(activity) { onContinue() }
-                                } else false
-                                // If no ad available, continue for free
-                                if (!adShown) onContinue()
+                                onContinue()
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("💚 Continue", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("Free (ad coming soon)", fontSize = 9.sp, color = Color.White.copy(alpha = 0.5f))
-                        }
+                        Text("💚 Continue", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                     Spacer(Modifier.height(12.dp))
                 }

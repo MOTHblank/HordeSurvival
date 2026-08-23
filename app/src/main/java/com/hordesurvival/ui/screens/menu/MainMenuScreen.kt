@@ -173,9 +173,6 @@ fun MainMenuScreen(
             // Footer — subtle
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("v1.2.9", fontSize = 10.sp, color = Color.White.copy(alpha = 0.15f))
-                Spacer(Modifier.height(2.dp))
-                Text("github.com/niksiratforex-ux/HordeSurvival", fontSize = 8.sp, color = Color.White.copy(alpha = 0.1f))
-                Text("niksirat.forex@gmail.com", fontSize = 8.sp, color = Color.White.copy(alpha = 0.1f))
             }
             Spacer(Modifier.height(16.dp))
         }
