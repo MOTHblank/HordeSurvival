@@ -4,6 +4,7 @@ import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.System
+import com.badlogic.gdx.math.Vector2
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.utils.GameMath
 import kotlin.math.atan2
@@ -12,9 +13,12 @@ import kotlin.math.sin
 
 /**
  * Projectile movement, homing, boomerang return, and lifetime.
- * Fixed: boomerang return logic, proper distance tracking.
+ * Fixed: boomerang return logic, proper distance tracking. Reuses Vector2 for trail particle offsets.
  */
 class ProjectileSystem(private val engine: GameEngine) : System() {
+
+    // Reusable Vector2 for offset calculation in trail particles
+    private val tempVec2 = Vector2()
 
     // Trail spawn timer — spawn trail particles every N seconds per projectile
     private var trailTimer = 0f
@@ -118,7 +122,7 @@ class ProjectileSystem(private val engine: GameEngine) : System() {
             else -> 0xFF808080.toInt()
         }
         val p = engine.createEntity("particle")
-        val offset = GameMath.randomPointInCircle(3f)
+        val offset = GameMath.randomPointInCircle(3f, tempVec2)
         p.add(TransformComponent(x + offset.x, y + offset.y))
         p.add(SpriteComponent(
             width = 6f, height = 6f,

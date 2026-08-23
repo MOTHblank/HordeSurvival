@@ -1,5 +1,6 @@
 package com.hordesurvival.game.hazard
 
+import com.badlogic.gdx.math.Vector2
 import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.utils.GameMath
@@ -11,6 +12,8 @@ import kotlin.math.sin
  * Hazards spawn periodically and add environmental challenge.
  */
 class MapHazard(private val engine: GameEngine) {
+
+    private val tempVec2 = Vector2()
 
     enum class HazardType {
         SPIKE_TRAP,      // Stationary, damages on contact
@@ -139,7 +142,7 @@ class MapHazard(private val engine: GameEngine) {
 
     private fun spawnHazardParticle(x: Float, y: Float, color: Int, count: Int) {
         repeat(count) {
-            val offset = GameMath.randomPointInCircle(20f)
+            val offset = GameMath.randomPointInCircle(20f, tempVec2)
             val p = engine.createEntity("particle")
             p.add(TransformComponent(x + offset.x, y + offset.y))
             p.add(VelocityComponent(vx = offset.x * 3f, vy = offset.y * 3f, speed = 1f))
