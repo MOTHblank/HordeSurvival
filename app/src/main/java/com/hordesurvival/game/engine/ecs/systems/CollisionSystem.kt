@@ -5,18 +5,22 @@ import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.System
 import com.hordesurvival.game.audio.SoundManager
+import com.badlogic.gdx.math.Vector2
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.utils.Constants
 import com.hordesurvival.utils.GameMath
 
 /**
  * Handles all collision detection with proper cooldowns and damage batching.
- * Optimized: no per-frame list allocation — iterates entities directly.
+ * Optimized: no per-frame list allocation — iterates entities directly and reuses Vector2 for particles.
  */
 class CollisionSystem(private val engine: GameEngine) : System() {
 
     // Shield contact cooldown per enemy (prevents per-frame damage)
     private val shieldHitCooldowns = mutableMapOf<Int, Float>()
+
+    // Reusable Vector2 for offset calculation — prevents GC allocations in particle loops
+    private val tempVec2 = Vector2()
 
     // Reusable collections — no allocation per frame
     private val damageNumbers = mutableListOf<DamageNumberData>()
@@ -339,7 +343,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
 
     private fun spawnHitParticles(x: Float, y: Float, color: Int) {
         repeat(4) {
-            val offset = GameMath.randomPointInCircle(8f)
+            val offset = GameMath.randomPointInCircle(8f, tempVec2)
             val p = engine.createEntity("particle")
             p.add(TransformComponent(x + offset.x, y + offset.y))
             p.add(VelocityComponent(vx = offset.x * 3f, vy = offset.y * 3f, speed = 1f))
@@ -364,7 +368,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         flash.add(ParticleComponent(lifetime = 0.15f, fadeOut = true, shrink = true))
 
         repeat(6) {
-            val offset = GameMath.randomPointOnCircle(radius * 0.6f)
+            val offset = GameMath.randomPointOnCircle(radius * 0.6f, tempVec2)
             val spark = engine.createEntity("particle")
             spark.add(TransformComponent(x + offset.x, y + offset.y))
             spark.add(VelocityComponent(vx = offset.x * 2f, vy = offset.y * 2f, speed = 1f))

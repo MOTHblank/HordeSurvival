@@ -41,20 +41,28 @@ object GameMath {
         return MathUtils.random(min, max)
     }
 
-    /** Random point on circle edge */
-    fun randomPointOnCircle(radius: Float): Vector2 {
+    /**
+     * Random point on circle edge.
+     * Takes an optional target [out] Vector2 to populate and return, avoiding new allocations.
+     * Crucial for hot paths (e.g. particle spawns, projectile dispersion, death effects) to prevent GC churn.
+     */
+    fun randomPointOnCircle(radius: Float, out: Vector2 = Vector2()): Vector2 {
         val angle = MathUtils.random(MathUtils.PI2)
-        return Vector2(
+        return out.set(
             MathUtils.cos(angle) * radius,
             MathUtils.sin(angle) * radius
         )
     }
 
-    /** Random point inside circle */
-    fun randomPointInCircle(radius: Float): Vector2 {
+    /**
+     * Random point inside circle.
+     * Takes an optional target [out] Vector2 to populate and return, avoiding new allocations.
+     * Crucial for hot paths (e.g. particle spawns, XP gem spreads, collision feedback) to prevent GC churn.
+     */
+    fun randomPointInCircle(radius: Float, out: Vector2 = Vector2()): Vector2 {
         val angle = MathUtils.random(MathUtils.PI2)
         val r = radius * sqrt(MathUtils.random())  // sqrt for uniform distribution
-        return Vector2(MathUtils.cos(angle) * r, MathUtils.sin(angle) * r)
+        return out.set(MathUtils.cos(angle) * r, MathUtils.sin(angle) * r)
     }
 
     /** Quadratic ease out */

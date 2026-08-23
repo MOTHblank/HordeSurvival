@@ -4,6 +4,7 @@ import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.System
+import com.badlogic.gdx.math.Vector2
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.game.weapon.WeaponEvolution
 import com.hordesurvival.game.audio.SoundManager
@@ -14,9 +15,12 @@ import kotlin.math.sin
 
 /**
  * Auto-attack system: fires all player weapons automatically.
- * Each weapon has unique projectile behavior and targeting.
+ * Each weapon has unique projectile behavior and targeting. Reuses Vector2 for random offsets.
  */
 class WeaponSystem(private val engine: GameEngine) : System() {
+
+    // Reusable Vector2 for offset calculation in poison cloud placement
+    private val tempVec2 = Vector2()
 
     // Per-enemy cooldown for Lightning Ring to prevent per-wave damage stacking
     private val lightningHitCooldowns = mutableMapOf<Int, Float>()
@@ -187,11 +191,11 @@ class WeaponSystem(private val engine: GameEngine) : System() {
             val cy: Float
             if (target != null) {
                 val t = target.get<TransformComponent>()!!
-                val offset = GameMath.randomPointInCircle(50f)
+                val offset = GameMath.randomPointInCircle(50f, tempVec2)
                 cx = t.x + offset.x
                 cy = t.y + offset.y
             } else {
-                val offset = GameMath.randomPointOnCircle(150f)
+                val offset = GameMath.randomPointOnCircle(150f, tempVec2)
                 cx = pos.x + offset.x
                 cy = pos.y + offset.y
             }

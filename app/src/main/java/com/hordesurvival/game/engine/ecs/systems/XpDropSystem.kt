@@ -4,15 +4,19 @@ import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.System
+import com.badlogic.gdx.math.Vector2
 import com.hordesurvival.game.audio.SoundManager
 import com.hordesurvival.game.enemy.EnemyType
 import com.hordesurvival.utils.GameMath
 
 /**
  * Handles enemy death: XP drops, gold, split-on-death, death effects.
- * Fixed: split enemies have CollisionComponent, proper cleanup.
+ * Fixed: split enemies have CollisionComponent, proper cleanup. Reuses Vector2 for particle/gem offsets.
  */
 class XpDropSystem(private val engine: GameEngine) : System() {
+
+    // Reusable Vector2 for offset calculations in gem & particle spawns
+    private val tempVec2 = Vector2()
 
     // Direct reference to TD mode for gold/score tracking
     var towerDefense: com.hordesurvival.game.mode.TowerDefenseMode? = null
@@ -83,7 +87,7 @@ class XpDropSystem(private val engine: GameEngine) : System() {
         val xpPerGem = totalXp / gemCount
 
         repeat(gemCount) {
-            val offset = GameMath.randomPointInCircle(20f)
+            val offset = GameMath.randomPointInCircle(20f, tempVec2)
             val gem = engine.createEntity("xp_gem")
             gem.add(TransformComponent(x + offset.x, y + offset.y))
             gem.add(XpGemComponent(value = xpPerGem))
@@ -106,7 +110,7 @@ class XpDropSystem(private val engine: GameEngine) : System() {
 
     private fun spawnSplits(x: Float, y: Float, count: Int, parent: EnemyComponent) {
         repeat(count) {
-            val offset = GameMath.randomPointOnCircle(30f)
+            val offset = GameMath.randomPointOnCircle(30f, tempVec2)
             val entity = engine.createEntity("enemy")
             entity.add(TransformComponent(x + offset.x, y + offset.y))
             entity.add(VelocityComponent(speed = 80f))
@@ -165,7 +169,7 @@ class XpDropSystem(private val engine: GameEngine) : System() {
     }
 
     private fun spawnHealthGem(x: Float, y: Float, healAmount: Float) {
-        val offset = GameMath.randomPointInCircle(15f)
+        val offset = GameMath.randomPointInCircle(15f, tempVec2)
         val gem = engine.createEntity("health_gem")
         gem.add(TransformComponent(x + offset.x, y + offset.y))
         gem.add(XpGemComponent(value = healAmount, lifetime = 20f))
@@ -182,7 +186,7 @@ class XpDropSystem(private val engine: GameEngine) : System() {
         val particleCount = if (isBoss) 20 else if (enemySize > 20f) 10 else 5
         val spreadRadius = if (isBoss) 30f else enemySize * 1.5f
         repeat(particleCount) {
-            val offset = GameMath.randomPointInCircle(spreadRadius)
+            val offset = GameMath.randomPointInCircle(spreadRadius, tempVec2)
             val p = engine.createEntity("particle")
             p.add(TransformComponent(x + offset.x, y + offset.y))
             val speed = if (isBoss) 6f else 4f
