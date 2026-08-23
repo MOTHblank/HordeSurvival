@@ -12,7 +12,8 @@ import com.hordesurvival.utils.GameMath
 
 /**
  * Handles all collision detection with proper cooldowns and damage batching.
- * Optimized: no per-frame list allocation — iterates entities directly and reuses Vector2 for particles.
+ * Overhauled: rebuilds engine.spatialGrid after movements to ensure fresh positions,
+ * and accounts for target entity radius when querying SpatialGrid so large entities/bosses are never missed.
  */
 class CollisionSystem(private val engine: GameEngine) : System() {
 
@@ -32,9 +33,24 @@ class CollisionSystem(private val engine: GameEngine) : System() {
     private val _poisonClouds = mutableListOf<Entity>()
     private val _orbitShields = mutableListOf<Entity>()
 
+    // Scratch buffer for spatial queries
+    private val _nearbyEnemiesBuffer = mutableListOf<Entity>()
+
+    // Maximum possible enemy collision radius (bosses can be up to 40f)
+    private val MAX_ENEMY_RADIUS = 40f
+
     data class DamageNumberData(val x: Float, val y: Float, val amount: Float, val isCrit: Boolean)
 
     override fun update(dt: Float, entities: List<Entity>) {
+        // Rebuild SpatialGrid with updated entity positions after MovementSystem/EnemyAISystem ran
+        engine.spatialGrid.clear()
+        for (i in 0 until entities.size) {
+            val e = entities[i]
+            if (e.active && e.has<TransformComponent>()) {
+                engine.spatialGrid.insert(e)
+            }
+        }
+
         val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
         val playerTransform = player.get<TransformComponent>() ?: return
         val playerHealth = player.get<HealthComponent>() ?: return
@@ -46,10 +62,11 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             playerHealth.invincibleTimer -= dt
         }
 
-        // Categorize entities in a single pass — no allocation
+        // Categorize non-enemy entities in a single pass — enemies are queried via SpatialGrid
         _enemies.clear(); _projectiles.clear(); _xpGems.clear(); _healthGems.clear()
-        _poisonClouds.clear(); _orbitShields.clear()
-        for (e in entities) {
+        _poisonClouds.clear(); _orbitShields.clear(); _enemyProjectiles.clear()
+        for (i in 0 until entities.size) {
+            val e = entities[i]
             if (!e.active) continue
             when (e.tag) {
                 "enemy" -> _enemies.add(e)
@@ -62,7 +79,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
         }
 
-        // Decay shield cooldowns — iterate map directly, use enemy list for validation
+        // Decay shield cooldowns — iterate map directly
         val cooldownIter = shieldHitCooldowns.iterator()
         while (cooldownIter.hasNext()) {
             val entry = cooldownIter.next()
@@ -72,8 +89,12 @@ class CollisionSystem(private val engine: GameEngine) : System() {
 
         damageNumbers.clear()
 
-        // ── Player vs Enemy contact damage ─────────────────────────
-        for (enemy in _enemies) {
+        // ── Player vs Enemy contact damage ──────────────────────────────
+        _nearbyEnemiesBuffer.clear()
+        engine.spatialGrid.queryRange(playerTransform.x, playerTransform.y, playerCollision.radius + MAX_ENEMY_RADIUS, "enemy", _nearbyEnemiesBuffer)
+        for (i in 0 until _nearbyEnemiesBuffer.size) {
+            val enemy = _nearbyEnemiesBuffer[i]
+            if (!enemy.active) continue
             val eTransform = enemy.get<TransformComponent>() ?: continue
             val eEnemy = enemy.get<EnemyComponent>() ?: continue
             val eCollision = enemy.get<CollisionComponent>() ?: continue
@@ -96,7 +117,9 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         }
 
         // ── Enemy Projectile vs Player ────────────────────────────
-        for (eproj in _enemyProjectiles) {
+        for (i in 0 until _enemyProjectiles.size) {
+            val eproj = _enemyProjectiles[i]
+            if (!eproj.active) continue
             val epTransform = eproj.get<TransformComponent>() ?: continue
             val epComp = eproj.get<TurretProjectileComponent>() ?: continue
             val epCollision = eproj.get<CollisionComponent>()?.radius ?: 6f
@@ -121,13 +144,20 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
         }
 
-        // ── Projectile vs Enemy ───────────────────────────────────
-        for (proj in _projectiles) {
+        // ── Projectile vs Enemy (Spatial Grid query including MAX_ENEMY_RADIUS) ──
+        for (i in 0 until _projectiles.size) {
+            val proj = _projectiles[i]
+            if (!proj.active) continue
             val pTransform = proj.get<TransformComponent>() ?: continue
             val pComp = proj.get<ProjectileComponent>() ?: continue
             val projCollision = proj.get<CollisionComponent>()?.radius ?: 8f
 
-            for (enemy in _enemies) {
+            val queryRadius = projCollision + MAX_ENEMY_RADIUS
+            _nearbyEnemiesBuffer.clear()
+            engine.spatialGrid.queryRange(pTransform.x, pTransform.y, queryRadius, "enemy", _nearbyEnemiesBuffer)
+
+            for (j in 0 until _nearbyEnemiesBuffer.size) {
+                val enemy = _nearbyEnemiesBuffer[j]
                 if (!enemy.active) continue
                 val eTransform = enemy.get<TransformComponent>() ?: continue
                 val eHealth = enemy.get<HealthComponent>() ?: continue
@@ -140,7 +170,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
                 val minDist = projCollision + eCollision.radius
 
                 if (distSq < minDist * minDist) {
-                    // Shield absorption: elite shielded enemies take reduced projectile damage
                     var actualDamage = pComp.damage
                     val elite = enemy.get<EliteComponent>()
                     if (elite != null && elite.shieldActive && elite.shieldHp > 0f) {
@@ -161,7 +190,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
                         eEnemy.burnDamage = pComp.burnDamage
                     }
                     if (pComp.slowFactor < 1f) {
-                        // Only apply if new slow is stronger or longer than current
                         if (pComp.slowFactor < eEnemy.slowFactor || pComp.slowDuration > eEnemy.slowTimer) {
                             eEnemy.slowTimer = pComp.slowDuration
                             eEnemy.slowFactor = pComp.slowFactor
@@ -188,8 +216,10 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
         }
 
-        // ── Poison Cloud vs Enemy (with proper tick timing) ───────
-        for (cloud in _poisonClouds) {
+        // ── Poison Cloud vs Enemy ───────────────────────────────
+        for (i in 0 until _poisonClouds.size) {
+            val cloud = _poisonClouds[i]
+            if (!cloud.active) continue
             val cTransform = cloud.get<TransformComponent>() ?: continue
             val cComp = cloud.get<PoisonCloudComponent>() ?: continue
 
@@ -207,8 +237,11 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             cComp.tickTimer += dt
             if (cComp.tickTimer >= cComp.tickInterval) {
                 cComp.tickTimer = 0f
-                val nearbyEnemies = engine.findInRange(cTransform.x, cTransform.y, cComp.radius, "enemy")
-                for (enemy in nearbyEnemies) {
+                _nearbyEnemiesBuffer.clear()
+                engine.spatialGrid.queryRange(cTransform.x, cTransform.y, cComp.radius + MAX_ENEMY_RADIUS, "enemy", _nearbyEnemiesBuffer)
+                for (j in 0 until _nearbyEnemiesBuffer.size) {
+                    val enemy = _nearbyEnemiesBuffer[j]
+                    if (!enemy.active) continue
                     val eHealth = enemy.get<HealthComponent>() ?: continue
                     val hpBefore = eHealth.currentHp
                     eHealth.takeDamage(cComp.damagePerTick)
@@ -221,13 +254,20 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
         }
 
-        // ── Orbit Shield vs Enemy (with cooldown fix + might scaling) ──
-        val shieldDamage = 10f * playerComp.might  // Scale with player might
-        for (shield in _orbitShields) {
+        // ── Orbit Shield vs Enemy ───────────────────────────────
+        val shieldDamage = 10f * playerComp.might
+        for (i in 0 until _orbitShields.size) {
+            val shield = _orbitShields[i]
+            if (!shield.active) continue
             val sTransform = shield.get<TransformComponent>() ?: continue
             val sHealth = shield.get<HealthComponent>() ?: continue
 
-            for (enemy in _enemies) {
+            _nearbyEnemiesBuffer.clear()
+            engine.spatialGrid.queryRange(sTransform.x, sTransform.y, 12f + MAX_ENEMY_RADIUS, "enemy", _nearbyEnemiesBuffer)
+
+            for (j in 0 until _nearbyEnemiesBuffer.size) {
+                val enemy = _nearbyEnemiesBuffer[j]
+                if (!enemy.active) continue
                 val eTransform = enemy.get<TransformComponent>() ?: continue
                 val eHealth = enemy.get<HealthComponent>() ?: continue
                 val eCollision = enemy.get<CollisionComponent>() ?: continue
@@ -254,9 +294,11 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
         }
 
-        // ── Player vs XP Gem (skip when paused) ───────────────────
+        // ── Player vs XP Gem ────────────────────────────────────
         if (engine.isPaused) return
-        for (gem in _xpGems) {
+        for (i in 0 until _xpGems.size) {
+            val gem = _xpGems[i]
+            if (!gem.active) continue
             val gTransform = gem.get<TransformComponent>() ?: continue
             val gComp = gem.get<XpGemComponent>() ?: continue
             val gSprite = gem.get<SpriteComponent>()
@@ -284,7 +326,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
 
             if (distSq < 24f * 24f) {
-                // Apply combo multiplier to XP
                 val comboMult = player.get<ComboComponent>()?.comboMultiplier ?: 1f
                 playerComp.addXp(gComp.value * comboMult)
                 gem.active = false
@@ -294,7 +335,9 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         }
 
         // ── Player vs Health Gem ────────────────────────────────
-        for (gem in _healthGems) {
+        for (i in 0 until _healthGems.size) {
+            val gem = _healthGems[i]
+            if (!gem.active) continue
             val gTransform = gem.get<TransformComponent>() ?: continue
             val gComp = gem.get<XpGemComponent>() ?: continue
 
@@ -302,7 +345,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             val dy = playerTransform.y - gTransform.y
             val distSq = dx * dx + dy * dy
 
-            // Auto-magnet if in range
             if (distSq < playerComp.pickupRange * playerComp.pickupRange) {
                 gComp.magnetized = true
             }
@@ -329,15 +371,16 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         }
 
         // ── Spawn damage numbers ──────────────────────────────────
-        for (dn in damageNumbers) {
+        for (i in 0 until damageNumbers.size) {
+            val dn = damageNumbers[i]
             spawnDamageNumberEntity(dn.x, dn.y, dn.amount, dn.isCrit)
         }
     }
 
     private fun applyAoeDamage(x: Float, y: Float, radius: Float, damage: Float) {
         val nearby = engine.findInRange(x, y, radius, "enemy")
-        for (enemy in nearby) {
-            enemy.get<HealthComponent>()?.takeDamage(damage)
+        for (i in 0 until nearby.size) {
+            nearby[i].get<HealthComponent>()?.takeDamage(damage)
         }
     }
 
@@ -393,7 +436,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
     }
 
     private fun spawnDamageNumberEntity(x: Float, y: Float, amount: Float, isCrit: Boolean) {
-        // Spawn a damage number entity — rendered as text in GameRenderer
         val p = engine.createEntity("damage_number")
         p.add(TransformComponent(x, y))
         p.add(DamageNumberComponent(

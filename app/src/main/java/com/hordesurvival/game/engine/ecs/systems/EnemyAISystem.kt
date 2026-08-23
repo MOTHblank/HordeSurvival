@@ -14,14 +14,18 @@ import com.hordesurvival.game.component.SpriteShape
 /**
  * Controls enemy behavior: chase player, ranged attacks, healing, phasing.
  * Different enemy types have different AI patterns.
+ * Overhauled: uses GameEngine's SpatialGrid for range queries in healer logic.
  */
 class EnemyAISystem(private val engine: GameEngine) : System() {
+
+    private val _healCandidatesBuffer = mutableListOf<Entity>()
 
     override fun update(dt: Float, entities: List<Entity>) {
         val player = entities.find { it.tag == "player" } ?: return
         val playerTransform = player.get<TransformComponent>() ?: return
 
-        for (entity in entities) {
+        for (i in 0 until entities.size) {
+            val entity = entities[i]
             if (entity.tag != "enemy" || !entity.active) continue
             val enemy = entity.get<EnemyComponent>() ?: continue
             val transform = entity.get<TransformComponent>() ?: continue
@@ -41,7 +45,7 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
                 enemy.healTimer -= dt
                 if (enemy.healTimer <= 0f) {
                     enemy.healTimer = enemy.healCooldown
-                    healNearbyEnemies(transform.x, transform.y, entities)
+                    healNearbyEnemies(transform.x, transform.y)
                 }
             }
 
@@ -194,20 +198,18 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
         }
     }
 
-    private fun healNearbyEnemies(x: Float, y: Float, entities: List<Entity>) {
+    private fun healNearbyEnemies(x: Float, y: Float) {
         val healRadius = 100f
         // Heal scales with game time — stronger heals as difficulty increases
         val timeMinutes = engine.gameTime / 60f
         val healPercent = 0.05f + timeMinutes * 0.005f  // 5% base + 0.5% per minute
-        for (entity in entities) {
-            if (entity.tag != "enemy") continue
-            val transform = entity.get<TransformComponent>() ?: continue
+        _healCandidatesBuffer.clear()
+        engine.spatialGrid.queryRange(x, y, healRadius, "enemy", _healCandidatesBuffer)
+        for (i in 0 until _healCandidatesBuffer.size) {
+            val entity = _healCandidatesBuffer[i]
+            if (!entity.active) continue
             val health = entity.get<HealthComponent>() ?: continue
-            val dx = transform.x - x
-            val dy = transform.y - y
-            if (dx * dx + dy * dy <= healRadius * healRadius) {
-                health.heal(health.maxHp * healPercent)
-            }
+            health.heal(health.maxHp * healPercent)
         }
     }
 }

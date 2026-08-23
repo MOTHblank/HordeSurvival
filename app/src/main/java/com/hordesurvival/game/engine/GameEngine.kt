@@ -1,6 +1,7 @@
 package com.hordesurvival.game.engine
 
 import com.hordesurvival.game.component.PlayerComponent
+import com.hordesurvival.game.component.TransformComponent
 import com.hordesurvival.game.component.WeaponStateComponent
 import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.System
@@ -9,8 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Core game engine managing the ECS world.
- * Fixed: inactive entity cleanup, proper entity lifecycle.
- * Optimized: reduced GC pressure with cached lists.
+ * Overhauled: integrated 2D SpatialGrid for spatial queries (findNearest, findInRange, collisions),
+ * eliminating O(N) linear scans across entities during hot gameplay loops.
  */
 class GameEngine {
 
@@ -18,6 +19,9 @@ class GameEngine {
     private val systems = mutableListOf<System>()
     private val entitiesToAdd = mutableListOf<Entity>()
     private var nextEntityId = AtomicInteger(0)
+
+    // Spatial partitioning grid for zero-allocation range/collision queries
+    val spatialGrid = SpatialGrid(cellSize = 128f)
 
     // Entity pool for reuse
     private val entityPool = ObjectPool(
@@ -128,39 +132,23 @@ class GameEngine {
         return activeEntitiesCache.filter { it.has<T>() }
     }
 
+    /**
+     * Finds nearest entity using SpatialGrid query.
+     */
     fun findNearest(x: Float, y: Float, tag: String, maxDist: Float = Float.MAX_VALUE): Entity? {
-        var best: Entity? = null
-        var bestDist = maxDist * maxDist
-        for (e in entities) {
-            if (!e.active || e.tag != tag) continue
-            val pos = e.get<com.hordesurvival.game.component.TransformComponent>() ?: continue
-            val dx = pos.x - x
-            val dy = pos.y - y
-            val dist = dx * dx + dy * dy
-            if (dist < bestDist) {
-                bestDist = dist
-                best = e
-            }
-        }
-        return best
+        return spatialGrid.findNearest(x, y, tag, maxDist)
     }
 
     // Reusable list for findInRange to avoid allocation
     private val _findRangeResult = mutableListOf<Entity>()
 
+    /**
+     * Finds all entities within [radius] matching [tag] using SpatialGrid query.
+     */
     fun findInRange(x: Float, y: Float, radius: Float, tag: String): List<Entity> {
         _findRangeResult.clear()
-        val r2 = radius * radius
-        for (e in _activeEntitiesCache) {  // Use cached list instead of full entities
-            if (!e.active || e.tag != tag) continue
-            val pos = e.get<com.hordesurvival.game.component.TransformComponent>() ?: continue
-            val dx = pos.x - x
-            val dy = pos.y - y
-            if (dx * dx + dy * dy <= r2) {
-                _findRangeResult.add(e)
-            }
-        }
-        return _findRangeResult  // Return reference (callers must not modify)
+        spatialGrid.queryRange(x, y, radius, tag, _findRangeResult)
+        return _findRangeResult
     }
 
     fun getActiveEntities(): List<Entity> = _activeEntitiesCache
@@ -199,12 +187,18 @@ class GameEngine {
             entitiesToAdd.clear()
         }
 
-        // Update cached active entities list (reuse existing list, no allocation)
+        // Update cached active entities list and rebuild SpatialGrid
         _activeEntitiesCache.clear()
-        for (e in entities) {
+        spatialGrid.clear()
+
+        for (i in 0 until entities.size) {
+            val e = entities[i]
             if (e.active) {
                 e.age += scaledDt  // track entity age
                 _activeEntitiesCache.add(e)
+                if (e.has<TransformComponent>()) {
+                    spatialGrid.insert(e)
+                }
             }
         }
 
@@ -223,6 +217,7 @@ class GameEngine {
         entities.clear()
         entitiesToAdd.clear()
         _activeEntitiesCache.clear()
+        spatialGrid.clear()
         entityPool.freeAll()
         systems.forEach { it.dispose() }
         systems.clear()
