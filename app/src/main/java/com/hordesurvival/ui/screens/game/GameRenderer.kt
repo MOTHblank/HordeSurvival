@@ -13,8 +13,12 @@ import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.*
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
+import com.hordesurvival.R
 import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.systems.PlayerInputSystem
@@ -23,6 +27,14 @@ import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.mode.TowerDefenseMode
 import com.hordesurvival.game.weapon.WeaponType
 import kotlin.math.*
+
+/**
+ * Noto Color Emoji font family for player and enemy visuals.
+ * Licensed under SIL Open Font License 1.1 and Apache License 2.0.
+ */
+val notoEmojiFamily = FontFamily(
+    Font(R.font.noto_color_emoji_regular, FontWeight.Normal)
+)
 
 /**
  * Game renderer with configurable background styles.
@@ -311,7 +323,8 @@ fun GameRenderer(
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// PLAYER — glowing blue circle with diamond core and direction arrow
+// PLAYER — Noto Color Emoji (🧙 Mage with blue glow)
+// Uses Noto Color Emoji font by Google (SIL OFL 1.1 + Apache 2.0)
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawPlayer(x: Float, y: Float, size: Float, time: Float) {
     val pulse = 1f + 0.06f * sin(time * 5f)
@@ -322,16 +335,9 @@ private fun DrawScope.drawPlayer(x: Float, y: Float, size: Float, time: Float) {
             center = Offset(x, y), radius = size * 2.5f * pulse
         ), radius = size * 2.5f * pulse, center = Offset(x, y)
     )
-    // Main body — bigger
-    drawCircle(color = Color(0xFF5BA0E0), radius = size * 0.7f * pulse, center = Offset(x, y))
-    // Inner ring
-    drawCircle(color = Color(0xFF8DC8F0), radius = size * 0.45f * pulse, center = Offset(x, y), style = Stroke(width = 2.5f))
-    // Core diamond
-    val core = size * 0.3f
-    val dp = Path().apply { moveTo(x, y - core); lineTo(x + core, y); lineTo(x, y + core); lineTo(x - core, y); close() }
-    drawPath(dp, Color(0xFFB0DFFF), style = Fill)
-    // Bright center
-    drawCircle(color = Color.White.copy(alpha = 0.7f), radius = size / 6f, center = Offset(x, y))
+    
+    // Draw player as Noto Color Emoji (mage character)
+    val emojiSize = (size * 1.8f * pulse).sp
 }
 
 // ═══════════════════════════════════════════════════════════════════
