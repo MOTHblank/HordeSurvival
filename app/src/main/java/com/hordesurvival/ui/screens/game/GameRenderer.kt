@@ -65,7 +65,7 @@ fun GameRenderer(
         else -> 300 // High: render all
     }
     val textMeasurer = rememberTextMeasurer()
-    val emojiCache = remember { mutableMapOf<Pair<String, Int>, TextLayoutResult>() }
+    val emojiCache = remember { mutableMapOf<Long, TextLayoutResult>() }
 
     val entities = remember(frameTick) { engine.getActiveEntities() }
 
@@ -195,16 +195,30 @@ fun GameRenderer(
             }
         }
 
-        // Cull enemies to maxRenderedEnemies if threshold exceeded
+        // Cull enemies to maxRenderedEnemies using zero-allocation partial selection sort
         if (enemiesScratch.size > maxRenderedEnemies && playerPos != null) {
-            enemiesScratch.sortBy { e ->
-                val t = e.get<TransformComponent>()
-                if (t != null) {
-                    val dx = t.x - playerPos.x; val dy = t.y - playerPos.y
-                    dx * dx + dy * dy
-                } else Float.MAX_VALUE
-            }
+            val px = playerPos.x
+            val py = playerPos.y
             for (i in 0 until maxRenderedEnemies) {
+                var minIdx = i
+                var minDistSq = Float.MAX_VALUE
+                for (j in i until enemiesScratch.size) {
+                    val e = enemiesScratch[j]
+                    val t = e.get<TransformComponent>()
+                    val distSq = if (t != null) {
+                        val dx = t.x - px; val dy = t.y - py
+                        dx * dx + dy * dy
+                    } else Float.MAX_VALUE
+                    if (distSq < minDistSq) {
+                        minDistSq = distSq
+                        minIdx = j
+                    }
+                }
+                if (minIdx != i) {
+                    val tmp = enemiesScratch[i]
+                    enemiesScratch[i] = enemiesScratch[minIdx]
+                    enemiesScratch[minIdx] = tmp
+                }
                 renderListScratch.add(enemiesScratch[i])
             }
         } else {
@@ -331,7 +345,7 @@ private fun DrawScope.drawPlayer(
     entity: Entity,
     x: Float, y: Float, size: Float, time: Float,
     textMeasurer: TextMeasurer,
-    emojiCache: MutableMap<Pair<String, Int>, TextLayoutResult>
+    emojiCache: MutableMap<Long, TextLayoutResult>
 ) {
     val pulse = 1f + 0.06f * sin(time * 5f)
     drawCircle(
@@ -344,7 +358,7 @@ private fun DrawScope.drawPlayer(
     val emoji = "🧙"
     val fontSizeSp = (size * 1.5f).sp
     val fontSizePx = size * 1.5f
-    val cacheKey = Pair(emoji, fontSizePx.toInt())
+    val cacheKey = (emoji.hashCode().toLong() shl 32) or (fontSizePx.toInt().toLong() and 0xFFFFFFFFL)
 
     val textResult = emojiCache.getOrPut(cacheKey) {
         textMeasurer.measure(
@@ -385,7 +399,7 @@ private fun DrawScope.drawEnemy(
     entity: Entity,
     x: Float, y: Float, w: Float, h: Float, color: Color, time: Float,
     textMeasurer: TextMeasurer,
-    emojiCache: MutableMap<Pair<String, Int>, TextLayoutResult>
+    emojiCache: MutableMap<Long, TextLayoutResult>
 ) {
     val enemy = entity.get<EnemyComponent>()
     val type = enemy?.type
@@ -404,7 +418,7 @@ private fun DrawScope.drawEnemy(
     val emoji = getEnemyEmoji(type)
     val fontSizeSp = (w * 1.2f).sp
     val fontSizePx = w * 1.2f
-    val cacheKey = Pair(emoji, fontSizePx.toInt())
+    val cacheKey = (emoji.hashCode().toLong() shl 32) or (fontSizePx.toInt().toLong() and 0xFFFFFFFFL)
 
     val textResult = emojiCache.getOrPut(cacheKey) {
         textMeasurer.measure(
