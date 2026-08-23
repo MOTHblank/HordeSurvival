@@ -15,10 +15,6 @@
         android:theme="@style/Theme.HordeSurvival"
         android:hardwareAccelerated="true">
 
-        <!-- AdMob App ID (replace with real ID before release) -->
-        <meta-data
-            android:name="123"
-            android:value="123" />
 
         <activity
             android:name=".SplashActivity"

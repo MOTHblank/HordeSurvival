@@ -99,11 +99,6 @@ dependencies {
     // Gson for JSON serialization
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // Google Mobile Ads (AdMob)
-    implementation("com.google.android.gms:play-services-ads:23.1.0")
-
-    // Google Play Billing (In-App Purchases)
-    implementation("com.android.billingclient:billing-ktx:6.2.1")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
