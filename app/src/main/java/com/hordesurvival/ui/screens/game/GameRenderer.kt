@@ -234,7 +234,7 @@ fun GameRenderer(
             val w = s.width * s.scaleX; val h = s.height * s.scaleY
 
             when (e.tag) {
-                "player" -> drawPlayer(sx, sy, w, engine.gameTime, textMeasurer, emojiCache)
+                "player" -> drawPlayer(e, sx, sy, w, engine.gameTime, textMeasurer, emojiCache)
                 "enemy" -> drawEnemy(e, sx, sy, w, h, color, engine.gameTime, textMeasurer, emojiCache)
                 "projectile" -> drawProjectile(e, sx, sy, w, h, color)
                 "xp_gem" -> {
@@ -324,10 +324,11 @@ fun GameRenderer(
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// PLAYER — Noto Color Emoji (🧙 Mage with blue glow)
+// PLAYER — Noto Color Emoji
 // Uses Noto Color Emoji font by Google (SIL OFL 1.1 + Apache 2.0)
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawPlayer(
+    entity: Entity,
     x: Float, y: Float, size: Float, time: Float,
     textMeasurer: TextMeasurer,
     emojiCache: MutableMap<Pair<String, Int>, TextLayoutResult>
@@ -338,6 +339,26 @@ private fun DrawScope.drawPlayer(
             colors = listOf(Color(0xFF6BB6FF).copy(alpha = 0.4f), Color(0xFF4A90D9).copy(alpha = 0.15f), Color.Transparent),
             center = Offset(x, y), radius = size * 2.5f * pulse
         ), radius = size * 2.5f * pulse, center = Offset(x, y)
+    )
+
+    val emoji = "🧙"
+    val fontSizeSp = (size * 1.5f).sp
+    val fontSizePx = size * 1.5f
+    val cacheKey = Pair(emoji, fontSizePx.toInt())
+
+    val textResult = emojiCache.getOrPut(cacheKey) {
+        textMeasurer.measure(
+            text = AnnotatedString(emoji),
+            style = TextStyle(
+                fontFamily = notoEmojiFamily,
+                fontSize = fontSizeSp
+            )
+        )
+    }
+
+    drawText(
+        textLayoutResult = textResult,
+        topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
     )
 }
 
@@ -362,7 +383,9 @@ private fun getEnemyEmoji(type: EnemyType?): String = when (type) {
 
 private fun DrawScope.drawEnemy(
     entity: Entity,
-    x: Float, y: Float, w: Float, h: Float, color: Color, time: Float
+    x: Float, y: Float, w: Float, h: Float, color: Color, time: Float,
+    textMeasurer: TextMeasurer,
+    emojiCache: MutableMap<Pair<String, Int>, TextLayoutResult>
 ) {
     val enemy = entity.get<EnemyComponent>()
     val type = enemy?.type
@@ -378,135 +401,21 @@ private fun DrawScope.drawEnemy(
         )
     }
 
-    when (type) {
-        EnemyType.BASIC_DRONE -> {
-            drawPolygon(color, x, y, w / 2f, 6)
-            drawPolygon(Color.White.copy(alpha = 0.08f), x, y, w / 2.5f, 6)
-            drawCircle(Color.White.copy(alpha = 0.5f), radius = w / 6f, center = Offset(x, y))
-            drawCircle(color.copy(alpha = 0.8f), radius = w / 8f, center = Offset(x, y))
-        }
-        EnemyType.FLYING_WISP -> {
-            val wispPulse = 0.7f + 0.3f * sin(time * 6f + entity.id)
-            drawCircle(color = color.copy(alpha = 0.15f * wispPulse), radius = w * 1.2f, center = Offset(x, y))
-            drawCircle(color = color.copy(alpha = 0.3f), radius = w / 1.3f, center = Offset(x, y))
-            drawDiamond(color, x, y, w * wispPulse, h * wispPulse)
-            drawCircle(Color.White.copy(alpha = 0.6f), radius = w / 4f, center = Offset(x, y))
-        }
-        EnemyType.TANK_GOLEM -> {
-            drawRect(color = color, topLeft = Offset(x - w / 2f, y - h / 2f), size = Size(w, h))
-            drawRect(color = color.copy(alpha = 0.6f), topLeft = Offset(x - w / 2f, y - h / 2f), size = Size(w, h), style = Stroke(width = 2.5f))
-            drawLine(Color.White.copy(alpha = 0.1f), Offset(x - w / 2f, y), Offset(x + w / 2f, y), strokeWidth = 1.5f)
-            drawLine(Color.White.copy(alpha = 0.1f), Offset(x, y - h / 2f), Offset(x, y + h / 2f), strokeWidth = 1.5f)
-            drawCircle(Color.White.copy(alpha = 0.15f), radius = 2f, center = Offset(x - w / 3f, y - h / 3f))
-            drawCircle(Color.White.copy(alpha = 0.15f), radius = 2f, center = Offset(x + w / 3f, y - h / 3f))
-            drawCircle(Color.White.copy(alpha = 0.15f), radius = 2f, center = Offset(x - w / 3f, y + h / 3f))
-            drawCircle(Color.White.copy(alpha = 0.15f), radius = 2f, center = Offset(x + w / 3f, y + h / 3f))
-        }
-        EnemyType.SHOOTER_TURRET -> {
-            drawPolygon(color, x, y, w / 2f, 5)
-            drawPolygon(Color(0xFFFFCC80).copy(alpha = 0.15f), x, y, w / 2.8f, 5)
-            drawCircle(Color(0xFFFFCC80), radius = w / 5f, center = Offset(x, y))
-            drawCircle(Color(0xFFFF6E40), radius = w / 8f, center = Offset(x, y))
-            val barrelAngle = time * 1.5f + entity.id
-            val barrelLen = w * 0.7f
-            val bx = x + cos(barrelAngle) * barrelLen
-            val by = y + sin(barrelAngle) * barrelLen
-            drawLine(color.copy(alpha = 0.9f), Offset(x, y), Offset(bx, by), strokeWidth = 3f)
-        }
-        EnemyType.SWARM_BAT -> {
-            val pulse = 1f + 0.1f * sin(time * 8f + entity.id)
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(color.copy(alpha = 0.3f), Color.Transparent),
-                    center = Offset(x, y), radius = w * 1.5f
-                ), radius = w * 1.5f, center = Offset(x, y)
+    val emoji = getEnemyEmoji(type)
+    val fontSizeSp = (w * 1.2f).sp
+    val fontSizePx = w * 1.2f
+    val cacheKey = Pair(emoji, fontSizePx.toInt())
+
+    val textResult = emojiCache.getOrPut(cacheKey) {
+        textMeasurer.measure(
+            text = AnnotatedString(emoji),
+            style = TextStyle(
+                fontFamily = notoEmojiFamily,
+                fontSize = fontSizeSp
             )
-            drawCircle(color, radius = w * 0.4f * pulse, center = Offset(x, y))
-            drawCircle(Color.White.copy(alpha = 0.4f), radius = w * 0.15f, center = Offset(x, y))
-        }
-        EnemyType.ELITE_KNIGHT -> {
-            val p = Path().apply {
-                moveTo(x, y - h / 2f)
-                lineTo(x + w / 2f, y - h / 4f)
-                lineTo(x + w / 2f, y + h / 4f)
-                lineTo(x, y + h / 2f)
-                lineTo(x - w / 2f, y + h / 4f)
-                lineTo(x - w / 2f, y - h / 4f)
-                close()
-            }
-            drawPath(p, color, style = Fill)
-            drawPath(p, Color.White.copy(alpha = 0.15f), style = Stroke(width = 2f))
-            drawLine(Color.White.copy(alpha = 0.25f), Offset(x, y - h / 4f), Offset(x, y + h / 4f), strokeWidth = 2f)
-            drawLine(Color.White.copy(alpha = 0.25f), Offset(x - w / 4f, y), Offset(x + w / 4f, y), strokeWidth = 2f)
-        }
-        EnemyType.GHOST -> {
-            val ghostAlpha = 0.4f + 0.25f * sin(time * 3f)
-            val p = Path().apply {
-                moveTo(x - w / 2f, y + h / 3f)
-                lineTo(x - w / 2f, y - h / 4f)
-                cubicTo(x - w / 2f, y - h / 2f, x + w / 2f, y - h / 2f, x + w / 2f, y - h / 4f)
-                lineTo(x + w / 2f, y + h / 3f)
-                lineTo(x + w / 3f, y + h / 6f)
-                lineTo(x, y + h / 3f)
-                lineTo(x - w / 3f, y + h / 6f)
-                close()
-            }
-            drawPath(p, color.copy(alpha = ghostAlpha), style = Fill)
-            drawCircle(color.copy(alpha = ghostAlpha * 0.3f), radius = w * 0.8f, center = Offset(x, y))
-            drawCircle(Color(0xFFE040FB).copy(alpha = 0.9f), radius = w / 7f, center = Offset(x - w / 5f, y - h / 6f))
-            drawCircle(Color(0xFFE040FB).copy(alpha = 0.9f), radius = w / 7f, center = Offset(x + w / 5f, y - h / 6f))
-            drawCircle(Color.White.copy(alpha = 0.6f), radius = w / 12f, center = Offset(x - w / 5f, y - h / 6f))
-            drawCircle(Color.White.copy(alpha = 0.6f), radius = w / 12f, center = Offset(x + w / 5f, y - h / 6f))
-        }
-        EnemyType.BOSS -> {
-            val bossPulse = 1f + 0.05f * sin(time * 4f)
-            drawCircle(Color(0xFFFF6E40).copy(alpha = 0.08f), radius = w * 1.8f * bossPulse, center = Offset(x, y))
-            for (i in 0 until 8) {
-                val a = Math.toRadians((i * 45.0) - 90.0).toFloat()
-                val innerR = w / 3f
-                val outerR = w / 2f * bossPulse
-                drawLine(color, Offset(x + cos(a) * innerR, y + sin(a) * innerR),
-                    Offset(x + cos(a) * outerR, y + sin(a) * outerR), strokeWidth = 3f)
-            }
-            drawCircle(color, radius = w / 3f * bossPulse, center = Offset(x, y))
-            drawCircle(color.copy(alpha = 0.5f), radius = w / 2.5f, center = Offset(x, y), style = Stroke(width = 2f))
-            drawCircle(Color.White, radius = w / 7f, center = Offset(x - w / 5f, y - h / 8f))
-            drawCircle(Color.White, radius = w / 7f, center = Offset(x + w / 5f, y - h / 8f))
-            drawCircle(Color(0xFFFF1744), radius = w / 10f, center = Offset(x - w / 5f, y - h / 8f))
-            drawCircle(Color(0xFFFF1744), radius = w / 10f, center = Offset(x + w / 5f, y - h / 8f))
-            drawLine(Color(0xFFFF1744).copy(alpha = 0.6f), Offset(x - w / 5f, y + h / 6f), Offset(x + w / 5f, y + h / 6f), strokeWidth = 2f)
-        }
-        EnemyType.SPLITTER -> {
-            drawDiamond(color, x, y, w, h)
-            drawLine(Color.White.copy(alpha = 0.4f), Offset(x - w / 3f, y - h / 4f), Offset(x + w / 6f, y + h / 3f), strokeWidth = 1f)
-            drawLine(Color.White.copy(alpha = 0.3f), Offset(x + w / 4f, y - h / 3f), Offset(x - w / 5f, y + h / 4f), strokeWidth = 1f)
-            drawCircle(Color(0xFFFFCC80).copy(alpha = 0.2f), radius = w / 4f, center = Offset(x, y))
-        }
-        EnemyType.HEALER -> {
-            val healPulse = 0.6f + 0.4f * sin(time * 3f)
-            drawCircle(color = color.copy(alpha = 0.12f * healPulse), radius = w * 1.3f, center = Offset(x, y))
-            drawCircle(color = color.copy(alpha = 0.25f), radius = w / 1.3f, center = Offset(x, y))
-            drawRect(color = color, topLeft = Offset(x - w / 6f, y - h / 2f), size = Size(w / 3f, h))
-            drawRect(color = color, topLeft = Offset(x - w / 2f, y - h / 6f), size = Size(w, h / 3f))
-            drawCircle(Color.White.copy(alpha = 0.4f * healPulse), radius = w / 5f, center = Offset(x, y))
-        }
-        EnemyType.MAGE -> {
-            val magePulse = 0.6f + 0.4f * sin(time * 4f + entity.id)
-            val robe = Path().apply {
-                moveTo(x, y - h / 2f)
-                lineTo(x + w / 2f, y + h / 2f)
-                lineTo(x - w / 2f, y + h / 2f)
-                close()
-            }
-            drawPath(robe, color, style = Fill)
-            drawPath(robe, color.copy(alpha = 0.5f), style = Stroke(width = 1f))
-            drawCircle(color.copy(alpha = 0.8f), radius = w / 3f, center = Offset(x, y - h / 3f))
-            drawCircle(Color(0xFFCE93D8).copy(alpha = 0.4f * magePulse), radius = w * 0.8f, center = Offset(x, y))
-            drawCircle(Color(0xFFE040FB).copy(alpha = 0.7f), radius = w / 5f, center = Offset(x, y - h / 6f))
-            drawCircle(Color.White.copy(alpha = 0.5f * magePulse), radius = w / 8f, center = Offset(x, y - h / 6f))
-        }
-        null -> drawGeneric(x, y, w, h, color, SpriteShape.CIRCLE)
+        )
     }
+
     drawText(
         textLayoutResult = textResult,
         topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
