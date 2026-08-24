@@ -24,3 +24,6 @@ When querying spatial structures for collisions:
 **Learning:** Allocating `Path()` inside Compose Canvas draw functions (`drawTriangle`, `drawDiamond`, `drawStar`, `drawPolygon`, `drawHeart`, and tiled background renderers like Persian/Roman/Egyptian) instantiates thousands of short-lived C++/JVM path objects per frame during active combat. Furthermore, searching active entity lists linearly ($O(N)$) for homing target IDs in `ProjectileSystem` caused frame-time spikes when dozens of homing missiles were in flight.
 
 **Action:** Pre-allocate composable scratch `Path` instances (`remember { Path() }`) and reset them in-place (`path.reset()`) for all custom geometry rendering. Maintain an $O(1)$ ID lookup map (`entityByIdMap`) in `GameEngine` for direct entity retrieval by ID, and bound text layout caches to prevent memory accumulation.
+## 2024-05-19 - Removed Autoboxing overhead in CollisionSystem
+**Learning:** `mutableMapOf<Int, Float>` causes autoboxing and unboxing, generating unnecessary GC pressure in the hot `update` loop.
+**Action:** Always prefer LibGDX's primitive collections like `IntFloatMap`, `Array`, or `FloatArray` when working with primitive types (Int, Float, Boolean) in hot paths to avoid autoboxing overhead.
