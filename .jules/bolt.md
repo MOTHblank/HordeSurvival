@@ -18,3 +18,9 @@ When querying spatial structures for collisions:
 **Learning:** Storing ECS components in per-entity `HashMap<Class<out Component>, Component>` maps caused millions of `HashMap` lookups per second across system loops (~75,000/frame with 500 entities x 15 queries x 10 systems). Recycling entities dropped Map `Node` objects into heap memory, triggering GC pauses. Additionally, `List.sortBy` in render loops allocated lambda closures and `Float` wrapper objects every frame, while `Pair` keys in Compose text caches generated hundreds of short-lived key objects per second.
 
 **Action:** Store ECS components in a direct-indexed sparse array `Array<Component?>(64)` paired with a primitive `Long` mask (`componentMask`). Map component classes to indices (0..63) via a thread-safe `ComponentRegistry`. Use in-place primitive partial selection sort for culling visible entities and composite primitive `Long` keys `(hash shl 32) or fontPx` for text layout caching to achieve zero GC allocations per frame during rendering.
+
+## 2026-03-31 - Zero-Allocation Canvas Path Geometry & O(1) Targeted Entity Lookup
+
+**Learning:** Allocating `Path()` inside Compose Canvas draw functions (`drawTriangle`, `drawDiamond`, `drawStar`, `drawPolygon`, `drawHeart`, and tiled background renderers like Persian/Roman/Egyptian) instantiates thousands of short-lived C++/JVM path objects per frame during active combat. Furthermore, searching active entity lists linearly ($O(N)$) for homing target IDs in `ProjectileSystem` caused frame-time spikes when dozens of homing missiles were in flight.
+
+**Action:** Pre-allocate composable scratch `Path` instances (`remember { Path() }`) and reset them in-place (`path.reset()`) for all custom geometry rendering. Maintain an $O(1)$ ID lookup map (`entityByIdMap`) in `GameEngine` for direct entity retrieval by ID, and bound text layout caches to prevent memory accumulation.

@@ -37,10 +37,17 @@ val notoEmojiFamily = FontFamily(
     Font(R.font.noto_color_emoji_regular, FontWeight.Normal)
 )
 
+// Pre-allocated reusable stroke objects
+private val strokeWidth0_8 = Stroke(width = 0.8f)
+private val strokeWidth1_5 = Stroke(width = 1.5f)
+private val strokeWidth2_0 = Stroke(width = 2.0f)
+private val strokeWidth3_0 = Stroke(width = 3.0f)
+
 /**
  * Game renderer with configurable background styles.
  * backgroundStyle: 0=grid, 1=stars, 2=nebula, 3=checkerboard, 4=solid
- * Overhauled: replaced per-frame filter/list allocation with reusable scratch buffers and insertion sort.
+ * Overhauled: zero-allocation render loop. Replaced per-frame Path/Brush/List/Color
+ * allocations with pre-allocated scratch paths, primitive layer sorting, and bounded text layout caches.
  */
 @Composable
 fun GameRenderer(
@@ -58,7 +65,7 @@ fun GameRenderer(
         while (true) { withFrameMillis { frameTick = it } }
     }
 
-    // Performance: limit rendered entities based on quality
+    // Performance: limit rendered enemies based on quality
     val maxRenderedEnemies = when (graphicsQuality) {
         0 -> 80   // Low: render max 80 enemies
         1 -> 150  // Medium: render max 150 enemies
@@ -66,12 +73,18 @@ fun GameRenderer(
     }
     val textMeasurer = rememberTextMeasurer()
     val emojiCache = remember { mutableMapOf<Long, TextLayoutResult>() }
+    val damageTextCache = remember { mutableMapOf<String, TextLayoutResult>() }
+
+    // Pre-allocated composable scratch paths for zero-allocation shape rendering
+    val scratchPath = remember { Path() }
+    val scratchPath2 = remember { Path() }
 
     val entities = remember(frameTick) { engine.getActiveEntities() }
 
     // Reusable scratch lists across recompositions to eliminate GC allocations
     val enemiesScratch = remember { mutableListOf<Entity>() }
     val renderListScratch = remember { mutableListOf<Entity>() }
+    val layersScratch = remember { mutableListOf<Int>() }
     val damageNumbersScratch = remember { mutableListOf<Entity>() }
 
     // Camera zoom: closer when stationary, farther when moving
@@ -130,7 +143,7 @@ fun GameRenderer(
         val bgOffsetX = offX - bgW / 2f + size.width / 2f
         val bgOffsetY = offY - bgH / 2f + size.height / 2f
         translate(bgOffsetX, bgOffsetY) {
-            drawBackground(bgW, bgH, camX, camY, engine.gameTime, backgroundStyle)
+            drawBackground(bgW, bgH, camX, camY, engine.gameTime, backgroundStyle, scratchPath, scratchPath2)
         }
 
         // ── TOWER DEFENSE BOUNDARY WALLS ─────────────────────────────
@@ -225,16 +238,22 @@ fun GameRenderer(
             renderListScratch.addAll(enemiesScratch)
         }
 
-        // Insertion sort renderListScratch by sprite layer in-place
+        // Insertion sort renderListScratch by sprite layer in-place using cached primitive layers
+        layersScratch.clear()
+        for (i in 0 until renderListScratch.size) {
+            layersScratch.add(renderListScratch[i].get<SpriteComponent>()?.layer ?: 0)
+        }
         for (i in 1 until renderListScratch.size) {
             val key = renderListScratch[i]
-            val keyLayer = key.get<SpriteComponent>()?.layer ?: 0
+            val keyLayer = layersScratch[i]
             var j = i - 1
-            while (j >= 0 && (renderListScratch[j].get<SpriteComponent>()?.layer ?: 0) > keyLayer) {
+            while (j >= 0 && layersScratch[j] > keyLayer) {
                 renderListScratch[j + 1] = renderListScratch[j]
+                layersScratch[j + 1] = layersScratch[j]
                 j--
             }
             renderListScratch[j + 1] = key
+            layersScratch[j + 1] = keyLayer
         }
 
         for (i in 0 until renderListScratch.size) {
@@ -250,27 +269,30 @@ fun GameRenderer(
             when (e.tag) {
                 "player" -> drawPlayer(e, sx, sy, w, engine.gameTime, textMeasurer, emojiCache)
                 "enemy" -> drawEnemy(e, sx, sy, w, h, color, engine.gameTime, textMeasurer, emojiCache)
-                "projectile" -> drawProjectile(e, sx, sy, w, h, color)
+                "projectile" -> drawProjectile(e, sx, sy, w, h, color, scratchPath)
                 "xp_gem" -> {
                     val isMagnetized = e.get<XpGemComponent>()?.magnetized == true
-                    drawXpGem(sx, sy, w, color, engine.gameTime, isMagnetized)
+                    drawXpGem(sx, sy, w, color, engine.gameTime, scratchPath, isMagnetized)
                     if (isMagnetized && playerPos != null) {
                         val px = playerPos.x + offX
                         val py = playerPos.y + offY
                         drawLine(Color(0xFF42A5F5).copy(alpha = 0.3f), Offset(sx, sy), Offset(px, py), strokeWidth = 1.5f)
                     }
                 }
-                "health_gem" -> drawHealthGem(sx, sy, w, engine.gameTime)
-                "orbit_shield" -> drawOrbitShield(sx, sy, w, engine.gameTime)
+                "health_gem" -> drawHealthGem(sx, sy, w, engine.gameTime, scratchPath)
+                "orbit_shield" -> drawOrbitShield(sx, sy, w, engine.gameTime, scratchPath)
                 "particle" -> drawParticle(sx, sy, w, color, s)
-                "loot_box" -> drawLootBox(e, sx, sy, w, h, engine.gameTime)
-                "relic" -> drawRelic(sx, sy, w, color, engine.gameTime)
-                else -> drawGeneric(sx, sy, w, h, color, s.shape)
+                "loot_box" -> drawLootBox(e, sx, sy, w, h, engine.gameTime, scratchPath)
+                "relic" -> drawRelic(sx, sy, w, color, engine.gameTime, scratchPath)
+                else -> drawGeneric(sx, sy, w, h, color, s.shape, scratchPath)
             }
         }
 
         // ── DAMAGE NUMBERS ─────────────────────────────────────────
         if (showDamageNumbers) {
+            // Evict damageTextCache if size grows too large to prevent unbounded memory accumulation
+            if (damageTextCache.size > 128) damageTextCache.clear()
+
             for (i in 0 until damageNumbersScratch.size) {
                 val e = damageNumbersScratch[i]
                 val t = e.get<TransformComponent>() ?: continue
@@ -280,26 +302,28 @@ fun GameRenderer(
 
                 val progress = (dn.timer / dn.lifetime).coerceIn(0f, 1f)
                 val alpha = 1f - progress
-                val scale = if (dn.isCrit) 1.3f else 1f
-                val fontSize = (14f * scale).sp
-
-                val color = if (dn.isCrit) Color(0xFFFFD700) else Color.White
                 val text = dn.getDisplayText()
+                val cacheKey = if (dn.isCrit) "crit_$text" else "norm_$text"
 
-                val textResult = textMeasurer.measure(
-                    text = AnnotatedString(text),
-                    style = TextStyle(
-                        fontSize = fontSize,
-                        fontWeight = if (dn.isCrit) FontWeight.ExtraBold else FontWeight.Bold,
-                        color = color.copy(alpha = alpha),
-                        shadow = Shadow(
-                            color = Color.Black.copy(alpha = alpha * 0.7f),
-                            offset = Offset(1f, 1f),
-                            blurRadius = 2f
+                val textResult = damageTextCache.getOrPut(cacheKey) {
+                    val scale = if (dn.isCrit) 1.3f else 1f
+                    val fontSize = (14f * scale).sp
+                    val color = if (dn.isCrit) Color(0xFFFFD700) else Color.White
+                    textMeasurer.measure(
+                        text = AnnotatedString(text),
+                        style = TextStyle(
+                            fontSize = fontSize,
+                            fontWeight = if (dn.isCrit) FontWeight.ExtraBold else FontWeight.Bold,
+                            color = color,
+                            shadow = Shadow(
+                                color = Color.Black.copy(alpha = 0.7f),
+                                offset = Offset(1f, 1f),
+                                blurRadius = 2f
+                            )
                         )
                     )
-                )
-                drawText(textResult, topLeft = Offset(sx - textResult.size.width / 2f, sy))
+                }
+                drawText(textResult, topLeft = Offset(sx - textResult.size.width / 2f, sy), alpha = alpha)
             }
         }
 
@@ -455,7 +479,8 @@ private fun DrawScope.drawEnemy(
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawProjectile(
     entity: Entity,
-    x: Float, y: Float, w: Float, h: Float, color: Color
+    x: Float, y: Float, w: Float, h: Float, color: Color,
+    scratchPath: Path
 ) {
     val proj = entity.get<ProjectileComponent>()
     val vel = entity.get<VelocityComponent>()
@@ -505,15 +530,15 @@ private fun DrawScope.drawProjectile(
             drawCircle(Color(0xFFFF8A65).copy(alpha = 0.6f), radius = w / 3f, center = Offset(x, y))
         }
         WeaponType.ICE_SHARD -> {
-            drawTriangle(color, x, y, w, h)
-            drawTriangle(Color.White.copy(alpha = 0.4f), x, y, w * 0.4f, h * 0.4f)
+            drawTriangle(color, x, y, w, h, scratchPath)
+            drawTriangle(Color.White.copy(alpha = 0.4f), x, y, w * 0.4f, h * 0.4f, scratchPath)
         }
         WeaponType.BOOMERANG_DAGGER -> {
-            drawDiamond(color, x, y, w, h)
+            drawDiamond(color, x, y, w, h, scratchPath)
             drawLine(Color.White.copy(alpha = 0.3f), Offset(x - w / 3f, y), Offset(x + w / 3f, y), strokeWidth = 1f)
         }
         WeaponType.DIVINE_SPEAR -> {
-            drawTriangle(color, x, y, w * 0.6f, h * 1.5f)
+            drawTriangle(color, x, y, w * 0.6f, h * 1.5f, scratchPath)
         }
         else -> {
             drawCircle(color, radius = w / 2f, center = Offset(x, y))
@@ -524,7 +549,10 @@ private fun DrawScope.drawProjectile(
 // ═══════════════════════════════════════════════════════════════════
 // XP GEM — glowing diamond with pulse
 // ═══════════════════════════════════════════════════════════════════
-private fun DrawScope.drawXpGem(x: Float, y: Float, w: Float, color: Color, time: Float, magnetized: Boolean = false) {
+private fun DrawScope.drawXpGem(
+    x: Float, y: Float, w: Float, color: Color, time: Float,
+    scratchPath: Path, magnetized: Boolean = false
+) {
     val pulse = 1f + 0.12f * sin(time * 6f + x * 0.01f)
     val gemColor = if (magnetized) Color(0xFF42A5F5) else color
     val glowAlpha = if (magnetized) 0.6f else 0.4f
@@ -535,7 +563,7 @@ private fun DrawScope.drawXpGem(x: Float, y: Float, w: Float, color: Color, time
             center = Offset(x, y), radius = glowRadius * pulse
         ), radius = glowRadius * pulse, center = Offset(x, y)
     )
-    drawDiamond(gemColor, x, y, w * pulse, w * pulse)
+    drawDiamond(gemColor, x, y, w * pulse, w * pulse, scratchPath)
     drawCircle(Color.White.copy(alpha = 0.5f), radius = w / 4f, center = Offset(x, y))
     if (magnetized) {
         val sparkleAngle = time * 8f + x
@@ -548,17 +576,16 @@ private fun DrawScope.drawXpGem(x: Float, y: Float, w: Float, color: Color, time
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// HEART SHAPE — reusable for health gems and loot boxes
+// HEART SHAPE — zero-allocation using scratchPath
 // ═══════════════════════════════════════════════════════════════════
-private fun DrawScope.drawHeart(color: Color, x: Float, y: Float, size: Float) {
+private fun DrawScope.drawHeart(color: Color, x: Float, y: Float, size: Float, scratchPath: Path) {
     val s = size
-    val path = Path().apply {
-        moveTo(x, y + s * 0.4f)
-        cubicTo(x - s * 0.8f, y - s * 0.4f, x - s * 0.8f, y - s * 1.0f, x, y - s * 0.4f)
-        cubicTo(x + s * 0.8f, y - s * 1.0f, x + s * 0.8f, y - s * 0.4f, x, y + s * 0.4f)
-        close()
-    }
-    drawPath(path, color)
+    scratchPath.reset()
+    scratchPath.moveTo(x, y + s * 0.4f)
+    scratchPath.cubicTo(x - s * 0.8f, y - s * 0.4f, x - s * 0.8f, y - s * 1.0f, x, y - s * 0.4f)
+    scratchPath.cubicTo(x + s * 0.8f, y - s * 1.0f, x + s * 0.8f, y - s * 0.4f, x, y + s * 0.4f)
+    scratchPath.close()
+    drawPath(scratchPath, color)
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -566,7 +593,6 @@ private fun DrawScope.drawHeart(color: Color, x: Float, y: Float, size: Float) {
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawMagnet(color: Color, x: Float, y: Float, size: Float) {
     val s = size
-    val stroke = Stroke(width = s * 0.35f, cap = StrokeCap.Round)
     val arcSize = Size(s * 1.6f, s * 1.6f)
     val topLeft = Offset(x - s * 0.8f, y - s * 0.4f)
     drawArc(
@@ -576,13 +602,13 @@ private fun DrawScope.drawMagnet(color: Color, x: Float, y: Float, size: Float) 
         useCenter = false,
         topLeft = topLeft,
         size = arcSize,
-        style = stroke
+        style = Stroke(width = s * 0.35f, cap = StrokeCap.Round)
     )
     drawCircle(Color(0xFFEF5350), radius = s * 0.2f, center = Offset(x - s * 0.8f, y + s * 0.4f))
     drawCircle(Color(0xFF42A5F5), radius = s * 0.2f, center = Offset(x + s * 0.8f, y + s * 0.4f))
 }
 
-private fun DrawScope.drawHealthGem(x: Float, y: Float, w: Float, time: Float) {
+private fun DrawScope.drawHealthGem(x: Float, y: Float, w: Float, time: Float, scratchPath: Path) {
     val pulse = 1f + 0.1f * kotlin.math.sin(time * 5f + x * 0.01f)
     val red = Color(0xFFEF5350)
     drawCircle(
@@ -591,14 +617,14 @@ private fun DrawScope.drawHealthGem(x: Float, y: Float, w: Float, time: Float) {
             center = Offset(x, y), radius = w * 2.5f * pulse
         ), radius = w * 2.5f * pulse, center = Offset(x, y)
     )
-    drawHeart(red.copy(alpha = 0.95f), x, y, w * 0.6f * pulse)
+    drawHeart(red.copy(alpha = 0.95f), x, y, w * 0.6f * pulse, scratchPath)
     drawCircle(Color.White.copy(alpha = 0.4f), radius = w * 0.12f, center = Offset(x - w * 0.15f, y - w * 0.2f))
 }
 
 // ═══════════════════════════════════════════════════════════════════
 // ORBIT SHIELD
 // ═══════════════════════════════════════════════════════════════════
-private fun DrawScope.drawOrbitShield(x: Float, y: Float, w: Float, time: Float) {
+private fun DrawScope.drawOrbitShield(x: Float, y: Float, w: Float, time: Float, scratchPath: Path) {
     val glow = 0.3f + 0.15f * sin(time * 5f)
     drawCircle(
         brush = Brush.radialGradient(
@@ -606,8 +632,8 @@ private fun DrawScope.drawOrbitShield(x: Float, y: Float, w: Float, time: Float)
             center = Offset(x, y), radius = w * 2f
         ), radius = w * 2f, center = Offset(x, y)
     )
-    drawDiamond(Color(0xFFB19CD9), x, y, w, w)
-    drawDiamond(Color(0xFFD1C4E9).copy(alpha = 0.5f), x, y, w * 0.4f, w * 0.4f)
+    drawDiamond(Color(0xFFB19CD9), x, y, w, w, scratchPath)
+    drawDiamond(Color(0xFFD1C4E9).copy(alpha = 0.5f), x, y, w * 0.4f, w * 0.4f, scratchPath)
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -615,7 +641,8 @@ private fun DrawScope.drawOrbitShield(x: Float, y: Float, w: Float, time: Float)
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawLootBox(
     entity: Entity,
-    x: Float, y: Float, w: Float, h: Float, time: Float
+    x: Float, y: Float, w: Float, h: Float, time: Float,
+    scratchPath: Path
 ) {
     val loot = entity.get<LootBoxComponent>() ?: return
     val bobOffset = kotlin.math.sin(loot.bobPhase) * 3f
@@ -634,8 +661,8 @@ private fun DrawScope.drawLootBox(
 
     when (loot.lootType) {
         LootType.HEALTH -> {
-            drawHeart(color.copy(alpha = 0.95f), x, by, halfW * 1.2f)
-            drawHeart(Color.White.copy(alpha = 0.3f), x, by, halfW * 0.5f)
+            drawHeart(color.copy(alpha = 0.95f), x, by, halfW * 1.2f, scratchPath)
+            drawHeart(Color.White.copy(alpha = 0.3f), x, by, halfW * 0.5f, scratchPath)
         }
         LootType.MAGNET -> {
             drawMagnet(color.copy(alpha = 0.95f), x, by, halfW * 1.2f)
@@ -657,16 +684,15 @@ private fun DrawScope.drawLootBox(
                 topLeft = Offset(x - halfW, by - halfH),
                 size = Size(w * pulse, h * pulse),
                 cornerRadius = CornerRadius(4f),
-                style = Stroke(width = 1.5f)
+                style = strokeWidth1_5
             )
             val arrowSize = halfW * 0.5f
-            val path = Path().apply {
-                moveTo(x, by - arrowSize)
-                lineTo(x + arrowSize * 0.6f, by + arrowSize * 0.3f)
-                lineTo(x - arrowSize * 0.6f, by + arrowSize * 0.3f)
-                close()
-            }
-            drawPath(path, Color.White.copy(alpha = 0.7f))
+            scratchPath.reset()
+            scratchPath.moveTo(x, by - arrowSize)
+            scratchPath.lineTo(x + arrowSize * 0.6f, by + arrowSize * 0.3f)
+            scratchPath.lineTo(x - arrowSize * 0.6f, by + arrowSize * 0.3f)
+            scratchPath.close()
+            drawPath(scratchPath, Color.White.copy(alpha = 0.7f))
         }
     }
     val sparkleAlpha = 0.4f + 0.3f * kotlin.math.sin(time * 6f + x)
@@ -676,7 +702,7 @@ private fun DrawScope.drawLootBox(
 // ═══════════════════════════════════════════════════════════════════
 // RELIC — glowing diamond with rotation
 // ═══════════════════════════════════════════════════════════════════
-private fun DrawScope.drawRelic(x: Float, y: Float, w: Float, color: Color, time: Float) {
+private fun DrawScope.drawRelic(x: Float, y: Float, w: Float, color: Color, time: Float, scratchPath: Path) {
     val pulse = 1f + 0.15f * sin(time * 5f)
     val bobY = y + sin(time * 3f) * 4f
     drawCircle(
@@ -685,8 +711,8 @@ private fun DrawScope.drawRelic(x: Float, y: Float, w: Float, color: Color, time
             center = Offset(x, bobY), radius = w * 3f * pulse
         ), radius = w * 3f * pulse, center = Offset(x, bobY)
     )
-    drawDiamond(color, x, bobY, w * pulse, w * pulse)
-    drawDiamond(Color.White.copy(alpha = 0.5f), x, bobY, w * 0.4f * pulse, w * 0.4f * pulse)
+    drawDiamond(color, x, bobY, w * pulse, w * pulse, scratchPath)
+    drawDiamond(Color.White.copy(alpha = 0.5f), x, bobY, w * 0.4f * pulse, w * 0.4f * pulse, scratchPath)
     val sparkleAlpha = 0.5f + 0.5f * sin(time * 8f + x)
     drawCircle(Color.White.copy(alpha = sparkleAlpha), radius = 2f, center = Offset(x + w * 0.7f, bobY - w * 0.7f))
 }
@@ -697,7 +723,7 @@ private fun DrawScope.drawRelic(x: Float, y: Float, w: Float, color: Color, time
 private fun DrawScope.drawParticle(x: Float, y: Float, w: Float, color: Color, sprite: SpriteComponent) {
     if (w > 40f) {
         drawCircle(Color.Transparent, radius = w, center = Offset(x, y))
-        drawCircle(color.copy(alpha = sprite.alpha * 0.6f), radius = w, center = Offset(x, y), style = Stroke(width = 3f))
+        drawCircle(color.copy(alpha = sprite.alpha * 0.6f), radius = w, center = Offset(x, y), style = strokeWidth3_0)
         val segments = 8
         for (i in 0 until segments) {
             val angle1 = (i.toFloat() / segments) * Math.PI.toFloat() * 2f
@@ -729,7 +755,7 @@ private fun DrawScope.drawJoystick(baseX: Float, baseY: Float, stickX: Float, st
     val sx = stickX * baseR; val sy = stickY * baseR
 
     drawCircle(Color.White.copy(alpha = 0.08f), radius = baseR, center = Offset(baseX, baseY))
-    drawCircle(Color.White.copy(alpha = 0.15f), radius = baseR, center = Offset(baseX, baseY), style = Stroke(2f))
+    drawCircle(Color.White.copy(alpha = 0.15f), radius = baseR, center = Offset(baseX, baseY), style = strokeWidth2_0)
     if (mag > 0.05f) drawLine(Color.White.copy(alpha = 0.1f), Offset(baseX, baseY), Offset(baseX + sx, baseY + sy), strokeWidth = 3f)
     val a = 0.25f + mag * 0.3f
     drawCircle(Color.White.copy(alpha = a), radius = stickR * (1f + mag * 0.2f), center = Offset(baseX + sx, baseY + sy))
@@ -739,7 +765,10 @@ private fun DrawScope.drawJoystick(baseX: Float, baseY: Float, stickX: Float, st
 // ═══════════════════════════════════════════════════════════════════
 // BACKGROUND — multiple styles, smooth movement
 // ═══════════════════════════════════════════════════════════════════
-private fun DrawScope.drawBackground(w: Float, h: Float, camX: Float, camY: Float, time: Float, style: Int) {
+private fun DrawScope.drawBackground(
+    w: Float, h: Float, camX: Float, camY: Float, time: Float, style: Int,
+    scratchPath: Path, scratchPath2: Path
+) {
     drawRect(Color(0xFF080814), topLeft = Offset.Zero, size = Size(w, h))
 
     when (style) {
@@ -748,9 +777,9 @@ private fun DrawScope.drawBackground(w: Float, h: Float, camX: Float, camY: Floa
         2 -> drawNebulaBg(w, h, camX, camY, time)
         3 -> drawCheckerBg(w, h, camX, camY)
         4 -> { /* solid dark — just the base rect */ }
-        5 -> drawPersianBg(w, h, camX, camY, time)
-        6 -> drawRomanBg(w, h, camX, camY, time)
-        7 -> drawEgyptianBg(w, h, camX, camY, time)
+        5 -> drawPersianBg(w, h, camX, camY, time, scratchPath, scratchPath2)
+        6 -> drawRomanBg(w, h, camX, camY, time, scratchPath)
+        7 -> drawEgyptianBg(w, h, camX, camY, time, scratchPath)
     }
 }
 
@@ -831,8 +860,11 @@ private fun DrawScope.drawCheckerBg(w: Float, h: Float, camX: Float, camY: Float
     }
 }
 
-/** 5: Persian/Iranian — geometric arabesque tile patterns */
-private fun DrawScope.drawPersianBg(w: Float, h: Float, camX: Float, camY: Float, time: Float) {
+/** 5: Persian/Iranian — geometric arabesque tile patterns (zero allocation) */
+private fun DrawScope.drawPersianBg(
+    w: Float, h: Float, camX: Float, camY: Float, time: Float,
+    scratchPath: Path, scratchPath2: Path
+) {
     val tileSize = 120f
     val p = 0.25f
     val cx = camX * p
@@ -859,22 +891,23 @@ private fun DrawScope.drawPersianBg(w: Float, h: Float, camX: Float, camY: Float
             val ty = iy * tileSize - offY + tileSize / 2f
             val r = tileSize * 0.35f
             val innerR = tileSize * 0.15f
-            val path = Path()
+
+            scratchPath.reset()
             for (i in 0 until 16) {
                 val a = Math.toRadians((i * 22.5) - 90.0).toFloat()
                 val rad = if (i % 2 == 0) r else innerR
                 val px = tx + kotlin.math.cos(a) * rad
                 val py = ty + kotlin.math.sin(a) * rad
-                if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                if (i == 0) scratchPath.moveTo(px, py) else scratchPath.lineTo(px, py)
             }
-            path.close()
-            drawPath(path, accent, style = Fill)
-            drawPath(path, accent2, style = Stroke(width = 0.8f))
+            scratchPath.close()
+            drawPath(scratchPath, accent, style = Fill)
+            drawPath(scratchPath, accent2, style = strokeWidth0_8)
+
             val dr = tileSize * 0.12f
-            val diamond = Path().apply {
-                moveTo(tx, ty - dr); lineTo(tx + dr, ty); lineTo(tx, ty + dr); lineTo(tx - dr, ty); close()
-            }
-            drawPath(diamond, Color(0xFFC8A24E).copy(alpha = 0.12f), style = Fill)
+            scratchPath2.reset()
+            scratchPath2.moveTo(tx, ty - dr); scratchPath2.lineTo(tx + dr, ty); scratchPath2.lineTo(tx, ty + dr); scratchPath2.lineTo(tx - dr, ty); scratchPath2.close()
+            drawPath(scratchPath2, Color(0xFFC8A24E).copy(alpha = 0.12f), style = Fill)
         }
     }
     val lineCol = Color(0xFFC8A24E).copy(alpha = 0.04f)
@@ -886,8 +919,11 @@ private fun DrawScope.drawPersianBg(w: Float, h: Float, camX: Float, camY: Float
     }
 }
 
-/** 6: Roman — columns, arches, laurel motifs */
-private fun DrawScope.drawRomanBg(w: Float, h: Float, camX: Float, camY: Float, time: Float) {
+/** 6: Roman — columns, arches, laurel motifs (zero allocation) */
+private fun DrawScope.drawRomanBg(
+    w: Float, h: Float, camX: Float, camY: Float, time: Float,
+    scratchPath: Path
+) {
     drawRect(Color(0xFF0D0D1A), topLeft = Offset.Zero, size = Size(w, h))
     val p = 0.2f
     val cx = camX * p
@@ -925,15 +961,22 @@ private fun DrawScope.drawRomanBg(w: Float, h: Float, camX: Float, camY: Float, 
         val lx = ((hash % 1000) / 1000f * w + cx * 0.05f) % w
         val ly = (((hash / 1000) * 7919) % 10000 / 10000f * h + cy * 0.05f) % h
         val s = 6f + (hash % 8)
-        val lp = Path().apply {
-            moveTo(lx, ly - s); lineTo(lx + s * 0.6f, ly + s * 0.3f); lineTo(lx, ly + s * 0.1f); lineTo(lx - s * 0.6f, ly + s * 0.3f); close()
-        }
-        drawPath(lp, laurelCol, style = Fill)
+
+        scratchPath.reset()
+        scratchPath.moveTo(lx, ly - s)
+        scratchPath.lineTo(lx + s * 0.6f, ly + s * 0.3f)
+        scratchPath.lineTo(lx, ly + s * 0.1f)
+        scratchPath.lineTo(lx - s * 0.6f, ly + s * 0.3f)
+        scratchPath.close()
+        drawPath(scratchPath, laurelCol, style = Fill)
     }
 }
 
-/** 7: Egyptian — hieroglyph-style symbols, gold accents, pyramids */
-private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Float, time: Float) {
+/** 7: Egyptian — hieroglyph-style symbols, gold accents, pyramids (zero allocation) */
+private fun DrawScope.drawEgyptianBg(
+    w: Float, h: Float, camX: Float, camY: Float, time: Float,
+    scratchPath: Path
+) {
     drawRect(Color(0xFF0E0A06), topLeft = Offset.Zero, size = Size(w, h))
     val p = 0.2f
     val cx = camX * p
@@ -951,14 +994,14 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
         val hash = (i * 2311 + 55) % 10000
         val px = ((hash % 1000) / 1000f * w * 1.2f - cx * 0.08f) % (w * 1.3f) - w * 0.15f
         val pSize = 120f + (hash % 100)
-        val pp = Path().apply {
-            moveTo(px, baseY)
-            lineTo(px + pSize / 2f, baseY - pSize * 0.7f)
-            lineTo(px + pSize, baseY)
-            close()
-        }
-        drawPath(pp, pyramidCol, style = Fill)
-        drawPath(pp, Color(0xFFC8A24E).copy(alpha = 0.04f), style = Stroke(width = 0.8f))
+
+        scratchPath.reset()
+        scratchPath.moveTo(px, baseY)
+        scratchPath.lineTo(px + pSize / 2f, baseY - pSize * 0.7f)
+        scratchPath.lineTo(px + pSize, baseY)
+        scratchPath.close()
+        drawPath(scratchPath, pyramidCol, style = Fill)
+        drawPath(scratchPath, Color(0xFFC8A24E).copy(alpha = 0.04f), style = strokeWidth0_8)
     }
     val hierCol = Color(0xFFC8A24E).copy(alpha = 0.07f)
     for (i in 0 until 40) {
@@ -969,24 +1012,28 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
         val s = 8f + (hash % 6)
         when (symbolType) {
             0 -> {
-                drawCircle(hierCol, radius = s, center = Offset(hx, hy), style = Stroke(width = 0.8f))
+                drawCircle(hierCol, radius = s, center = Offset(hx, hy), style = strokeWidth0_8)
                 drawCircle(hierCol, radius = s * 0.3f, center = Offset(hx, hy))
                 drawLine(hierCol, Offset(hx + s, hy), Offset(hx + s * 1.5f, hy + s * 0.5f), strokeWidth = 0.6f)
             }
             1 -> {
                 drawLine(hierCol, Offset(hx, hy - s), Offset(hx, hy + s), strokeWidth = 0.8f)
                 drawLine(hierCol, Offset(hx - s * 0.6f, hy - s * 0.2f), Offset(hx + s * 0.6f, hy - s * 0.2f), strokeWidth = 0.8f)
-                drawCircle(hierCol, radius = s * 0.4f, center = Offset(hx, hy - s * 0.8f), style = Stroke(width = 0.8f))
+                drawCircle(hierCol, radius = s * 0.4f, center = Offset(hx, hy - s * 0.8f), style = strokeWidth0_8)
             }
             2 -> {
-                val bp = Path().apply {
-                    moveTo(hx, hy - s); lineTo(hx + s * 0.5f, hy); lineTo(hx + s * 0.3f, hy + s * 0.3f)
-                    lineTo(hx, hy + s * 0.1f); lineTo(hx - s * 0.3f, hy + s * 0.3f); lineTo(hx - s * 0.5f, hy); close()
-                }
-                drawPath(bp, hierCol, style = Fill)
+                scratchPath.reset()
+                scratchPath.moveTo(hx, hy - s)
+                scratchPath.lineTo(hx + s * 0.5f, hy)
+                scratchPath.lineTo(hx + s * 0.3f, hy + s * 0.3f)
+                scratchPath.lineTo(hx, hy + s * 0.1f)
+                scratchPath.lineTo(hx - s * 0.3f, hy + s * 0.3f)
+                scratchPath.lineTo(hx - s * 0.5f, hy)
+                scratchPath.close()
+                drawPath(scratchPath, hierCol, style = Fill)
             }
             3 -> {
-                drawCircle(hierCol, radius = s * 0.6f, center = Offset(hx, hy), style = Stroke(width = 0.8f))
+                drawCircle(hierCol, radius = s * 0.6f, center = Offset(hx, hy), style = strokeWidth0_8)
                 for (ray in 0 until 8) {
                     val a = Math.toRadians((ray * 45.0)).toFloat()
                     drawLine(hierCol, Offset(hx + kotlin.math.cos(a) * s * 0.7f, hy + kotlin.math.sin(a) * s * 0.7f),
@@ -994,16 +1041,15 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
                 }
             }
             4 -> {
-                drawOval(hierCol, topLeft = Offset(hx - s * 0.4f, hy - s * 0.6f), size = Size(s * 0.8f, s * 1.2f), style = Stroke(width = 0.7f))
+                drawOval(hierCol, topLeft = Offset(hx - s * 0.4f, hy - s * 0.6f), size = Size(s * 0.8f, s * 1.2f), style = strokeWidth0_8)
                 drawLine(hierCol, Offset(hx - s * 0.5f, hy - s * 0.2f), Offset(hx - s, hy - s * 0.5f), strokeWidth = 0.5f)
                 drawLine(hierCol, Offset(hx + s * 0.5f, hy - s * 0.2f), Offset(hx + s, hy - s * 0.5f), strokeWidth = 0.5f)
             }
             5 -> {
-                val wp = Path().apply {
-                    moveTo(hx - s, hy)
-                    cubicTo(hx - s * 0.5f, hy - s * 0.4f, hx, hy + s * 0.4f, hx + s, hy)
-                }
-                drawPath(wp, hierCol, style = Stroke(width = 0.7f))
+                scratchPath.reset()
+                scratchPath.moveTo(hx - s, hy)
+                scratchPath.cubicTo(hx - s * 0.5f, hy - s * 0.4f, hx, hy + s * 0.4f, hx + s, hy)
+                drawPath(scratchPath, hierCol, style = strokeWidth0_8)
             }
         }
     }
@@ -1018,42 +1064,70 @@ private fun DrawScope.drawEgyptianBg(w: Float, h: Float, camX: Float, camY: Floa
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// SHAPE HELPERS
+// SHAPE HELPERS — zero allocation using scratchPath
 // ═══════════════════════════════════════════════════════════════════
-private fun DrawScope.drawTriangle(color: Color, cx: Float, cy: Float, w: Float, h: Float) {
-    drawPath(Path().apply { moveTo(cx, cy - h / 2f); lineTo(cx - w / 2f, cy + h / 2f); lineTo(cx + w / 2f, cy + h / 2f); close() }, color, style = Fill)
+private fun DrawScope.drawTriangle(
+    color: Color, cx: Float, cy: Float, w: Float, h: Float,
+    scratchPath: Path
+) {
+    scratchPath.reset()
+    scratchPath.moveTo(cx, cy - h / 2f)
+    scratchPath.lineTo(cx - w / 2f, cy + h / 2f)
+    scratchPath.lineTo(cx + w / 2f, cy + h / 2f)
+    scratchPath.close()
+    drawPath(scratchPath, color, style = Fill)
 }
 
-private fun DrawScope.drawDiamond(color: Color, cx: Float, cy: Float, w: Float, h: Float) {
-    drawPath(Path().apply { moveTo(cx, cy - h / 2f); lineTo(cx + w / 2f, cy); lineTo(cx, cy + h / 2f); lineTo(cx - w / 2f, cy); close() }, color, style = Fill)
+private fun DrawScope.drawDiamond(
+    color: Color, cx: Float, cy: Float, w: Float, h: Float,
+    scratchPath: Path
+) {
+    scratchPath.reset()
+    scratchPath.moveTo(cx, cy - h / 2f)
+    scratchPath.lineTo(cx + w / 2f, cy)
+    scratchPath.lineTo(cx, cy + h / 2f)
+    scratchPath.lineTo(cx - w / 2f, cy)
+    scratchPath.close()
+    drawPath(scratchPath, color, style = Fill)
 }
 
-private fun DrawScope.drawStar(color: Color, cx: Float, cy: Float, w: Float, h: Float) {
-    val p = Path()
+private fun DrawScope.drawStar(
+    color: Color, cx: Float, cy: Float, w: Float, h: Float,
+    scratchPath: Path
+) {
+    scratchPath.reset()
     for (i in 0 until 10) {
         val a = Math.toRadians((i * 36.0) - 90.0).toFloat()
         val r = if (i % 2 == 0) w / 2f else w / 4f
-        if (i == 0) p.moveTo(cx + cos(a) * r, cy + sin(a) * r) else p.lineTo(cx + cos(a) * r, cy + sin(a) * r)
+        if (i == 0) scratchPath.moveTo(cx + cos(a) * r, cy + sin(a) * r) else scratchPath.lineTo(cx + cos(a) * r, cy + sin(a) * r)
     }
-    p.close(); drawPath(p, color, style = Fill)
+    scratchPath.close()
+    drawPath(scratchPath, color, style = Fill)
 }
 
-private fun DrawScope.drawPolygon(color: Color, cx: Float, cy: Float, radius: Float, sides: Int) {
-    val p = Path()
+private fun DrawScope.drawPolygon(
+    color: Color, cx: Float, cy: Float, radius: Float, sides: Int,
+    scratchPath: Path
+) {
+    scratchPath.reset()
     for (i in 0 until sides) {
         val a = Math.toRadians((i * 360.0 / sides) - 90.0).toFloat()
         val px = cx + cos(a) * radius; val py = cy + sin(a) * radius
-        if (i == 0) p.moveTo(px, py) else p.lineTo(px, py)
+        if (i == 0) scratchPath.moveTo(px, py) else scratchPath.lineTo(px, py)
     }
-    p.close(); drawPath(p, color, style = Fill)
+    scratchPath.close()
+    drawPath(scratchPath, color, style = Fill)
 }
 
-private fun DrawScope.drawGeneric(x: Float, y: Float, w: Float, h: Float, color: Color, shape: SpriteShape) {
+private fun DrawScope.drawGeneric(
+    x: Float, y: Float, w: Float, h: Float, color: Color, shape: SpriteShape,
+    scratchPath: Path
+) {
     when (shape) {
         SpriteShape.CIRCLE -> drawCircle(color, radius = w / 2f, center = Offset(x, y))
         SpriteShape.RECT -> drawRect(color, topLeft = Offset(x - w / 2f, y - h / 2f), size = Size(w, h))
-        SpriteShape.TRIANGLE -> drawTriangle(color, x, y, w, h)
-        SpriteShape.DIAMOND -> drawDiamond(color, x, y, w, h)
-        SpriteShape.STAR -> drawStar(color, x, y, w, h)
+        SpriteShape.TRIANGLE -> drawTriangle(color, x, y, w, h, scratchPath)
+        SpriteShape.DIAMOND -> drawDiamond(color, x, y, w, h, scratchPath)
+        SpriteShape.STAR -> drawStar(color, x, y, w, h, scratchPath)
     }
 }
