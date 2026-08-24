@@ -14,6 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeCard
 
 /**
  * Pause overlay with Resume, Settings, and Quit buttons.
@@ -51,13 +53,7 @@ fun PauseScreen(
 
             if (showSettings) {
                 // Settings panel
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(HordeColors.CardBg.copy(alpha = 0.95f))
-                        .padding(20.dp)
-                ) {
+                HordeCard(modifier = Modifier.fillMaxWidth(0.85f)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "⚙ Settings",
@@ -128,22 +124,15 @@ fun PauseScreen(
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
-                        TextButton(onClick = { showSettings = false }) {
-                            Text("← Back", color = HordeColors.TextSecondary)
-                        }
+                        HordeButton(text = "← Back", onClick = { showSettings = false }, color = HordeColors.TextSecondary, isSecondary = true)
                     }
                 }
             } else {
                 // Main pause buttons
-                Button(onClick = onResume) {
-                    Text("▶ Resume", fontSize = 18.sp)
-                }
+                HordeButton(text = "Resume", icon = "▶", onClick = onResume, modifier = Modifier.width(200.dp))
                 Spacer(modifier = Modifier.height(12.dp))
-                TextButton(onClick = { showSettings = true }) {
-                    Text("⚙ Settings", color = HordeColors.SkyBlue, fontSize = 16.sp)
-                }
+                HordeButton(text = "Settings", icon = "⚙", onClick = { showSettings = true }, modifier = Modifier.width(200.dp), isSecondary = true, color = HordeColors.SkyBlue)
                 Spacer(modifier = Modifier.height(12.dp))
-                Spacer(Modifier.height(12.dp))
 
                 // Game speed control
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -160,9 +149,7 @@ fun PauseScreen(
                 }
                 Spacer(Modifier.height(12.dp))
 
-                TextButton(onClick = onQuit) {
-                    Text("🏠 Quit to Menu", color = HordeColors.TextSecondary)
-                }
+                HordeButton(text = "Quit to Menu", icon = "🏠", onClick = onQuit, modifier = Modifier.width(200.dp), color = HordeColors.SoftPink, isSecondary = true)
             }
         }
     }

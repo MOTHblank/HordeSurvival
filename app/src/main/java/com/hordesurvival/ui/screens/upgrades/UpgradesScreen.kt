@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.PlayerSave
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.utils.Constants
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeCard
 
 /**
  * Meta-progression upgrades screen.
@@ -41,11 +44,7 @@ fun UpgradesScreen(
         UpgradeDef("🍀", "Luck", "+3% better upgrades", playerSave.metaLuckLevel, { onUpgrade("luck", it) }),
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))
-    ) {
+    HordeScreen {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,28 +75,20 @@ fun UpgradesScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Stats
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(HordeColors.CardBg)
-                    .padding(16.dp)
+            HordeCard(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Text("📊 Stats", fontWeight = FontWeight.Bold, color = Color.White)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    StatLine("Total Runs", "${playerSave.totalRuns}")
-                    StatLine("Total Kills", "${playerSave.totalKills}")
-                    StatLine("Best Time", formatTime(playerSave.bestTime))
-                    StatLine("Best Level", "${playerSave.bestLevel}")
-                }
+                Text("📊 Stats", fontWeight = FontWeight.Bold, color = Color.White)
+                Spacer(modifier = Modifier.height(8.dp))
+                StatLine("Total Runs", "${playerSave.totalRuns}")
+                StatLine("Total Kills", "${playerSave.totalKills}")
+                StatLine("Best Time", formatTime(playerSave.bestTime))
+                StatLine("Best Level", "${playerSave.bestLevel}")
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            TextButton(onClick = onBack) {
-                Text("← Back", color = HordeColors.TextSecondary, fontSize = 16.sp)
-            }
+            HordeButton(text = "← Back", onClick = onBack, color = HordeColors.TextSecondary, isSecondary = true)
         }
     }
 }
@@ -112,13 +103,7 @@ private fun UpgradeRow(
     icon: String, title: String, description: String,
     cost: Int, canAfford: Boolean, isMaxed: Boolean, onBuy: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(HordeColors.CardBg)
-            .padding(14.dp)
-    ) {
+    HordeCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -137,15 +122,12 @@ private fun UpgradeRow(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) { Text("MAX", color = HordeColors.MintGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
             } else {
-                Button(
-                    onClick = onBuy, enabled = canAfford,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = HordeColors.SkyBlue,
-                        disabledContainerColor = HordeColors.DarkCard
-                    ),
-                    modifier = Modifier.height(34.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) { Text("${cost}💰", fontSize = 12.sp) }
+                HordeButton(
+                    text = "${cost}💰",
+                    onClick = onBuy,
+                    enabled = canAfford,
+                    modifier = Modifier.height(34.dp).width(80.dp) // Maintain smaller button shape for upgrades
+                )
             }
         }
     }

@@ -1,0 +1,10 @@
+## 2024-08-24 - Found widespread inconsistent UI implementations
+**Learning:** I found that screens like ModeSelect, Game Over, Shop, Settings, Upgrades, MapSelect, CharacterSelect, Pause, Stats, and Tutorial all hardcode their own Box/Column/TextButton implementations instead of using a shared UI library. Some use different colors or button styles (some use TextButton from material3, some implement custom GlowButtons, some use basic clickable Box). The overall problem is a lack of a central UI design system and the problem is systemic.
+**Action:** Create a central HordeUI.kt containing HordeScreen, HordeButton, and HordeCard components, and migrate the UI screens to use them for visual consistency.
+## 2024-08-24 - Compose InteractionSource for Buttons
+**Learning:** Hardcoding a mutable state for a button's `pressed` state inside `Modifier.clickable` (by setting it to true but never resetting it to false) causes the visual state to permanently remain pressed (e.g. shrunk scale). Compose's `Modifier.clickable` executes its lambda on the release of the click.
+**Action:** Use `MutableInteractionSource` and `interactionSource.collectIsPressedAsState()` for tracking button presses in Jetpack Compose, and make sure `clickable` takes the interaction source to properly feed press events into the state.
+
+## 2024-08-24 - Ripple Effect Ordering in Compose
+**Learning:** Passing `Modifier.clickable` into a parent container before applying a background can result in the click ripple being covered by the background. If a container such as `HordeCard` expects to be clickable and show ripples, the background modifiers should be defined first, followed by the `clickable` modifier, and finally padding.
+**Action:** When designing shared UI containers, provide an explicit `onClick: (() -> Unit)? = null` parameter rather than only accepting a pre-configured `modifier` from the caller. Apply the background and border, then apply the `.clickable` block internally to correctly layer the ripple effect above the background but below the contents.

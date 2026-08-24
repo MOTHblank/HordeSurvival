@@ -17,6 +17,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeCard
 
 /**
  * Item shop between runs — spend gold on permanent upgrades.
@@ -31,7 +34,7 @@ fun ItemShopScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("⚔️ Weapons", "🛡️ Passives", "🎨 Skins")
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))) {
+    HordeScreen {
         Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // Header
             Text("🛒 Item Shop", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach)
@@ -71,7 +74,7 @@ fun ItemShopScreen(
             }
 
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = onBack) { Text("← Back", color = HordeColors.TextSecondary) }
+            HordeButton(text = "← Back", onClick = onBack, color = HordeColors.TextSecondary, isSecondary = true)
         }
     }
 }
@@ -120,11 +123,8 @@ private fun ShopItemList(items: List<ShopItem>, gold: Int, onPurchase: (String, 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items.forEach { item ->
             val canAfford = gold >= item.cost
-            Box(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(HordeColors.CardBg)
-                    .then(if (canAfford) Modifier.clickable { onPurchase(item.id, item.cost) } else Modifier)
-                    .padding(14.dp)
+            HordeCard(
+                modifier = Modifier.fillMaxWidth().then(if (canAfford) Modifier.clickable { onPurchase(item.id, item.cost) } else Modifier)
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeButton
 
 /**
  * Interactive tutorial with step-by-step game mechanics explanation.
@@ -53,10 +55,7 @@ fun TutorialScreen(
     val currentStep = steps[step]
     val progress = (step + 1).toFloat() / steps.size
 
-    Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0D0D2B), Color(0xFF0A0A1F), Color(0xFF050510)))),
-        contentAlignment = Alignment.Center
-    ) {
+    HordeScreen {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(32.dp)
@@ -116,13 +115,9 @@ fun TutorialScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (step > 0) {
-                    TextButton(onClick = { step-- }) {
-                        Text("← Back", color = HordeColors.TextSecondary)
-                    }
+                    HordeButton(text = "← Back", onClick = { step-- }, color = HordeColors.TextSecondary, isSecondary = true, modifier = Modifier.height(36.dp).width(100.dp))
                 } else {
-                    TextButton(onClick = onSkip) {
-                        Text("Skip", color = HordeColors.TextSecondary)
-                    }
+                    HordeButton(text = "Skip", onClick = onSkip, color = HordeColors.TextSecondary, isSecondary = true, modifier = Modifier.height(36.dp).width(100.dp))
                 }
 
                 // Dots indicator
@@ -136,19 +131,9 @@ fun TutorialScreen(
                 }
 
                 if (step < steps.size - 1) {
-                    Button(
-                        onClick = { step++ },
-                        colors = ButtonDefaults.buttonColors(containerColor = HordeColors.SkyBlue)
-                    ) {
-                        Text("Next →")
-                    }
+                    HordeButton(text = "Next →", onClick = { step++ }, color = HordeColors.SkyBlue, modifier = Modifier.height(36.dp).width(100.dp))
                 } else {
-                    Button(
-                        onClick = onFinish,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A))
-                    ) {
-                        Text("Start Playing! 🎮")
-                    }
+                    HordeButton(text = "Start! 🎮", onClick = onFinish, color = Color(0xFF66BB6A), modifier = Modifier.height(36.dp).width(110.dp))
                 }
             }
         }

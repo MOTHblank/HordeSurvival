@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeButton
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.theme.HordeColors
 
@@ -41,7 +43,7 @@ fun SettingsScreen(
 ) {
     var showSaveDialog by remember { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))) {
+    HordeScreen {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("⚙ Settings", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach)
             Spacer(Modifier.height(24.dp))
@@ -192,7 +194,7 @@ fun SettingsScreen(
             ToggleSetting("📳 Screen Shake", "Camera shake on hits and bosses", screenShakeEnabled, onScreenShakeToggle)
 
             Spacer(Modifier.height(24.dp))
-            TextButton(onClick = { showSaveDialog = true }) { Text("← Back", color = HordeColors.TextSecondary) }
+            HordeButton(text = "← Back", onClick = { showSaveDialog = true }, color = HordeColors.TextSecondary, isSecondary = true)
         }
 
         // Save confirmation dialog

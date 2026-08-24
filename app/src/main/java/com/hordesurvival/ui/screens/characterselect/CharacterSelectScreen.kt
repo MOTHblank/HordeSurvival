@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.UnlockedCharacter
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeCard
 
 /**
  * Character selection screen with grid of characters.
@@ -36,13 +39,7 @@ fun CharacterSelectScreen(
     gold: Int,
     languageCode: String = "en"
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface))
-            )
-    ) {
+    HordeScreen {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -82,16 +79,9 @@ fun CharacterSelectScreen(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                TextButton(onClick = onBack) {
-                    Text("← Back", color = HordeColors.TextSecondary)
-                }
+                HordeButton(text = "← Back", onClick = onBack, color = HordeColors.TextSecondary, isSecondary = true)
 
-                Button(
-                    onClick = onConfirm,
-                    colors = ButtonDefaults.buttonColors(containerColor = HordeColors.SkyBlue)
-                ) {
-                    Text("Confirm", fontWeight = FontWeight.Bold)
-                }
+                HordeButton(text = "Confirm", onClick = onConfirm, color = HordeColors.SkyBlue)
             }
         }
     }
@@ -111,7 +101,7 @@ private fun CharacterCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(190.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(HordeColors.CardBg.copy(alpha = alpha))
             .border(2.dp, borderColor, RoundedCornerShape(14.dp))
@@ -156,16 +146,12 @@ private fun CharacterCard(
 
             if (!character.isUnlocked) {
                 Spacer(modifier = Modifier.height(8.dp))
-                TextButton(
+                HordeButton(
+                    text = "🔒 Unlock (500💰)",
                     onClick = { onUnlock(character.characterId, 500) },
-                    enabled = gold >= 500
-                ) {
-                    Text(
-                        "🔒 Unlock (500💰)",
-                        fontSize = 11.sp,
-                        color = if (gold >= 500) HordeColors.GoldColor else HordeColors.TextSecondary
-                    )
-                }
+                    enabled = gold >= 500,
+                    modifier = Modifier.height(34.dp)
+                )
             }
         }
     }
