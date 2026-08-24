@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * Core game engine managing the ECS world.
  * Overhauled: integrated 2D SpatialGrid for spatial queries (findNearest, findInRange, collisions),
- * eliminating O(N) linear scans across entities during hot gameplay loops.
+ * and O(1) entityByIdMap lookup for targeted projectile tracking.
  */
 class GameEngine {
 
@@ -22,6 +22,9 @@ class GameEngine {
 
     // Spatial partitioning grid for zero-allocation range/collision queries
     val spatialGrid = SpatialGrid(cellSize = 128f)
+
+    // O(1) ID lookup map to eliminate O(N) linear scans during homing/targeting
+    private val entityByIdMap = HashMap<Int, Entity>(512)
 
     // Entity pool for reuse
     private val entityPool = ObjectPool(
@@ -77,6 +80,7 @@ class GameEngine {
         entity.tag = tag
         entity.clearComponents()
         entity.id = nextEntityId.getAndIncrement()
+        entityByIdMap[entity.id] = entity
         entitiesToAdd.add(entity)
         return entity
     }
@@ -85,12 +89,19 @@ class GameEngine {
         entity.active = false
     }
 
+    /** Fast O(1) entity lookup by ID */
+    fun getEntityById(id: Int): Entity? {
+        val e = entityByIdMap[id]
+        return if (e != null && e.active) e else null
+    }
+
     /** Return inactive entities to pool + force-kill stale entities */
     private fun recycleEntities() {
         val iter = entities.iterator()
         while (iter.hasNext()) {
             val e = iter.next()
             if (!e.active && !e.has<PlayerComponent>()) {
+                entityByIdMap.remove(e.id)
                 entityPool.free(e)
                 iter.remove()
             } else if (e.active && !e.has<PlayerComponent>()) {
@@ -217,6 +228,7 @@ class GameEngine {
         entities.clear()
         entitiesToAdd.clear()
         _activeEntitiesCache.clear()
+        entityByIdMap.clear()
         spatialGrid.clear()
         entityPool.freeAll()
         systems.forEach { it.dispose() }

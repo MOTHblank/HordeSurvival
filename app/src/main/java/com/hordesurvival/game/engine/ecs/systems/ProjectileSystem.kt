@@ -13,7 +13,8 @@ import kotlin.math.sin
 
 /**
  * Projectile movement, homing, boomerang return, and lifetime.
- * Fixed: boomerang return logic, proper distance tracking. Reuses Vector2 for trail particle offsets.
+ * Overhauled: replaced O(N) linear homing searches with O(1) target lookup via GameEngine.getEntityById,
+ * preserving exact target lock-on gameplay behavior while eliminating frame spikes.
  */
 class ProjectileSystem(private val engine: GameEngine) : System() {
 
@@ -22,7 +23,7 @@ class ProjectileSystem(private val engine: GameEngine) : System() {
 
     // Trail spawn timer — spawn trail particles every N seconds per projectile
     private var trailTimer = 0f
-    private val TRAIL_INTERVAL = 0.03f  // every 30ms
+    private val TRAIL_INTERVAL = 0.05f  // every 50ms
 
     override fun update(dt: Float, entities: List<Entity>) {
         val player = entities.find { it.tag == "player" }
@@ -32,8 +33,9 @@ class ProjectileSystem(private val engine: GameEngine) : System() {
         val shouldSpawnTrail = trailTimer >= TRAIL_INTERVAL
         if (shouldSpawnTrail) trailTimer = 0f
 
-        for (entity in entities) {
-            if (entity.tag != "projectile") continue
+        for (i in 0 until entities.size) {
+            val entity = entities[i]
+            if (entity.tag != "projectile" || !entity.active) continue
             val proj = entity.get<ProjectileComponent>() ?: continue
             val transform = entity.get<TransformComponent>() ?: continue
             val velocity = entity.get<VelocityComponent>() ?: continue
@@ -83,10 +85,10 @@ class ProjectileSystem(private val engine: GameEngine) : System() {
                     continue
                 }
             }
-            // ── Regular homing ────────────────────────────────────
+            // ── Regular homing (O(1) target lookup) ─────────────────
             else if (proj.isHoming && proj.targetId >= 0) {
-                val target = engine.getActiveEntities().find { it.id == proj.targetId && it.active }
-                if (target != null) {
+                val target = engine.getEntityById(proj.targetId)
+                if (target != null && target.active) {
                     val targetPos = target.get<TransformComponent>()
                     if (targetPos != null) {
                         val desiredAngle = GameMath.angleTo(transform.x, transform.y, targetPos.x, targetPos.y)
@@ -105,8 +107,8 @@ class ProjectileSystem(private val engine: GameEngine) : System() {
             // Update rotation to face movement direction
             transform.rotation = atan2(velocity.vy, velocity.vx)
 
-            // Spawn trail particle
-            if (shouldSpawnTrail) {
+            // Spawn trail particle (throttled to avoid entity pool churn under heavy entity counts)
+            if (shouldSpawnTrail && engine.getEntityCount() < 400) {
                 spawnTrailParticle(transform.x, transform.y, proj.weaponType)
             }
         }
