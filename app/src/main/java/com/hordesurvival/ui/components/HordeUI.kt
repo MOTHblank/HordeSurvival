@@ -5,6 +5,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -33,6 +35,18 @@ import kotlinx.coroutines.delay
  */
 
 @Composable
+fun HordeScreen(content: @Composable BoxScope.() -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface))),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
+    }
+}
+
+@Composable
 fun HordeButton(
     text: String,
     onClick: () -> Unit,
@@ -42,6 +56,10 @@ fun HordeButton(
     breathe: Float = 1f,
     icon: String? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val s by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 0.95f else 1f,
     var pressed by remember { mutableStateOf(false) }
     val s by animateFloatAsState(
         targetValue = if (pressed) 0.95f else 1f,
@@ -74,6 +92,11 @@ fun HordeButton(
                 color = if (enabled) color.copy(alpha = 0.3f) else Color.Gray.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(18.dp)
             )
+            .then(
+                if (enabled) Modifier.clickable(interactionSource = interactionSource, indication = androidx.compose.material.ripple.rememberRipple()) {
+                    onClick()
+                } else Modifier
+            ),
             .clickable(enabled = enabled) {
                 pressed = true
                 onClick()
@@ -116,6 +139,10 @@ fun HordeSecondaryButton(
     color: Color = HordeColors.TextSecondary,
     icon: String? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val s by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
     var pressed by remember { mutableStateOf(false) }
     val s by animateFloatAsState(
         targetValue = if (pressed) 0.96f else 1f,
@@ -138,6 +165,7 @@ fun HordeSecondaryButton(
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFF1A1A3F))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+            .clickable(interactionSource = interactionSource, indication = androidx.compose.material.ripple.rememberRipple()) {
             .clickable {
                 pressed = true
                 onClick()
@@ -198,6 +226,7 @@ fun HordeBackButton(
 @Composable
 fun HordeCard(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box(
@@ -206,6 +235,9 @@ fun HordeCard(
             .clip(RoundedCornerShape(16.dp))
             .background(Brush.verticalGradient(listOf(Color(0xFF1E1E3F), Color(0xFF151530))))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+            .then(
+                if (onClick != null) Modifier.clickable { onClick() } else Modifier
+            )
             .padding(20.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth(), content = content)
