@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.utils.Constants
 import com.hordesurvival.utils.GameMath
+import com.badlogic.gdx.utils.IntFloatMap
 
 /**
  * Handles all collision detection with proper cooldowns and damage batching.
@@ -18,7 +19,8 @@ import com.hordesurvival.utils.GameMath
 class CollisionSystem(private val engine: GameEngine) : System() {
 
     // Shield contact cooldown per enemy (prevents per-frame damage)
-    private val shieldHitCooldowns = mutableMapOf<Int, Float>()
+    // Bolt: Swapped boxed standard Map for libGDX IntFloatMap to eliminate autoboxing of IDs and floats
+    private val shieldHitCooldowns = IntFloatMap()
 
     // Reusable Vector2 for offset calculation — prevents GC allocations in particle loops
     private val tempVec2 = Vector2()
@@ -84,7 +86,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         while (cooldownIter.hasNext()) {
             val entry = cooldownIter.next()
             val newTime = entry.value - dt
-            if (newTime <= 0f) cooldownIter.remove() else entry.setValue(newTime)
+            if (newTime <= 0f) cooldownIter.remove() else entry.value = newTime
         }
 
         damageNumbers.clear()
@@ -279,10 +281,10 @@ class CollisionSystem(private val engine: GameEngine) : System() {
 
                 if (distSq < minDist * minDist) {
                     val cooldownKey = enemy.id
-                    if (shieldHitCooldowns[cooldownKey] == null || shieldHitCooldowns[cooldownKey]!! <= 0f) {
+                    if (shieldHitCooldowns.get(cooldownKey, 0f) <= 0f) {
                         eHealth.takeDamage(shieldDamage)
                         sHealth.takeDamage(3f)
-                        shieldHitCooldowns[cooldownKey] = 0.3f
+                        shieldHitCooldowns.put(cooldownKey, 0.3f)
                         spawnHitParticles(eTransform.x, eTransform.y, 0xFFB19CD9.toInt())
                     }
                 }
