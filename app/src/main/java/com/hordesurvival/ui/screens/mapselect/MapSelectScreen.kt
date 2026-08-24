@@ -20,8 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.map.GameMap
-import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeSecondaryButton
 
 /**
  * Map selection screen — shown when player picks Survival mode.
@@ -36,7 +36,10 @@ fun MapSelectScreen(
 ) {
     var selectedMap by remember { mutableStateOf<GameMap?>(null) }
 
-    HordeScreen {
+    Box(
+        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0D0D2B), Color(0xFF0A0A1F), Color(0xFF050510)))),
+        contentAlignment = Alignment.TopCenter
+    ) {
         Column(
             Modifier.fillMaxSize().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -114,18 +117,25 @@ fun MapSelectScreen(
             // Action buttons
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // Back
-                HordeButton(text = "← Back", onClick = onBack, color = Color.White.copy(alpha = 0.7f), isSecondary = true, modifier = Modifier.weight(1f))
+                HordeSecondaryButton(
+                    text = "Back",
+                    icon = "←",
+                    onClick = onBack,
+                    modifier = Modifier.weight(1f)
+                )
 
                 // Play
                 val canPlay = selectedMap != null && (selectedMap!!.id in unlockedMapIds || selectedMap!!.unlockCost == 0)
                 HordeButton(
-                    text = "▶ Play",
-                    onClick = { if (canPlay) selectedMap?.let { onSelectMap(it) } },
+                    text = "Play",
+                    icon = "▶",
+                    color = Color(0xFF66BB6A),
                     enabled = canPlay,
-                    color = Color(0xFF4CAF50),
+                    onClick = { if (canPlay) selectedMap?.let { onSelectMap(it) } },
                     modifier = Modifier.weight(1f)
                 )
             }

@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeSecondaryButton
 
 /**
  * Tower Defense stage completion overlay.
@@ -93,44 +95,31 @@ fun TowerDefenseStageComplete(
             // Buttons
             if (!isVictory) {
                 // Next Stage
-                Box(
-                    Modifier.fillMaxWidth(0.7f).height(52.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Brush.horizontalGradient(listOf(Color(0xFF66BB6A), Color(0xFF4CAF50))))
-                        .clickable { onNextStage() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("▶ Next Stage", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                }
+                HordeButton(
+                    text = "Next Stage",
+                    icon = "▶",
+                    color = Color(0xFF66BB6A),
+                    onClick = onNextStage
+                )
             }
 
             Spacer(Modifier.height(10.dp))
 
             // Replay
-            Box(
-                Modifier.fillMaxWidth(0.7f).height(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF2A2A5F))
-                    .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(14.dp))
-                    .clickable { onReplayStage() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🔄 Replay Stage", fontSize = 16.sp, color = Color.White)
-            }
+            HordeSecondaryButton(
+                text = "Replay Stage",
+                icon = "🔄",
+                onClick = onReplayStage
+            )
 
             Spacer(Modifier.height(10.dp))
 
             // Main Menu
-            Box(
-                Modifier.fillMaxWidth(0.7f).height(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF1A1A3F))
-                    .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
-                    .clickable { onMainMenu() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🏠 Main Menu", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f))
-            }
+            HordeSecondaryButton(
+                text = "Main Menu",
+                icon = "🏠",
+                onClick = onMainMenu
+            )
         }
     }
 }

@@ -18,11 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.PlayerSave
+import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeSmallButton
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.utils.Constants
-import com.hordesurvival.ui.components.HordeScreen
-import com.hordesurvival.ui.components.HordeButton
-import com.hordesurvival.ui.components.HordeCard
 
 /**
  * Meta-progression upgrades screen.
@@ -44,7 +43,11 @@ fun UpgradesScreen(
         UpgradeDef("🍀", "Luck", "+3% better upgrades", playerSave.metaLuckLevel, { onUpgrade("luck", it) }),
     )
 
-    HordeScreen {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -75,20 +78,26 @@ fun UpgradesScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Stats
-            HordeCard(
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(HordeColors.CardBg)
+                    .padding(16.dp)
             ) {
-                Text("📊 Stats", fontWeight = FontWeight.Bold, color = Color.White)
-                Spacer(modifier = Modifier.height(8.dp))
-                StatLine("Total Runs", "${playerSave.totalRuns}")
-                StatLine("Total Kills", "${playerSave.totalKills}")
-                StatLine("Best Time", formatTime(playerSave.bestTime))
-                StatLine("Best Level", "${playerSave.bestLevel}")
+                Column {
+                    Text("📊 Stats", fontWeight = FontWeight.Bold, color = Color.White)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    StatLine("Total Runs", "${playerSave.totalRuns}")
+                    StatLine("Total Kills", "${playerSave.totalKills}")
+                    StatLine("Best Time", formatTime(playerSave.bestTime))
+                    StatLine("Best Level", "${playerSave.bestLevel}")
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            HordeButton(text = "← Back", onClick = onBack, color = HordeColors.TextSecondary, isSecondary = true)
+            HordeBackButton(onClick = onBack)
         }
     }
 }
@@ -103,7 +112,13 @@ private fun UpgradeRow(
     icon: String, title: String, description: String,
     cost: Int, canAfford: Boolean, isMaxed: Boolean, onBuy: () -> Unit
 ) {
-    HordeCard(modifier = Modifier.fillMaxWidth()) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(HordeColors.CardBg)
+            .padding(14.dp)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -122,11 +137,10 @@ private fun UpgradeRow(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) { Text("MAX", color = HordeColors.MintGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
             } else {
-                HordeButton(
+                HordeSmallButton(
                     text = "${cost}💰",
                     onClick = onBuy,
-                    enabled = canAfford,
-                    modifier = Modifier.height(34.dp).width(80.dp) // Maintain smaller button shape for upgrades
+                    enabled = canAfford
                 )
             }
         }

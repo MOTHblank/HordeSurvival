@@ -7,7 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.theme.HordeColors
-import com.hordesurvival.ui.components.HordeButton
 import kotlin.math.sin
 import kotlin.math.cos
 
@@ -156,16 +155,16 @@ fun MainMenuScreen(
 
                 // Secondary buttons — compact grid
                 Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HordeButton(text = L("characters"), icon = "👤", color = HordeColors.Lavender, onClick = onCharactersClick, modifier = Modifier.weight(1f))
-                    HordeButton(text = L("upgrades"), icon = "⬆", color = HordeColors.MintGreen, onClick = onUpgradesClick, modifier = Modifier.weight(1f))
+                    SmallMenuButton("👤", L("characters"), HordeColors.Lavender, Modifier.weight(1f), onCharactersClick)
+                    SmallMenuButton("⬆", L("upgrades"), HordeColors.MintGreen, Modifier.weight(1f), onUpgradesClick)
                 }
                 Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HordeButton(text = "Shop", icon = "🛒", color = HordeColors.GoldColor, onClick = onShopClick, modifier = Modifier.weight(1f))
-                    HordeButton(text = "Stats", icon = "📊", color = HordeColors.SoftPink, onClick = onStatsClick, modifier = Modifier.weight(1f))
+                    SmallMenuButton("🛒", "Shop", HordeColors.GoldColor, Modifier.weight(1f), onShopClick)
+                    SmallMenuButton("📊", "Stats", HordeColors.SoftPink, Modifier.weight(1f), onStatsClick)
                 }
                 Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HordeButton(text = L("settings"), icon = "⚙", color = HordeColors.WarmPeach, onClick = onSettingsClick, modifier = Modifier.weight(1f))
-                    HordeButton(text = "Tutorial", icon = "📖", color = HordeColors.Cream, onClick = onTutorialClick, modifier = Modifier.weight(1f))
+                    SmallMenuButton("⚙", L("settings"), HordeColors.WarmPeach, Modifier.weight(1f), onSettingsClick)
+                    SmallMenuButton("📖", "Tutorial", HordeColors.Cream, Modifier.weight(1f), onTutorialClick)
                 }
             }
 
@@ -195,5 +194,27 @@ private fun GlowButton(text: String, color: Color, onClick: () -> Unit, breathe:
     ) {
         Text(text, fontSize = 19.sp, fontWeight = FontWeight.Black, color = Color.White, letterSpacing = 2.sp,
             style = TextStyle(shadow = Shadow(color = color.copy(alpha = 0.5f), offset = Offset(0f, 0f), blurRadius = 12f)))
+    }
+}
+
+// ── Compact 2-column button ──
+@Composable
+private fun SmallMenuButton(icon: String, label: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
+    var pressed by remember { mutableStateOf(false) }
+    val s by animateFloatAsState(if (pressed) 0.94f else 1f, spring(dampingRatio = 0.7f), label = "sb")
+    Box(
+        modifier.height(48.dp).scale(s)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.12f), color.copy(alpha = 0.06f))))
+            .border(0.5.dp, color.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
+            .clickable { pressed = true; onClick() }
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Text(icon, fontSize = 16.sp)
+            Spacer(Modifier.width(6.dp))
+            Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.8f))
+        }
     }
 }

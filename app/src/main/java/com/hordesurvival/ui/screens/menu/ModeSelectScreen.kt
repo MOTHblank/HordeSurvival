@@ -17,15 +17,14 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.mode.DailyChallenge
 import com.hordesurvival.ui.Locales
+import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.theme.HordeColors
-import com.hordesurvival.ui.components.HordeScreen
-import com.hordesurvival.ui.components.HordeButton
 
 @Composable
 fun ModeSelectScreen(onModeSelected: (GameModeType) -> Unit, onBack: () -> Unit, languageCode: String = "en") {
     val L = { k: String -> Locales.getString(k, languageCode) }
     val dailyChallenge = remember { DailyChallenge.getTodayChallenge() }
-    HordeScreen {
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))) {
         Column(Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text(L("select_mode"), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue)
             Spacer(Modifier.height(40.dp))
@@ -39,7 +38,7 @@ fun ModeSelectScreen(onModeSelected: (GameModeType) -> Unit, onBack: () -> Unit,
             Spacer(Modifier.height(16.dp))
             ModeCard("👹 Boss Rush Extreme", "Bosses every 15s. No breaks. Pure chaos.", HordeColors.SoftPink) { onModeSelected(GameModeType.BOSS_RUSH_EXTREME) }
             Spacer(Modifier.height(32.dp))
-            HordeButton(text = "← ${L("back")}", onClick = onBack, color = HordeColors.TextSecondary, isSecondary = true)
+            HordeBackButton(text = "← ${L("back")}", onClick = onBack)
         }
     }
 }
