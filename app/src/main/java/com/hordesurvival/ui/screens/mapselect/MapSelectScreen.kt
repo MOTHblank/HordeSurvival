@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.map.GameMap
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeSecondaryButton
 
 /**
  * Map selection screen — shown when player picks Survival mode.
@@ -115,35 +117,27 @@ fun MapSelectScreen(
             // Action buttons
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // Back
-                Box(
-                    Modifier.weight(1f).height(50.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF1A1A3F))
-                        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
-                        .clickable { onBack() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("← Back", fontSize = 16.sp, color = Color.White.copy(alpha = 0.7f))
-                }
+                HordeSecondaryButton(
+                    text = "Back",
+                    icon = "←",
+                    onClick = onBack,
+                    modifier = Modifier.weight(1f)
+                )
 
                 // Play
                 val canPlay = selectedMap != null && (selectedMap!!.id in unlockedMapIds || selectedMap!!.unlockCost == 0)
-                Box(
-                    Modifier.weight(1f).height(50.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(
-                            if (canPlay) Brush.horizontalGradient(listOf(Color(0xFF66BB6A), Color(0xFF4CAF50)))
-                            else Brush.horizontalGradient(listOf(Color(0xFF333333), Color(0xFF222222)))
-                        )
-                        .clickable { if (canPlay) selectedMap?.let { onSelectMap(it) } },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("▶ Play", fontSize = 18.sp, fontWeight = FontWeight.Bold,
-                        color = if (canPlay) Color.White else Color.White.copy(alpha = 0.3f))
-                }
+                HordeButton(
+                    text = "Play",
+                    icon = "▶",
+                    color = Color(0xFF66BB6A),
+                    enabled = canPlay,
+                    onClick = { if (canPlay) selectedMap?.let { onSelectMap(it) } },
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }

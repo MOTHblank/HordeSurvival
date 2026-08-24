@@ -19,6 +19,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeCard
+import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.viewmodel.RunSummary
 @Composable
@@ -47,29 +50,25 @@ fun GameOverScreen(
             Spacer(Modifier.height(32.dp))
 
             // Stats card
-            Box(Modifier.scale(ss).fillMaxWidth(0.88f).clip(RoundedCornerShape(18.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xFF1E1E3F), Color(0xFF151530))))
-                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp)).padding(24.dp)) {
-                Column(Modifier.fillMaxWidth()) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(L("time_survived"), fontSize = 15.sp, color = HordeColors.TextSecondary)
-                        Text(formatTime(summary.timeSurvived), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue)
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(L("enemies_killed"), fontSize = 15.sp, color = HordeColors.TextSecondary)
-                        Text("${summary.kills}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.SoftPink)
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(L("level_reached"), fontSize = 15.sp, color = HordeColors.TextSecondary)
-                        Text("${summary.level}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.Lavender)
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(L("gold_earned"), fontSize = 15.sp, color = HordeColors.TextSecondary)
-                        Text("${summary.goldEarned}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.GoldColor)
-                    }
+            HordeCard(Modifier.scale(ss).fillMaxWidth(0.88f)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(L("time_survived"), fontSize = 15.sp, color = HordeColors.TextSecondary)
+                    Text(formatTime(summary.timeSurvived), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue)
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(L("enemies_killed"), fontSize = 15.sp, color = HordeColors.TextSecondary)
+                    Text("${summary.kills}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.SoftPink)
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(L("level_reached"), fontSize = 15.sp, color = HordeColors.TextSecondary)
+                    Text("${summary.level}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.Lavender)
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(L("gold_earned"), fontSize = 15.sp, color = HordeColors.TextSecondary)
+                    Text("${summary.goldEarned}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.GoldColor)
                 }
             }
 
@@ -78,36 +77,33 @@ fun GameOverScreen(
             // Continue button
             if (canContinue && !continueUsed) {
                 Column(Modifier.scale(bs), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        Modifier.fillMaxWidth(0.65f).height(54.dp).clip(RoundedCornerShape(16.dp))
-                            .background(Brush.horizontalGradient(listOf(Color(0xFF66BB6A).copy(alpha = 0.85f), Color(0xFF4CAF50).copy(alpha = 0.6f))))
-                            .border(1.dp, Color(0xFF66BB6A).copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                            .clickable {
-                                continueUsed = true
-                                onContinue()
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("💚 Continue", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
+                    HordeButton(
+                        text = "Continue",
+                        icon = "💚",
+                        color = Color(0xFF66BB6A),
+                        onClick = {
+                            continueUsed = true
+                            onContinue()
+                        }
+                    )
                     Spacer(Modifier.height(12.dp))
                 }
             }
 
             // Main buttons
             Column(Modifier.scale(bs), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(Modifier.fillMaxWidth(0.65f).height(54.dp).clip(RoundedCornerShape(16.dp))
-                    .background(Brush.horizontalGradient(listOf(HordeColors.SkyBlue.copy(alpha = 0.85f), HordeColors.Lavender.copy(alpha = 0.6f))))
-                    .border(1.dp, HordeColors.SkyBlue.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                    .clickable { onPlayAgain() }, contentAlignment = Alignment.Center) {
-                    Text("🔄  ${L("play_again")}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                }
+                HordeButton(
+                    text = L("play_again"),
+                    icon = "🔄",
+                    color = HordeColors.SkyBlue,
+                    onClick = onPlayAgain
+                )
                 Spacer(Modifier.height(12.dp))
-                Box(Modifier.fillMaxWidth(0.65f).height(50.dp).clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
-                    .clickable { onMainMenu() }, contentAlignment = Alignment.Center) {
-                    Text("🏠  ${L("main_menu")}", fontSize = 16.sp, color = HordeColors.TextSecondary)
-                }
+                HordeSecondaryButton(
+                    text = L("main_menu"),
+                    icon = "🏠",
+                    onClick = onMainMenu
+                )
             }
         }
     }

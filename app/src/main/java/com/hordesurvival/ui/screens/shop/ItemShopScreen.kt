@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -71,7 +72,7 @@ fun ItemShopScreen(
             }
 
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = onBack) { Text("← Back", color = HordeColors.TextSecondary) }
+            HordeBackButton(onClick = onBack)
         }
     }
 }

@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.UnlockedCharacter
+import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -80,18 +82,16 @@ fun CharacterSelectScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onBack) {
-                    Text("← Back", color = HordeColors.TextSecondary)
-                }
+                HordeBackButton(onClick = onBack)
 
-                Button(
+                HordeButton(
+                    text = "Confirm",
                     onClick = onConfirm,
-                    colors = ButtonDefaults.buttonColors(containerColor = HordeColors.SkyBlue)
-                ) {
-                    Text("Confirm", fontWeight = FontWeight.Bold)
-                }
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
