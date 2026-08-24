@@ -20,6 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
+import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -116,13 +118,9 @@ fun TutorialScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (step > 0) {
-                    TextButton(onClick = { step-- }) {
-                        Text("← Back", color = HordeColors.TextSecondary)
-                    }
+                    HordeBackButton(onClick = { step-- })
                 } else {
-                    TextButton(onClick = onSkip) {
-                        Text("Skip", color = HordeColors.TextSecondary)
-                    }
+                    HordeBackButton(text = "Skip", onClick = onSkip)
                 }
 
                 // Dots indicator
@@ -136,19 +134,20 @@ fun TutorialScreen(
                 }
 
                 if (step < steps.size - 1) {
-                    Button(
+                    HordeButton(
+                        text = "Next",
+                        icon = "→",
                         onClick = { step++ },
-                        colors = ButtonDefaults.buttonColors(containerColor = HordeColors.SkyBlue)
-                    ) {
-                        Text("Next →")
-                    }
+                        modifier = Modifier.width(130.dp)
+                    )
                 } else {
-                    Button(
+                    HordeButton(
+                        text = "Play!",
+                        icon = "🎮",
+                        color = Color(0xFF66BB6A),
                         onClick = onFinish,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A))
-                    ) {
-                        Text("Start Playing! 🎮")
-                    }
+                        modifier = Modifier.width(130.dp)
+                    )
                 }
             }
         }

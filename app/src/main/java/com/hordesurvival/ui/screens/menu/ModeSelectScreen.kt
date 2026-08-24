@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.mode.DailyChallenge
 import com.hordesurvival.ui.Locales
+import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.theme.HordeColors
 
 @Composable
@@ -37,7 +38,7 @@ fun ModeSelectScreen(onModeSelected: (GameModeType) -> Unit, onBack: () -> Unit,
             Spacer(Modifier.height(16.dp))
             ModeCard("👹 Boss Rush Extreme", "Bosses every 15s. No breaks. Pure chaos.", HordeColors.SoftPink) { onModeSelected(GameModeType.BOSS_RUSH_EXTREME) }
             Spacer(Modifier.height(32.dp))
-            TextButton(onClick = onBack) { Text("← ${L("back")}", color = HordeColors.TextSecondary) }
+            HordeBackButton(text = "← ${L("back")}", onClick = onBack)
         }
     }
 }

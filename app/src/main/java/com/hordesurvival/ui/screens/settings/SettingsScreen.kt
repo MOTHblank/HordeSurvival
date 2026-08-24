@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.theme.HordeColors
 
 @Composable
@@ -192,7 +193,7 @@ fun SettingsScreen(
             ToggleSetting("📳 Screen Shake", "Camera shake on hits and bosses", screenShakeEnabled, onScreenShakeToggle)
 
             Spacer(Modifier.height(24.dp))
-            TextButton(onClick = { showSaveDialog = true }) { Text("← Back", color = HordeColors.TextSecondary) }
+            HordeBackButton(onClick = { showSaveDialog = true })
         }
 
         // Save confirmation dialog

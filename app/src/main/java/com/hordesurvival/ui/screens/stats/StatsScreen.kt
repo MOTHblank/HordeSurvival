@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.PlayerSave
 import com.hordesurvival.ui.Locales
+import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -66,7 +67,7 @@ fun StatsScreen(
             }
 
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = onBack) { Text("← Back", color = HordeColors.TextSecondary) }
+            HordeBackButton(onClick = onBack)
         }
     }
 }

@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.PlayerSave
+import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeSmallButton
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.utils.Constants
 
@@ -95,9 +97,7 @@ fun UpgradesScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            TextButton(onClick = onBack) {
-                Text("← Back", color = HordeColors.TextSecondary, fontSize = 16.sp)
-            }
+            HordeBackButton(onClick = onBack)
         }
     }
 }
@@ -137,15 +137,11 @@ private fun UpgradeRow(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) { Text("MAX", color = HordeColors.MintGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
             } else {
-                Button(
-                    onClick = onBuy, enabled = canAfford,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = HordeColors.SkyBlue,
-                        disabledContainerColor = HordeColors.DarkCard
-                    ),
-                    modifier = Modifier.height(34.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) { Text("${cost}💰", fontSize = 12.sp) }
+                HordeSmallButton(
+                    text = "${cost}💰",
+                    onClick = onBuy,
+                    enabled = canAfford
+                )
             }
         }
     }

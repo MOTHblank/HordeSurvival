@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -135,15 +137,18 @@ fun PauseScreen(
                 }
             } else {
                 // Main pause buttons
-                Button(onClick = onResume) {
-                    Text("▶ Resume", fontSize = 18.sp)
-                }
+                HordeButton(
+                    text = "Resume",
+                    icon = "▶",
+                    onClick = onResume
+                )
                 Spacer(modifier = Modifier.height(12.dp))
-                TextButton(onClick = { showSettings = true }) {
-                    Text("⚙ Settings", color = HordeColors.SkyBlue, fontSize = 16.sp)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Spacer(Modifier.height(12.dp))
+                HordeSecondaryButton(
+                    text = "Settings",
+                    icon = "⚙",
+                    onClick = { showSettings = true }
+                )
+                Spacer(modifier = Modifier.height(24.dp))
 
                 // Game speed control
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -158,11 +163,13 @@ fun PauseScreen(
                         ) { Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary, fontSize = 13.sp, fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal) }
                     }
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(24.dp))
 
-                TextButton(onClick = onQuit) {
-                    Text("🏠 Quit to Menu", color = HordeColors.TextSecondary)
-                }
+                HordeSecondaryButton(
+                    text = "Quit to Menu",
+                    icon = "🏠",
+                    onClick = onQuit
+                )
             }
         }
     }
