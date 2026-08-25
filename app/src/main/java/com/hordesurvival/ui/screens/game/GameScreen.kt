@@ -306,6 +306,7 @@ fun GameScreen(
                 goldEarned = tdStageGold,
                 livesRemaining = tdLivesRemaining,
                 isVictory = tdIsVictory,
+                languageCode = languageCode,
                 onNextStage = {
                     gameViewModel.tdNextStage()
                     gameViewModel.resumeGame()
@@ -337,6 +338,7 @@ fun GameScreen(
                 musicVolume = musicVol,
                 sfxVolume = sfxVol,
                 bgMusicEnabled = bgMusicOn,
+                languageCode = languageCode,
                 onMusicVolumeChange = { musicVol = it; com.hordesurvival.game.audio.SoundManager.setMusicVolume(it); com.hordesurvival.game.audio.SoundManager.setSfxVolume(sfxVol) },
                 onSfxVolumeChange = { sfxVol = it; com.hordesurvival.game.audio.SoundManager.setSfxVolume(it) },
                 onBgMusicToggle = { bgMusicOn = !bgMusicOn; com.hordesurvival.game.audio.SoundManager.toggleBgMusic() },
