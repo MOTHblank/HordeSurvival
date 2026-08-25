@@ -137,13 +137,13 @@ fun PauseScreen(
                 }
             } else {
                 // Main pause buttons
-                HordeButton(
+                HordeButton(modifier = Modifier.fillMaxWidth(0.7f),
                     text = "Resume",
                     icon = "▶",
                     onClick = onResume
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                HordeSecondaryButton(
+                HordeSecondaryButton(modifier = Modifier.fillMaxWidth(0.7f),
                     text = "Settings",
                     icon = "⚙",
                     onClick = { showSettings = true }
@@ -165,7 +165,7 @@ fun PauseScreen(
                 }
                 Spacer(Modifier.height(24.dp))
 
-                HordeSecondaryButton(
+                HordeSecondaryButton(modifier = Modifier.fillMaxWidth(0.7f),
                     text = "Quit to Menu",
                     icon = "🏠",
                     onClick = onQuit
