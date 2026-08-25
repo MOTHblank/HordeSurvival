@@ -27,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.theme.HordeColors
-import kotlinx.coroutines.delay
 
 /**
  * Unified UI component system for Horde Survival.
@@ -82,7 +81,10 @@ fun HordeButton(
                 shape = RoundedCornerShape(18.dp)
             )
             .then(
-                if (enabled) Modifier.clickable(interactionSource = interactionSource, indication = androidx.compose.material.ripple.rememberRipple()) {
+                if (enabled) Modifier.clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
                     onClick()
                 } else Modifier
             ),
@@ -139,7 +141,10 @@ fun HordeSecondaryButton(
             .clip(RoundedCornerShape(16.dp))
             .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.12f), color.copy(alpha = 0.06f))))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
-            .clickable(interactionSource = interactionSource, indication = androidx.compose.material.ripple.rememberRipple()) {
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
                 onClick()
             },
         contentAlignment = Alignment.Center
