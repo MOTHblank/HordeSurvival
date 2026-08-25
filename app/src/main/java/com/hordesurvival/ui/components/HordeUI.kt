@@ -65,7 +65,6 @@ fun HordeButton(
 
     Box(
         modifier = modifier
-            .fillMaxWidth(0.7f)
             .height(56.dp)
             .scale(s * breathe)
             .clip(RoundedCornerShape(18.dp))
@@ -137,11 +136,10 @@ fun HordeSecondaryButton(
 
     Box(
         modifier = modifier
-            .fillMaxWidth(0.7f)
             .height(50.dp)
             .scale(s)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1A1A3F))
+            .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.12f), color.copy(alpha = 0.06f))))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
             .clickable(
                 interactionSource = interactionSource,

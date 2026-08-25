@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeSecondaryButton
 import kotlin.math.sin
 import kotlin.math.cos
 
@@ -151,20 +153,27 @@ fun MainMenuScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // Play button — prominent
-                GlowButton("▶  ${L("play")}", HordeColors.SkyBlue, onPlayClick, breathe)
+                HordeButton(
+                    text = L("play"),
+                    icon = "▶",
+                    onClick = onPlayClick,
+                    color = HordeColors.SkyBlue,
+                    modifier = Modifier.fillMaxWidth(0.7f),
+                    breathe = breathe
+                )
 
                 // Secondary buttons — compact grid
                 Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SmallMenuButton("👤", L("characters"), HordeColors.Lavender, Modifier.weight(1f), onCharactersClick)
-                    SmallMenuButton("⬆", L("upgrades"), HordeColors.MintGreen, Modifier.weight(1f), onUpgradesClick)
+                    HordeSecondaryButton(text = L("characters"), onClick = onCharactersClick, modifier = Modifier.weight(1f), color = HordeColors.Lavender, icon = "👤")
+                    HordeSecondaryButton(text = L("upgrades"), onClick = onUpgradesClick, modifier = Modifier.weight(1f), color = HordeColors.MintGreen, icon = "⬆")
                 }
                 Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SmallMenuButton("🛒", "Shop", HordeColors.GoldColor, Modifier.weight(1f), onShopClick)
-                    SmallMenuButton("📊", "Stats", HordeColors.SoftPink, Modifier.weight(1f), onStatsClick)
+                    HordeSecondaryButton(text = "Shop", onClick = onShopClick, modifier = Modifier.weight(1f), color = HordeColors.GoldColor, icon = "🛒")
+                    HordeSecondaryButton(text = "Stats", onClick = onStatsClick, modifier = Modifier.weight(1f), color = HordeColors.SoftPink, icon = "📊")
                 }
                 Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SmallMenuButton("⚙", L("settings"), HordeColors.WarmPeach, Modifier.weight(1f), onSettingsClick)
-                    SmallMenuButton("📖", "Tutorial", HordeColors.Cream, Modifier.weight(1f), onTutorialClick)
+                    HordeSecondaryButton(text = L("settings"), onClick = onSettingsClick, modifier = Modifier.weight(1f), color = HordeColors.WarmPeach, icon = "⚙")
+                    HordeSecondaryButton(text = "Tutorial", onClick = onTutorialClick, modifier = Modifier.weight(1f), color = HordeColors.Cream, icon = "📖")
                 }
             }
 
@@ -175,46 +184,6 @@ fun MainMenuScreen(
                 Text("v1.2.9", fontSize = 10.sp, color = Color.White.copy(alpha = 0.15f))
             }
             Spacer(Modifier.height(16.dp))
-        }
-    }
-}
-
-// ── Play button with glow ──
-@Composable
-private fun GlowButton(text: String, color: Color, onClick: () -> Unit, breathe: Float) {
-    var pressed by remember { mutableStateOf(false) }
-    val s by animateFloatAsState(if (pressed) 0.95f else 1f, spring(dampingRatio = 0.6f), label = "gb")
-    Box(
-        Modifier.fillMaxWidth(0.7f).height(56.dp).scale(s * breathe)
-            .clip(RoundedCornerShape(18.dp))
-            .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.7f), color.copy(alpha = 0.4f))))
-            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(18.dp))
-            .clickable { pressed = true; onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text, fontSize = 19.sp, fontWeight = FontWeight.Black, color = Color.White, letterSpacing = 2.sp,
-            style = TextStyle(shadow = Shadow(color = color.copy(alpha = 0.5f), offset = Offset(0f, 0f), blurRadius = 12f)))
-    }
-}
-
-// ── Compact 2-column button ──
-@Composable
-private fun SmallMenuButton(icon: String, label: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
-    var pressed by remember { mutableStateOf(false) }
-    val s by animateFloatAsState(if (pressed) 0.94f else 1f, spring(dampingRatio = 0.7f), label = "sb")
-    Box(
-        modifier.height(48.dp).scale(s)
-            .clip(RoundedCornerShape(14.dp))
-            .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.12f), color.copy(alpha = 0.06f))))
-            .border(0.5.dp, color.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
-            .clickable { pressed = true; onClick() }
-            .padding(horizontal = 12.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-            Text(icon, fontSize = 16.sp)
-            Spacer(Modifier.width(6.dp))
-            Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White.copy(alpha = 0.8f))
         }
     }
 }
