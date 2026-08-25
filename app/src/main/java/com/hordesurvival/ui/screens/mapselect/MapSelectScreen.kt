@@ -1,8 +1,6 @@
 package com.hordesurvival.ui.screens.mapselect
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -12,8 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -21,7 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.map.GameMap
 import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeItemCard
+import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSecondaryButton
+import com.hordesurvival.ui.theme.HordeColors
 
 /**
  * Map selection screen — shown when player picks Survival mode.
@@ -36,19 +37,16 @@ fun MapSelectScreen(
 ) {
     var selectedMap by remember { mutableStateOf<GameMap?>(null) }
 
-    Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0D0D2B), Color(0xFF0A0A1F), Color(0xFF050510)))),
-        contentAlignment = Alignment.TopCenter
-    ) {
+    HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier.fillMaxSize().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(40.dp))
 
-            Text("🗺️ Select Map", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.White)
+            Text("🗺️ Select Map", fontSize = 28.sp, fontWeight = FontWeight.Black, color = HordeColors.WarmPeach)
             Spacer(Modifier.height(8.dp))
-            Text("Gold: $playerGold", fontSize = 16.sp, color = Color(0xFFFFD700))
+            Text("Gold: $playerGold", fontSize = 16.sp, color = HordeColors.GoldColor)
 
             Spacer(Modifier.height(20.dp))
 
@@ -62,27 +60,12 @@ fun MapSelectScreen(
                 items(GameMap.allMaps) { map ->
                     val isUnlocked = map.id in unlockedMapIds || map.unlockCost == 0
                     val isSelected = selectedMap?.id == map.id
+                    val alpha = if (isUnlocked) 1f else 0.5f
 
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(
-                                if (isSelected) Color(0xFF1A3A5F)
-                                else Color(0xFF151530)
-                            )
-                            .border(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) Color(0xFF6BB6FF)
-                                else Color.White.copy(alpha = 0.08f),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            .clickable {
-                                if (isUnlocked) selectedMap = map
-                            }
-                            .padding(14.dp),
-                        contentAlignment = Alignment.Center
+                    HordeItemCard(
+                        modifier = Modifier.height(160.dp).alpha(alpha),
+                        selected = isSelected,
+                        onClick = if (isUnlocked) { { selectedMap = map } } else null
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(map.icon, fontSize = 36.sp)

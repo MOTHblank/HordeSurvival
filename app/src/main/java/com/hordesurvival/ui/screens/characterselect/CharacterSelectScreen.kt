@@ -1,8 +1,6 @@
 package com.hordesurvival.ui.screens.characterselect
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -12,8 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -22,6 +20,8 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.UnlockedCharacter
 import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeItemCard
+import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -38,13 +38,7 @@ fun CharacterSelectScreen(
     gold: Int,
     languageCode: String = "en"
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface))
-            )
-    ) {
+    HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -105,18 +99,12 @@ private fun CharacterCard(
     onUnlock: (Int, Int) -> Unit,
     gold: Int
 ) {
-    val borderColor = if (isSelected) HordeColors.SkyBlue else Color.Transparent
     val alpha = if (character.isUnlocked) 1f else 0.5f
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(HordeColors.CardBg.copy(alpha = alpha))
-            .border(2.dp, borderColor, RoundedCornerShape(14.dp))
-            .clickable(enabled = character.isUnlocked) { onClick() }
-            .padding(12.dp)
+    HordeItemCard(
+        modifier = Modifier.height(180.dp).alpha(alpha),
+        selected = isSelected,
+        onClick = if (character.isUnlocked) onClick else null
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
