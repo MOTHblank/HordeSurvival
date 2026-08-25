@@ -22,10 +22,11 @@ class XpDropSystem(private val engine: GameEngine) : System() {
     var towerDefense: com.hordesurvival.game.mode.TowerDefenseMode? = null
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = entities.find { it.tag == "player" }
+        val player = engine.playerEntity
         val playerComp = player?.get<PlayerComponent>()
 
-        for (entity in entities) {
+        for (i in 0 until entities.size) {
+            val entity = entities[i]
             if (entity.tag != "enemy") continue
             val health = entity.get<HealthComponent>() ?: continue
             if (!health.isDead || !entity.active) continue

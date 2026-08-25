@@ -19,7 +19,7 @@ class LootBoxSystem(private val engine: GameEngine) : System() {
     private var baseInterval = 15f  // seconds between spawns
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() }
+        val player = engine.playerEntity
         val playerPos = player?.get<TransformComponent>() ?: return
         // FIX: player is non-null here (after ?: return), remove unnecessary safe calls
         val playerComp = player.get<PlayerComponent>()
@@ -36,7 +36,8 @@ class LootBoxSystem(private val engine: GameEngine) : System() {
         }
 
         // Update damage boost timers
-        for (e in entities) {
+        for (i in 0 until entities.size) {
+            val e = entities[i]
             if (e.tag != "damage_boost_timer" || !e.active) continue
             val boost = e.get<DamageBoostComponent>() ?: continue
             boost.timer += dt
@@ -48,7 +49,8 @@ class LootBoxSystem(private val engine: GameEngine) : System() {
         }
 
         // Update existing loot boxes
-        for (e in entities) {
+        for (i in 0 until entities.size) {
+            val e = entities[i]
             if (e.tag != "loot_box" || !e.active) continue
             val loot = e.get<LootBoxComponent>() ?: continue
             loot.timer += dt

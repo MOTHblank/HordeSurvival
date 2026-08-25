@@ -63,6 +63,7 @@ fun HordeButton(
         label = "HordeButtonScale"
     )
 
+
     Box(
         modifier = modifier
             .height(56.dp)
@@ -134,6 +135,7 @@ fun HordeSecondaryButton(
         label = "HordeSecondaryButtonScale"
     )
 
+
     Box(
         modifier = modifier
             .height(50.dp)
@@ -141,10 +143,7 @@ fun HordeSecondaryButton(
             .clip(RoundedCornerShape(16.dp))
             .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.12f), color.copy(alpha = 0.06f))))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {
+            .clickable(interactionSource = interactionSource, indication = androidx.compose.material.ripple.rememberRipple()) {
                 onClick()
             },
         contentAlignment = Alignment.Center

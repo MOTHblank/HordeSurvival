@@ -2,16 +2,18 @@ package com.hordesurvival.game.engine.ecs.systems
 
 import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.ecs.Entity
+import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.System
 
 /**
  * Movement system — no world bounds clamping.
  * Player moves freely, camera follows.
  */
-class MovementSystem : System() {
+class MovementSystem(private val engine: GameEngine) : System() {
 
     override fun update(dt: Float, entities: List<Entity>) {
-        for (entity in entities) {
+        for (i in 0 until entities.size) {
+            val entity = entities[i]
             if (!entity.active) continue
             val transform = entity.get<TransformComponent>() ?: continue
             val velocity = entity.get<VelocityComponent>() ?: continue
