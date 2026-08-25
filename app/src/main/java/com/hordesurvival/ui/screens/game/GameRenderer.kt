@@ -14,9 +14,12 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.R
 import com.hordesurvival.game.component.*
@@ -74,6 +77,11 @@ fun GameRenderer(
     val textMeasurer = rememberTextMeasurer()
     val emojiCache = remember { mutableMapOf<Long, TextLayoutResult>() }
     val damageTextCache = remember { mutableMapOf<String, TextLayoutResult>() }
+
+    // Loaded terrain spritesheet drawables
+    val terrainBasicBitmap = ImageBitmap.imageResource(R.drawable.terrain_basic)
+    val terrainLavaBitmap = ImageBitmap.imageResource(R.drawable.terrain_lava)
+    val terrainIceBitmap = ImageBitmap.imageResource(R.drawable.terrain_ice)
 
     // Pre-allocated composable scratch paths for zero-allocation shape rendering
     val scratchPath = remember { Path() }
@@ -143,7 +151,10 @@ fun GameRenderer(
         val bgOffsetX = offX - bgW / 2f + size.width / 2f
         val bgOffsetY = offY - bgH / 2f + size.height / 2f
         translate(bgOffsetX, bgOffsetY) {
-            drawBackground(bgW, bgH, camX, camY, engine.gameTime, backgroundStyle, scratchPath, scratchPath2)
+            drawBackground(
+                bgW, bgH, camX, camY, engine.gameTime, backgroundStyle, scratchPath, scratchPath2,
+                terrainBasicBitmap, terrainLavaBitmap, terrainIceBitmap
+            )
         }
 
         // ── TOWER DEFENSE BOUNDARY WALLS ─────────────────────────────
@@ -767,19 +778,65 @@ private fun DrawScope.drawJoystick(baseX: Float, baseY: Float, stickX: Float, st
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawBackground(
     w: Float, h: Float, camX: Float, camY: Float, time: Float, style: Int,
-    scratchPath: Path, scratchPath2: Path
+    scratchPath: Path, scratchPath2: Path,
+    terrainBasic: ImageBitmap,
+    terrainLava: ImageBitmap,
+    terrainIce: ImageBitmap
 ) {
     drawRect(Color(0xFF080814), topLeft = Offset.Zero, size = Size(w, h))
 
     when (style) {
-        0 -> drawGridBg(w, h, camX, camY)
+        0 -> drawTerrainBg(w, h, camX, camY, terrainBasic)
         1 -> drawStarsBg(w, h, camX, camY, time)
         2 -> drawNebulaBg(w, h, camX, camY, time)
-        3 -> drawCheckerBg(w, h, camX, camY)
-        4 -> { /* solid dark — just the base rect */ }
+        3 -> drawTerrainBg(w, h, camX, camY, terrainLava)
+        4 -> drawTerrainBg(w, h, camX, camY, terrainIce)
         5 -> drawPersianBg(w, h, camX, camY, time, scratchPath, scratchPath2)
         6 -> drawRomanBg(w, h, camX, camY, time, scratchPath)
         7 -> drawEgyptianBg(w, h, camX, camY, time, scratchPath)
+        else -> drawTerrainBg(w, h, camX, camY, terrainBasic)
+    }
+}
+
+/** Tiled terrain background rendering using spritesheets */
+private fun DrawScope.drawTerrainBg(
+    w: Float, h: Float, camX: Float, camY: Float,
+    bitmap: ImageBitmap
+) {
+    val tileSize = 96f
+    val spriteTileSize = 32
+    val cx = camX * 0.4f
+    val cy = camY * 0.4f
+    val offX = ((cx % tileSize) + tileSize) % tileSize
+    val offY = ((cy % tileSize) + tileSize) % tileSize
+    val startCol = kotlin.math.floor((cx / tileSize).toDouble()).toInt()
+    val startRow = kotlin.math.floor((cy / tileSize).toDouble()).toInt()
+
+    val tilesX = (w / tileSize).toInt() + 3
+    val tilesY = (h / tileSize).toInt() + 3
+
+    for (iy in -1 until tilesY) {
+        val worldRow = startRow + iy
+        val dstY = iy * tileSize - offY
+        for (ix in -1 until tilesX) {
+            val worldCol = startCol + ix
+            val dstX = ix * tileSize - offX
+
+            // Deterministic tile selection from 4x4 grid (16 tiles) based on tile position
+            val hash = kotlin.math.abs((worldCol * 73856093) xor (worldRow * 19349663))
+            val tileIndex = if (hash % 10 < 7) 0 else (hash % 16)
+            val srcX = (tileIndex % 4) * spriteTileSize
+            val srcY = (tileIndex / 4) * spriteTileSize
+
+            drawImage(
+                image = bitmap,
+                srcOffset = IntOffset(srcX, srcY),
+                srcSize = IntSize(spriteTileSize, spriteTileSize),
+                dstOffset = IntOffset(dstX.toInt(), dstY.toInt()),
+                dstSize = IntSize(tileSize.toInt(), tileSize.toInt()),
+                filterQuality = FilterQuality.None
+            )
+        }
     }
 }
 
