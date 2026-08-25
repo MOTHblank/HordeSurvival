@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,12 +20,13 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.UnlockedCharacter
 import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
- * Character selection screen with grid of characters.
+ * Character selection screen with heroic tiles and arcade styling.
  */
 @Composable
 fun CharacterSelectScreen(
@@ -45,14 +46,16 @@ fun CharacterSelectScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Choose Your Hero",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = HordeColors.Lavender
+            Spacer(modifier = Modifier.height(16.dp))
+
+            HordeHeader(
+                title = "SELECT HERO",
+                subtitle = "Choose your warrior for the horde battle",
+                icon = "👤",
+                accentColor = HordeColors.Lavender
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -82,7 +85,7 @@ fun CharacterSelectScreen(
                 HordeBackButton(onClick = onBack)
 
                 HordeButton(
-                    text = "Confirm",
+                    text = "CONFIRM",
                     onClick = onConfirm,
                     modifier = Modifier.weight(1f)
                 )
@@ -115,8 +118,8 @@ private fun CharacterCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(HordeColors.Lavender.copy(alpha = 0.3f)),
+                    .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
+                    .background(HordeColors.Lavender.copy(alpha = 0.25f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -130,13 +133,13 @@ private fun CharacterCard(
             Text(
                 text = character.name,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Black,
                 color = if (character.isUnlocked) Color.White else HordeColors.TextSecondary
             )
 
             Text(
                 text = character.description,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 color = HordeColors.TextSecondary,
                 textAlign = TextAlign.Center,
                 maxLines = 2
@@ -151,6 +154,7 @@ private fun CharacterCard(
                     Text(
                         "🔒 Unlock (500💰)",
                         fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
                         color = if (gold >= 500) HordeColors.GoldColor else HordeColors.TextSecondary
                     )
                 }

@@ -3,7 +3,7 @@ package com.hordesurvival.ui.screens.shop
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
@@ -22,7 +23,7 @@ import com.hordesurvival.ui.theme.HordeColors
 /**
  * Item shop between runs — spend gold on permanent upgrades.
  * Categories: Weapons (starting), Passives, Skins.
- * Uses shared components and Locales for strings.
+ * Stylized arcade theme with custom header and tabs.
  */
 @Composable
 fun ItemShopScreen(
@@ -36,26 +37,29 @@ fun ItemShopScreen(
 
     HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            // Header
-            Text(
-                "🛒 ${Locales.getString("upgrades", languageCode)}",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = HordeColors.WarmPeach
+            Spacer(Modifier.height(16.dp))
+
+            HordeHeader(
+                title = "ARMORY SHOP",
+                subtitle = "Unlock starting gear, passives & skins",
+                icon = "🛒",
+                accentColor = HordeColors.WarmPeach
             )
-            Spacer(Modifier.height(8.dp))
+
+            Spacer(Modifier.height(12.dp))
+
             Box(
                 Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFFFFD700).copy(alpha = 0.1f))
-                    .border(1.dp, Color(0xFFFFD700).copy(alpha = 0.2f), RoundedCornerShape(20.dp))
+                    .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
+                    .background(Color(0xFFFFD700).copy(alpha = 0.12f))
+                    .border(1.dp, Color(0xFFFFD700).copy(alpha = 0.25f), CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
                     .padding(horizontal = 16.dp, vertical = 6.dp)
             ) {
                 Text(
-                    "💰 $gold",
-                    fontSize = 18.sp,
+                    "💰 $gold Gold",
+                    fontSize = 17.sp,
                     color = HordeColors.GoldColor,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Black
                 )
             }
 
@@ -68,15 +72,15 @@ fun ItemShopScreen(
                     HordeItemCard(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = 2.dp),
                         onClick = { selectedTab = i },
                         selected = sel
                     ) {
                         Text(
                             label,
                             color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                            fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 13.sp
+                            fontWeight = if (sel) FontWeight.Black else FontWeight.Normal,
+                            fontSize = 14.sp
                         )
                     }
                 }
@@ -168,7 +172,7 @@ private fun ShopItemList(items: List<ShopItem>, gold: Int, onPurchase: (String, 
                     Spacer(Modifier.width(12.dp))
                     Box(
                         Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp))
                             .background(if (canAfford) Color(0xFFFFD700).copy(alpha = 0.15f) else Color.Gray.copy(alpha = 0.1f))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
