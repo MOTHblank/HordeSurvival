@@ -2,13 +2,14 @@ package com.hordesurvival.game.engine.ecs.systems
 
 import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.ecs.Entity
+import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.System
 
 /**
  * Particle system with linear shrink, velocity, and fade.
  * Fixed: linear shrink (not exponential), removed dead damage_number tag.
  */
-class ParticleSystem : System() {
+class ParticleSystem(private val engine: GameEngine) : System() {
 
     companion object {
         const val MAX_PARTICLES = 150  // Cap particles for low-end device performance
@@ -17,7 +18,8 @@ class ParticleSystem : System() {
     override fun update(dt: Float, entities: List<Entity>) {
         var particleCount = 0
 
-        for (entity in entities) {
+        for (i in 0 until entities.size) {
+            val entity = entities[i]
             if (entity.tag != "particle") continue
             particleCount++
 

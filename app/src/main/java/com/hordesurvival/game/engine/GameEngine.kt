@@ -46,6 +46,7 @@ class GameEngine {
     @PublishedApi
     internal val activeEntitiesCache: MutableList<Entity> get() = _activeEntitiesCache
 
+    var playerEntity: Entity? = null
     var gameTime = 0f
     var isPaused = false
     var isGameOver = false
@@ -81,6 +82,9 @@ class GameEngine {
         entity.clearComponents()
         entity.id = nextEntityId.getAndIncrement()
         entityByIdMap[entity.id] = entity
+        if (tag == "player") {
+            playerEntity = entity
+        }
         entitiesToAdd.add(entity)
         return entity
     }
@@ -237,6 +241,7 @@ class GameEngine {
         gameTime = 0f
         isPaused = false
         isGameOver = false
+        playerEntity = null
         shakeIntensity = 0f; shakeDuration = 0f; shakeTimer = 0f
         shakeOffsetX = 0f; shakeOffsetY = 0f
         bossIntroTimer = 0f

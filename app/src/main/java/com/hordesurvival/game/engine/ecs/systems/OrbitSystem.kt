@@ -3,6 +3,7 @@ package com.hordesurvival.game.engine.ecs.systems
 import com.hordesurvival.game.component.OrbitComponent
 import com.hordesurvival.game.component.TransformComponent
 import com.hordesurvival.game.engine.ecs.Entity
+import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.System
 import kotlin.math.cos
 import kotlin.math.sin
@@ -10,14 +11,15 @@ import kotlin.math.sin
 /**
  * Updates orbiting entities (shield weapon) around their center point.
  */
-class OrbitSystem : System() {
+class OrbitSystem(private val engine: GameEngine) : System() {
 
     override fun update(dt: Float, entities: List<Entity>) {
         // Find player position for orbit center
-        val player = entities.find { it.tag == "player" }
+        val player = engine.playerEntity
         val playerPos = player?.get<TransformComponent>()
 
-        for (entity in entities) {
+        for (i in 0 until entities.size) {
+            val entity = entities[i]
             if (entity.tag != "orbit_shield") continue
             val orbit = entity.get<OrbitComponent>() ?: continue
             val transform = entity.get<TransformComponent>() ?: continue

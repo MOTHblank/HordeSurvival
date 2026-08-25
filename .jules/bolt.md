@@ -27,3 +27,7 @@ When querying spatial structures for collisions:
 ## 2024-05-19 - Removed Autoboxing overhead in CollisionSystem
 **Learning:** `mutableMapOf<Int, Float>` causes autoboxing and unboxing, generating unnecessary GC pressure in the hot `update` loop.
 **Action:** Always prefer LibGDX's primitive collections like `IntFloatMap`, `Array`, or `FloatArray` when working with primitive types (Int, Float, Boolean) in hot paths to avoid autoboxing overhead.
+
+## 2024-05-19 - Removed Iterator Allocations in Hot Paths
+**Learning:** Standard `for (entity in entities)` loops implicitly allocate an `Iterator` object per iteration, producing hundreds of GC allocations per frame across ECS systems. Additionally, `entities.find { it.tag == "player" }` executes an O(N) lookup and allocates a lambda closure every frame.
+**Action:** Always use indexed loops (`for (i in 0 until entities.size)`) when iterating through `Array` or `List` structures in `update()` loops, and use the cached `engine.playerEntity` to locate the player instead of searching the entity list.

@@ -60,19 +60,10 @@ fun HordeButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val s by animateFloatAsState(
         targetValue = if (isPressed && enabled) 0.95f else 1f,
-    var pressed by remember { mutableStateOf(false) }
-    val s by animateFloatAsState(
-        targetValue = if (pressed) 0.95f else 1f,
         animationSpec = spring(dampingRatio = 0.6f),
         label = "HordeButtonScale"
     )
 
-    LaunchedEffect(pressed) {
-        if (pressed) {
-            delay(100)
-            pressed = false
-        }
-    }
 
     Box(
         modifier = modifier
@@ -97,10 +88,6 @@ fun HordeButton(
                     onClick()
                 } else Modifier
             ),
-            .clickable(enabled = enabled) {
-                pressed = true
-                onClick()
-            },
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -143,19 +130,10 @@ fun HordeSecondaryButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val s by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
-    var pressed by remember { mutableStateOf(false) }
-    val s by animateFloatAsState(
-        targetValue = if (pressed) 0.96f else 1f,
         animationSpec = spring(dampingRatio = 0.7f),
         label = "HordeSecondaryButtonScale"
     )
 
-    LaunchedEffect(pressed) {
-        if (pressed) {
-            delay(100)
-            pressed = false
-        }
-    }
 
     Box(
         modifier = modifier
@@ -166,8 +144,6 @@ fun HordeSecondaryButton(
             .background(Color(0xFF1A1A3F))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
             .clickable(interactionSource = interactionSource, indication = androidx.compose.material.ripple.rememberRipple()) {
-            .clickable {
-                pressed = true
                 onClick()
             },
         contentAlignment = Alignment.Center
