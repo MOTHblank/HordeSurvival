@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
@@ -20,26 +21,42 @@ import com.hordesurvival.ui.theme.HordeColors
 
 /**
  * Item shop between runs — spend gold on permanent upgrades.
- * Categories: Characters, Weapons (starting), Passives, Skins (future).
+ * Categories: Weapons (starting), Passives, Skins.
+ * Uses shared components and Locales for strings.
  */
 @Composable
 fun ItemShopScreen(
     gold: Int,
+    languageCode: String = "en",
     onPurchase: (String, Int) -> Unit,
     onBack: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("⚔️ Weapons", "🛡️ Passives", "🎨 Skins")
+    val tabs = listOf("⚔️ Weap", "🛡️ Pass", "🎨 Skins")
 
     HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // Header
-            Text("🛒 Item Shop", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach)
+            Text(
+                "🛒 ${Locales.getString("upgrades", languageCode)}",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = HordeColors.WarmPeach
+            )
             Spacer(Modifier.height(8.dp))
-            Box(Modifier.clip(RoundedCornerShape(20.dp)).background(Color(0xFFFFD700).copy(alpha = 0.1f))
-                .border(1.dp, Color(0xFFFFD700).copy(alpha = 0.2f), RoundedCornerShape(20.dp))
-                .padding(horizontal = 16.dp, vertical = 6.dp)) {
-                Text("💰 $gold", fontSize = 18.sp, color = HordeColors.GoldColor, fontWeight = FontWeight.Bold)
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFFFFD700).copy(alpha = 0.1f))
+                    .border(1.dp, Color(0xFFFFD700).copy(alpha = 0.2f), RoundedCornerShape(20.dp))
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    "💰 $gold",
+                    fontSize = 18.sp,
+                    color = HordeColors.GoldColor,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Spacer(Modifier.height(20.dp))
@@ -49,12 +66,18 @@ fun ItemShopScreen(
                 tabs.forEachIndexed { i, label ->
                     val sel = selectedTab == i
                     HordeItemCard(
-                        modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(vertical = 4.dp),
                         onClick = { selectedTab = i },
                         selected = sel
                     ) {
-                        Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                            fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 13.sp)
+                        Text(
+                            label,
+                            color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
+                            fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 13.sp
+                        )
                     }
                 }
             }
@@ -69,7 +92,10 @@ fun ItemShopScreen(
             }
 
             Spacer(Modifier.weight(1f))
-            HordeBackButton(onClick = onBack)
+            HordeBackButton(
+                text = "← ${Locales.getString("back", languageCode)}",
+                onClick = onBack
+            )
         }
     }
 }
@@ -121,19 +147,37 @@ private fun ShopItemList(items: List<ShopItem>, gold: Int, onPurchase: (String, 
             HordeItemCard(
                 onClick = if (canAfford) { { onPurchase(item.id, item.cost) } } else null
             ) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Column(Modifier.weight(1f)) {
-                        Text(item.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = if (canAfford) Color.White else Color.White.copy(alpha = 0.4f))
-                        Text(item.description, fontSize = 11.sp, color = HordeColors.TextSecondary)
+                        Text(
+                            item.name,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (canAfford) Color.White else Color.White.copy(alpha = 0.4f)
+                        )
+                        Text(
+                            item.description,
+                            fontSize = 11.sp,
+                            color = HordeColors.TextSecondary
+                        )
                     }
                     Spacer(Modifier.width(12.dp))
                     Box(
-                        Modifier.clip(RoundedCornerShape(8.dp))
+                        Modifier
+                            .clip(RoundedCornerShape(8.dp))
                             .background(if (canAfford) Color(0xFFFFD700).copy(alpha = 0.15f) else Color.Gray.copy(alpha = 0.1f))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Text("💰 ${item.cost}", fontSize = 13.sp, fontWeight = FontWeight.Bold,
-                            color = if (canAfford) HordeColors.GoldColor else Color.Gray)
+                        Text(
+                            "💰 ${item.cost}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (canAfford) HordeColors.GoldColor else Color.Gray
+                        )
                     }
                 }
             }
