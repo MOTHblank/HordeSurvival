@@ -42,6 +42,9 @@ class GameEngine {
     private val _activeEntitiesCache = mutableListOf<Entity>()
     val cachedActiveEntities: List<Entity> get() = _activeEntitiesCache
 
+    // Cached reference to the player entity for O(1) lookup in systems
+    var playerEntity: Entity? = null
+
     // Public accessor for inline functions
     @PublishedApi
     internal val activeEntitiesCache: MutableList<Entity> get() = _activeEntitiesCache
@@ -78,6 +81,9 @@ class GameEngine {
         val entity = entityPool.obtain()
         entity.active = true
         entity.tag = tag
+        if (tag == "player") {
+            playerEntity = entity
+        }
         entity.clearComponents()
         entity.id = nextEntityId.getAndIncrement()
         entityByIdMap[entity.id] = entity
@@ -240,5 +246,6 @@ class GameEngine {
         shakeIntensity = 0f; shakeDuration = 0f; shakeTimer = 0f
         shakeOffsetX = 0f; shakeOffsetY = 0f
         bossIntroTimer = 0f
+        playerEntity = null
     }
 }

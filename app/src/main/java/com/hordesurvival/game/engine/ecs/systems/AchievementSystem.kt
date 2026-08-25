@@ -34,7 +34,7 @@ class AchievementSystem(private val engine: GameEngine) : System() {
     var onAchievementUnlocked: ((AchievementState) -> Unit)? = null
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
+        val player = engine.playerEntity?.takeIf { it.active && it.has<PlayerComponent>() } ?: return
         val comp = player.get<PlayerComponent>() ?: return
 
         val kills = comp.totalKills
