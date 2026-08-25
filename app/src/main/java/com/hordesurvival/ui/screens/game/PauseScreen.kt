@@ -14,7 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.components.HordeSecondaryButton
+import com.hordesurvival.ui.components.HordeToggleChip
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -53,13 +55,7 @@ fun PauseScreen(
 
             if (showSettings) {
                 // Settings panel
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(HordeColors.CardBg.copy(alpha = 0.95f))
-                        .padding(20.dp)
-                ) {
+                HordeCard(modifier = Modifier.fillMaxWidth(0.85f)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "⚙ Settings",
@@ -70,10 +66,7 @@ fun PauseScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Background Music Toggle
-                        Box(
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                                .background(HordeColors.DarkCard).padding(12.dp)
-                        ) {
+                        HordeCard {
                             Row(
                                 Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -93,10 +86,7 @@ fun PauseScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // Music Volume
-                        Box(
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                                .background(HordeColors.DarkCard).padding(12.dp)
-                        ) {
+                        HordeCard {
                             Column {
                                 Text("🎶 Music Volume: ${(musicVolume * 100).toInt()}%", color = Color.White, fontSize = 14.sp)
                                 Slider(
@@ -112,10 +102,7 @@ fun PauseScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // SFX Volume
-                        Box(
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                                .background(HordeColors.DarkCard).padding(12.dp)
-                        ) {
+                        HordeCard {
                             Column {
                                 Text("🔊 SFX Volume: ${(sfxVolume * 100).toInt()}%", color = Color.White, fontSize = 14.sp)
                                 Slider(
@@ -153,14 +140,14 @@ fun PauseScreen(
                 // Game speed control
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                     Text("Speed: ", color = HordeColors.TextSecondary, fontSize = 14.sp)
+                    Spacer(Modifier.width(8.dp))
                     listOf(0.5f to "0.5x", 1f to "1x", 2f to "2x", 3f to "3x").forEach { (speed, label) ->
-                        val sel = gameSpeed == speed
-                        Box(
-                            Modifier.padding(horizontal = 4.dp).clip(RoundedCornerShape(8.dp))
-                                .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.3f) else Color.Transparent)
-                                .clickable { onSpeedChange(speed) }
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
-                        ) { Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary, fontSize = 13.sp, fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal) }
+                        HordeToggleChip(
+                            text = label,
+                            selected = gameSpeed == speed,
+                            onClick = { onSpeedChange(speed) },
+                            modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+                        )
                     }
                 }
                 Spacer(Modifier.height(24.dp))

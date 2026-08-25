@@ -34,12 +34,16 @@ import com.hordesurvival.ui.theme.HordeColors
  */
 
 @Composable
-fun HordeScreen(content: @Composable BoxScope.() -> Unit) {
+fun HordeScreen(
+    modifier: Modifier = Modifier,
+    contentAlignment: Alignment = Alignment.Center,
+    content: @Composable BoxScope.() -> Unit
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface))),
-        contentAlignment = Alignment.Center
+        contentAlignment = contentAlignment
     ) {
         content()
     }
@@ -204,19 +208,85 @@ fun HordeBackButton(
 fun HordeCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    selected: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val s by animateFloatAsState(
+        targetValue = if (isPressed && onClick != null) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f),
+        label = "HordeCardScale"
+    )
+
+    val bgColor = if (selected) {
+        Brush.verticalGradient(listOf(HordeColors.CardBg, HordeColors.DarkCard))
+    } else {
+        Brush.verticalGradient(listOf(Color(0xFF1E1E3F), Color(0xFF151530)))
+    }
+
+    val borderColor = if (selected) {
+        HordeColors.SkyBlue
+    } else {
+        Color.White.copy(alpha = 0.08f)
+    }
+
+    val borderWidth = if (selected) 2.dp else 1.dp
+
     Box(
         modifier = modifier
-            .fillMaxWidth()
+            .scale(s)
             .clip(RoundedCornerShape(16.dp))
-            .background(Brush.verticalGradient(listOf(Color(0xFF1E1E3F), Color(0xFF151530))))
-            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+            .background(bgColor)
+            .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
             .then(
-                if (onClick != null) Modifier.clickable { onClick() } else Modifier
+                if (onClick != null) Modifier.clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
+                    onClick()
+                } else Modifier
             )
             .padding(20.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth(), content = content)
+        Column(modifier = Modifier, content = content)
+    }
+}
+
+@Composable
+fun HordeToggleChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val s by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f),
+        label = "HordeToggleChipScale"
+    )
+
+    Box(
+        modifier = modifier
+            .scale(s)
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (selected) HordeColors.SkyBlue.copy(alpha = 0.2f) else HordeColors.DarkCard)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                onClick()
+            }
+            .padding(vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = if (selected) HordeColors.SkyBlue else HordeColors.TextSecondary,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 13.sp
+        )
     }
 }

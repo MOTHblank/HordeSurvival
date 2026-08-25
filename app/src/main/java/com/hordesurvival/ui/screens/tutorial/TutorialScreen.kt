@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -55,10 +56,7 @@ fun TutorialScreen(
     val currentStep = steps[step]
     val progress = (step + 1).toFloat() / steps.size
 
-    Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0D0D2B), Color(0xFF0A0A1F), Color(0xFF050510)))),
-        contentAlignment = Alignment.Center
-    ) {
+    HordeScreen(contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(32.dp)

@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.map.GameMap
 import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.components.HordeSecondaryButton
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeCard
 
 /**
  * Map selection screen — shown when player picks Survival mode.
@@ -36,10 +38,7 @@ fun MapSelectScreen(
 ) {
     var selectedMap by remember { mutableStateOf<GameMap?>(null) }
 
-    Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0D0D2B), Color(0xFF0A0A1F), Color(0xFF050510)))),
-        contentAlignment = Alignment.TopCenter
-    ) {
+    HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier.fillMaxSize().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -63,28 +62,14 @@ fun MapSelectScreen(
                     val isUnlocked = map.id in unlockedMapIds || map.unlockCost == 0
                     val isSelected = selectedMap?.id == map.id
 
-                    Box(
-                        Modifier
+                    HordeCard(
+                        modifier = Modifier
                             .fillMaxWidth()
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(
-                                if (isSelected) Color(0xFF1A3A5F)
-                                else Color(0xFF151530)
-                            )
-                            .border(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) Color(0xFF6BB6FF)
-                                else Color.White.copy(alpha = 0.08f),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            .clickable {
-                                if (isUnlocked) selectedMap = map
-                            }
-                            .padding(14.dp),
-                        contentAlignment = Alignment.Center
+                            .height(160.dp),
+                        selected = isSelected,
+                        onClick = if (isUnlocked) { { selectedMap = map } } else null
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Text(map.icon, fontSize = 36.sp)
                             Spacer(Modifier.height(6.dp))
                             Text(map.name, fontSize = 14.sp, fontWeight = FontWeight.Bold,

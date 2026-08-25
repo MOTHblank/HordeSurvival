@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.PlayerSave
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -31,18 +33,13 @@ fun StatsScreen(
 ) {
     val L = { k: String -> Locales.getString(k, languageCode) }
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))) {
+    HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("📊 ${L("your_stats")}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach)
             Spacer(Modifier.height(24.dp))
 
             // Stats card
-            Box(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                    .background(Brush.verticalGradient(listOf(Color(0xFF1E1E3F), Color(0xFF151530))))
-                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
-                    .padding(20.dp)
-            ) {
+            HordeCard {
                 Column(Modifier.fillMaxWidth()) {
                     StatRow("🏃 ${L("total_runs")}", "${save.totalRuns}")
                     Spacer(Modifier.height(12.dp))

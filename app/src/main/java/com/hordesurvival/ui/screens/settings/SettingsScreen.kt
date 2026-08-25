@@ -18,6 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeCard
+import com.hordesurvival.ui.components.HordeToggleChip
 import com.hordesurvival.ui.theme.HordeColors
 
 @Composable
@@ -42,7 +45,7 @@ fun SettingsScreen(
 ) {
     var showSaveDialog by remember { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))) {
+    HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("⚙ Settings", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach)
             Spacer(Modifier.height(24.dp))
@@ -56,7 +59,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
 
             // Vibration
-            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(HordeColors.CardBg).padding(16.dp)) {
+            HordeCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("📳 Vibration", color = Color.White, fontSize = 16.sp)
                     Switch(checked = vibrationEnabled, onCheckedChange = { onVibrationToggle() },
@@ -66,7 +69,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
 
             // Background Music Toggle
-            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(HordeColors.CardBg).padding(16.dp)) {
+            HordeCard {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("🎵 Background Music", color = Color.White, fontSize = 16.sp)
                     Switch(checked = bgMusicEnabled, onCheckedChange = { onBgMusicToggle() },
@@ -76,7 +79,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
 
             // Background Style
-            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(HordeColors.CardBg).padding(16.dp)) {
+            HordeCard {
                 Column {
                     Text("🌌 Background", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))
@@ -95,17 +98,12 @@ fun SettingsScreen(
                     for (row in backgrounds.chunked(2)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                             row.forEach { (id, label) ->
-                                val sel = backgroundStyle == id
-                                Box(
-                                    Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                                        .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.25f) else HordeColors.DarkCard)
-                                        .clickable { onBackgroundChange(id) }
-                                        .padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 13.sp)
-                                }
+                                HordeToggleChip(
+                                    text = label,
+                                    selected = backgroundStyle == id,
+                                    onClick = { onBackgroundChange(id) },
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                             if (row.size == 1) Spacer(Modifier.weight(1f))
                         }
@@ -116,7 +114,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
 
             // Language
-            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(HordeColors.CardBg).padding(16.dp)) {
+            HordeCard {
                 Column {
                     Text("🌐 Language", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))
@@ -124,14 +122,12 @@ fun SettingsScreen(
                     for (row in langs.chunked(2)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                             row.forEach { (code, label) ->
-                                val sel = languageCode == code
-                                Box(Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                                    .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.25f) else HordeColors.DarkCard)
-                                    .clickable { onLanguageChange(code) }.padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center) {
-                                    Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 14.sp)
-                                }
+                                HordeToggleChip(
+                                    text = label,
+                                    selected = languageCode == code,
+                                    onClick = { onLanguageChange(code) },
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                             if (row.size == 1) Spacer(Modifier.weight(1f))
                         }
@@ -147,24 +143,19 @@ fun SettingsScreen(
             Spacer(Modifier.height(10.dp))
 
             // Graphics Quality
-            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(HordeColors.CardBg).padding(16.dp)) {
+            HordeCard {
                 Column {
                     Text("Quality Level", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))
                     val qualities = listOf(0 to "⚡ Low", 1 to "⚖️ Medium", 2 to "✨ High")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         qualities.forEach { (id, label) ->
-                            val sel = graphicsQuality == id
-                            Box(
-                                Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                                    .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.25f) else HordeColors.DarkCard)
-                                    .clickable { onGraphicsQualityChange(id) }
-                                    .padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                    fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 13.sp)
-                            }
+                            HordeToggleChip(
+                                text = label,
+                                selected = graphicsQuality == id,
+                                onClick = { onGraphicsQualityChange(id) },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                     Spacer(Modifier.height(6.dp))
@@ -219,7 +210,7 @@ fun SettingsScreen(
 
 @Composable
 private fun SliderSetting(label: String, value: Float, onChange: (Float) -> Unit) {
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(HordeColors.CardBg).padding(16.dp)) {
+    HordeCard {
         Column {
             Text(label, color = Color.White, fontSize = 16.sp)
             Slider(value = value, onValueChange = onChange,
@@ -236,7 +227,7 @@ private fun SectionHeader(title: String) {
 
 @Composable
 private fun ToggleSetting(title: String, description: String, checked: Boolean, onToggle: () -> Unit) {
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(HordeColors.CardBg).padding(16.dp)) {
+    HordeCard {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(title, color = Color.White, fontSize = 15.sp)

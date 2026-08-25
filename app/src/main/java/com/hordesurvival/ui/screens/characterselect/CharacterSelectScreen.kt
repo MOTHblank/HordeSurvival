@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.UnlockedCharacter
 import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -38,13 +40,7 @@ fun CharacterSelectScreen(
     gold: Int,
     languageCode: String = "en"
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface))
-            )
-    ) {
+    HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -105,18 +101,12 @@ private fun CharacterCard(
     onUnlock: (Int, Int) -> Unit,
     gold: Int
 ) {
-    val borderColor = if (isSelected) HordeColors.SkyBlue else Color.Transparent
-    val alpha = if (character.isUnlocked) 1f else 0.5f
-
-    Box(
+    HordeCard(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(HordeColors.CardBg.copy(alpha = alpha))
-            .border(2.dp, borderColor, RoundedCornerShape(14.dp))
-            .clickable(enabled = character.isUnlocked) { onClick() }
-            .padding(12.dp)
+            .height(180.dp),
+        selected = isSelected,
+        onClick = if (character.isUnlocked) onClick else null
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

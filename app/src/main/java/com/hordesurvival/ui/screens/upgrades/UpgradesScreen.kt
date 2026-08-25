@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.PlayerSave
 import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeSmallButton
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.utils.Constants
 
@@ -43,11 +45,7 @@ fun UpgradesScreen(
         UpgradeDef("🍀", "Luck", "+3% better upgrades", playerSave.metaLuckLevel, { onUpgrade("luck", it) }),
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))
-    ) {
+    HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -78,13 +76,7 @@ fun UpgradesScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Stats
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(HordeColors.CardBg)
-                    .padding(16.dp)
-            ) {
+            HordeCard {
                 Column {
                     Text("📊 Stats", fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -112,13 +104,7 @@ private fun UpgradeRow(
     icon: String, title: String, description: String,
     cost: Int, canAfford: Boolean, isMaxed: Boolean, onBuy: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(HordeColors.CardBg)
-            .padding(14.dp)
-    ) {
+    HordeCard {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically

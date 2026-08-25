@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.components.HordeCard
+import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.viewmodel.RunSummary
@@ -42,7 +43,7 @@ fun GameOverScreen(
     val ss by animateFloatAsState(if (showStats) 1f else 0.7f, spring(0.6f), label = "s")
     val bs by animateFloatAsState(if (showBtns) 1f else 0.8f, spring(0.7f), label = "b")
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0D0D2B), Color(0xFF0A0A1F), Color(0xFF050510)))), contentAlignment = Alignment.Center) {
+    HordeScreen(contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(28.dp)) {
             Text("💀", fontSize = 48.sp)
             Spacer(Modifier.height(8.dp))

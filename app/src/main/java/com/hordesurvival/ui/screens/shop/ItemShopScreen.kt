@@ -17,6 +17,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeCard
+import com.hordesurvival.ui.components.HordeToggleChip
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -32,7 +35,7 @@ fun ItemShopScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("⚔️ Weapons", "🛡️ Passives", "🎨 Skins")
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))) {
+    HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // Header
             Text("🛒 Item Shop", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach)
@@ -48,17 +51,12 @@ fun ItemShopScreen(
             // Tab row
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 tabs.forEachIndexed { i, label ->
-                    val sel = selectedTab == i
-                    Box(
-                        Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
-                            .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.2f) else HordeColors.DarkCard)
-                            .clickable { selectedTab = i }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                            fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 13.sp)
-                    }
+                    HordeToggleChip(
+                        text = label,
+                        selected = selectedTab == i,
+                        onClick = { selectedTab = i },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
 
@@ -121,11 +119,8 @@ private fun ShopItemList(items: List<ShopItem>, gold: Int, onPurchase: (String, 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items.forEach { item ->
             val canAfford = gold >= item.cost
-            Box(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .background(HordeColors.CardBg)
-                    .then(if (canAfford) Modifier.clickable { onPurchase(item.id, item.cost) } else Modifier)
-                    .padding(14.dp)
+            HordeCard(
+                onClick = if (canAfford) { { onPurchase(item.id, item.cost) } } else null
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
