@@ -95,7 +95,7 @@ fun TowerDefenseStageComplete(
             // Buttons
             if (!isVictory) {
                 // Next Stage
-                HordeButton(
+                HordeButton(modifier = Modifier.fillMaxWidth(0.7f),
                     text = "Next Stage",
                     icon = "▶",
                     color = Color(0xFF66BB6A),
@@ -106,7 +106,7 @@ fun TowerDefenseStageComplete(
             Spacer(Modifier.height(10.dp))
 
             // Replay
-            HordeSecondaryButton(
+            HordeSecondaryButton(modifier = Modifier.fillMaxWidth(0.7f),
                 text = "Replay Stage",
                 icon = "🔄",
                 onClick = onReplayStage
@@ -115,7 +115,7 @@ fun TowerDefenseStageComplete(
             Spacer(Modifier.height(10.dp))
 
             // Main Menu
-            HordeSecondaryButton(
+            HordeSecondaryButton(modifier = Modifier.fillMaxWidth(0.7f),
                 text = "Main Menu",
                 icon = "🏠",
                 onClick = onMainMenu
