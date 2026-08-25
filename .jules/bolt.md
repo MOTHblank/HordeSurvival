@@ -27,3 +27,7 @@ When querying spatial structures for collisions:
 ## 2024-05-19 - Removed Autoboxing overhead in CollisionSystem
 **Learning:** `mutableMapOf<Int, Float>` causes autoboxing and unboxing, generating unnecessary GC pressure in the hot `update` loop.
 **Action:** Always prefer LibGDX's primitive collections like `IntFloatMap`, `Array`, or `FloatArray` when working with primitive types (Int, Float, Boolean) in hot paths to avoid autoboxing overhead.
+
+## 2024-05-19 - Removed O(N) player lookup lambda allocations in ECS systems
+**Learning:** `entities.find { it.tag == "player" }` was being called inside `update` loops of nearly every ECS system (13 of them). This not only caused an O(N) linear search per frame per system, but more critically, allocated a lambda closure on the heap for every system every frame, causing significant GC pressure and micro-stutters.
+**Action:** Always prefer maintaining a cached reference to singular important entities (like the player) directly in the `GameEngine`. Replaced `entities.find` with `engine.playerEntity?.takeIf { it.active }` for O(1), zero-allocation lookups across all systems.

@@ -2,6 +2,7 @@ package com.hordesurvival.game.engine.ecs.systems
 
 import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.ecs.Entity
+import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.System
 import com.hordesurvival.game.audio.SoundManager
 
@@ -10,13 +11,13 @@ import com.hordesurvival.game.audio.SoundManager
  * Grants XP bonus multiplier based on combo count.
  * Fixed: tracks already-counted entity IDs to prevent double counting.
  */
-class ComboSystem : System() {
+class ComboSystem(private val engine: GameEngine) : System() {
 
     // Track entity IDs that have already been counted as kills this cycle
     private val countedKills = mutableSetOf<Int>()
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
+        val player = engine.playerEntity?.takeIf { it.active && it.has<PlayerComponent>() } ?: return
         val combo = player.get<ComboComponent>() ?: return
 
         // Update combo timer

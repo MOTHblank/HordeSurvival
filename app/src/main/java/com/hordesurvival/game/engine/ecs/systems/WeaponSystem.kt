@@ -30,7 +30,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
     private val _enemyQueryResult = mutableListOf<Entity>()
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
+        val player = engine.playerEntity?.takeIf { it.active && it.has<PlayerComponent>() } ?: return
         val playerTransform = player.get<TransformComponent>() ?: return
         val playerComp = player.get<PlayerComponent>() ?: return
 
