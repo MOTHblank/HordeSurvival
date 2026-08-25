@@ -39,7 +39,6 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         for (i in 0 until entities.size) {
             val entity = entities[i]
             val ws = entity.get<WeaponStateComponent>() ?: continue
-            if (entity.tag != "player") continue
 
             ws.cooldownTimer -= dt
             if (ws.cooldownTimer <= 0f) {

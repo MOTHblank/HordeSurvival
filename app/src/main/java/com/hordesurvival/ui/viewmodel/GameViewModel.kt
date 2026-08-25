@@ -162,7 +162,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             player.add(CollisionComponent(radius = 16f))
             player.add(ComboComponent())
 
-            val we = engine.createEntity("player")
+            val we = engine.createEntity("weapon_state")
             we.add(WeaponStateComponent(type = startingWeapon, baseCooldown = startingWeapon.baseCooldown, baseDamage = startingWeapon.baseDamage, projectileCount = startingWeapon.baseProjectiles, area = startingWeapon.baseArea))
 
             val input = PlayerInputSystem(engine)
@@ -532,7 +532,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     option.weaponType?.let { w ->
                         if (w !in comp.weapons) {
                             comp.weapons.add(w); _playerWeapons.value = comp.weapons.toList()
-                            engine.createEntity("player").add(WeaponStateComponent(type = w, baseCooldown = w.baseCooldown, baseDamage = w.baseDamage, projectileCount = w.baseProjectiles, area = w.baseArea))
+                            engine.createEntity("weapon_state").add(WeaponStateComponent(type = w, baseCooldown = w.baseCooldown, baseDamage = w.baseDamage, projectileCount = w.baseProjectiles, area = w.baseArea))
                         }
                     }
                 }
