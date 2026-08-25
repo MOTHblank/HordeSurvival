@@ -8,9 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -30,8 +28,12 @@ import com.hordesurvival.ui.theme.HordeColors
 
 /**
  * Unified UI component system for Horde Survival.
- * Provides consistent styling, animations, and interactions across the game.
+ * Stylized dark-fantasy arcade aesthetic featuring rich glowing borders, angled cuts,
+ * tactile push animations, and high visual personality.
  */
+
+private val CornerCutShape = CutCornerShape(topStart = 10.dp, bottomEnd = 10.dp, topEnd = 2.dp, bottomStart = 2.dp)
+private val SmallCutShape = CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp, topEnd = 2.dp, bottomStart = 2.dp)
 
 @Composable
 fun HordeScreen(
@@ -41,10 +43,71 @@ fun HordeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface))),
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        Color(0xFF1E1E3F),
+                        Color(0xFF0F0F23),
+                        Color(0xFF070711)
+                    ),
+                    center = Offset(0.5f, 0.4f),
+                    radius = 1800f
+                )
+            ),
         contentAlignment = contentAlignment
     ) {
         content()
+    }
+}
+
+@Composable
+fun HordeHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: String? = null,
+    accentColor: Color = HordeColors.SkyBlue
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
+                Text(
+                    text = icon,
+                    fontSize = 32.sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+            Text(
+                text = title,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black,
+                color = accentColor,
+                letterSpacing = 3.sp,
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = accentColor.copy(alpha = 0.5f),
+                        offset = Offset(0f, 0f),
+                        blurRadius = 16f
+                    )
+                )
+            )
+        }
+        if (subtitle != null) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = HordeColors.TextSecondary,
+                letterSpacing = 1.sp
+            )
+        }
     }
 }
 
@@ -61,28 +124,48 @@ fun HordeButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val s by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f),
+        targetValue = if (isPressed && enabled) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
         label = "HordeButtonScale"
     )
 
-
     Box(
         modifier = modifier
-            .height(56.dp)
+            .height(54.dp)
             .scale(s * breathe)
-            .clip(RoundedCornerShape(18.dp))
+            .clip(CornerCutShape)
             .background(
                 if (enabled) {
-                    Brush.horizontalGradient(listOf(color.copy(alpha = 0.7f), color.copy(alpha = 0.4f)))
+                    Brush.verticalGradient(
+                        listOf(
+                            color.copy(alpha = 0.85f),
+                            color.copy(alpha = 0.45f),
+                            Color(0xFF090C15)
+                        )
+                    )
                 } else {
-                    Brush.horizontalGradient(listOf(Color.Gray.copy(alpha = 0.3f), Color.DarkGray.copy(alpha = 0.3f)))
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xFF333344),
+                            Color(0xFF1A1A26)
+                        )
+                    )
                 }
             )
             .border(
-                width = 1.dp,
-                color = if (enabled) color.copy(alpha = 0.3f) else Color.Gray.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(18.dp)
+                width = 1.5.dp,
+                brush = if (enabled) {
+                    Brush.linearGradient(
+                        listOf(
+                            color,
+                            color.copy(alpha = 0.4f),
+                            color.copy(alpha = 0.8f)
+                        )
+                    )
+                } else {
+                    Brush.linearGradient(listOf(Color.Gray.copy(alpha = 0.3f), Color.DarkGray.copy(alpha = 0.2f)))
+                },
+                shape = CornerCutShape
             )
             .then(
                 if (enabled) Modifier.clickable(
@@ -96,24 +179,25 @@ fun HordeButton(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             if (icon != null) {
                 Text(
                     text = icon,
-                    fontSize = 19.sp,
-                    color = if (enabled) Color.White else Color.White.copy(alpha = 0.5f)
+                    fontSize = 20.sp,
+                    color = if (enabled) Color.White else Color.White.copy(alpha = 0.4f)
                 )
                 Spacer(Modifier.width(8.dp))
             }
             Text(
                 text = text,
-                fontSize = 19.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Black,
-                color = if (enabled) Color.White else Color.White.copy(alpha = 0.5f),
+                color = if (enabled) Color.White else Color.White.copy(alpha = 0.4f),
                 letterSpacing = 2.sp,
                 style = if (enabled) {
-                    TextStyle(shadow = Shadow(color = color.copy(alpha = 0.5f), offset = Offset(0f, 0f), blurRadius = 12f))
+                    TextStyle(shadow = Shadow(color = color.copy(alpha = 0.6f), offset = Offset(0f, 0f), blurRadius = 14f))
                 } else {
                     TextStyle.Default
                 }
@@ -133,27 +217,46 @@ fun HordeSecondaryButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val s by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
+        targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(dampingRatio = 0.7f),
         label = "HordeSecondaryButtonScale"
     )
 
-
     Box(
         modifier = modifier
-            .height(50.dp)
+            .height(48.dp)
             .scale(s)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.12f), color.copy(alpha = 0.06f))))
-            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
-            .clickable(interactionSource = interactionSource, indication = androidx.compose.material.ripple.rememberRipple()) {
+            .clip(SmallCutShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        color.copy(alpha = 0.22f),
+                        Color(0xFF121226)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    listOf(
+                        color.copy(alpha = 0.6f),
+                        color.copy(alpha = 0.2f)
+                    )
+                ),
+                shape = SmallCutShape
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
                 onClick()
             },
         contentAlignment = Alignment.Center
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 12.dp)
         ) {
             if (icon != null) {
                 Text(text = icon, fontSize = 16.sp, color = color)
@@ -161,7 +264,8 @@ fun HordeSecondaryButton(
             }
             Text(
                 text = text,
-                fontSize = 16.sp,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
                 color = color
             )
         }
@@ -176,17 +280,42 @@ fun HordeSmallButton(
     color: Color = HordeColors.SkyBlue,
     enabled: Boolean = true
 ) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = color,
-            disabledContainerColor = HordeColors.DarkCard
-        ),
-        modifier = modifier.height(34.dp),
-        shape = RoundedCornerShape(8.dp)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val s by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f),
+        label = "HordeSmallButtonScale"
+    )
+
+    Box(
+        modifier = modifier
+            .height(34.dp)
+            .scale(s)
+            .clip(CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp))
+            .background(
+                if (enabled) color.copy(alpha = 0.85f) else Color.DarkGray.copy(alpha = 0.4f)
+            )
+            .border(
+                width = 1.dp,
+                color = if (enabled) color else Color.Gray.copy(alpha = 0.3f),
+                shape = CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp)
+            )
+            .then(
+                if (enabled) Modifier.clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { onClick() } else Modifier
+            )
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(text, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (enabled) Color.White else Color.Gray)
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (enabled) Color.White else Color.Gray
+        )
     }
 }
 
@@ -197,8 +326,17 @@ fun HordeBackButton(
     modifier: Modifier = Modifier,
     color: Color = HordeColors.TextSecondary
 ) {
-    TextButton(onClick = onClick, modifier = modifier) {
-        Text(text, color = color, fontSize = 16.sp)
+    TextButton(
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Text(
+            text = text,
+            color = color,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        )
     }
 }
 
@@ -208,18 +346,48 @@ fun HordeCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    HordePanel(
+        modifier = modifier,
+        onClick = onClick,
+        content = content
+    )
+}
+
+@Composable
+fun HordePanel(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    borderColor: Color = HordeColors.CardBorder,
+    content: @Composable ColumnScope.() -> Unit
+) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Brush.verticalGradient(listOf(Color(0xFF1E1E3F), Color(0xFF151530))))
-            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+            .clip(CornerCutShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF1D1D3A),
+                        Color(0xFF101026)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    listOf(
+                        borderColor.copy(alpha = 0.7f),
+                        borderColor.copy(alpha = 0.2f),
+                        borderColor.copy(alpha = 0.5f)
+                    )
+                ),
+                shape = CornerCutShape
+            )
             .then(
                 if (onClick != null) Modifier.clickable { onClick() } else Modifier
             )
-            .padding(20.dp)
+            .padding(18.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth(), content = content)
+        Column(content = content)
     }
 }
 
@@ -237,16 +405,26 @@ fun HordeItemCard(
         animationSpec = spring(dampingRatio = 0.7f),
         label = "HordeItemCardScale"
     )
-    val bgColor = if (selected) HordeColors.SkyBlue.copy(alpha = 0.15f) else HordeColors.CardBg
-    val borderColor = if (selected) HordeColors.SkyBlue.copy(alpha = 0.5f) else Color.Transparent
+
+    val bgColor = if (selected) {
+        Brush.verticalGradient(listOf(HordeColors.SkyBlue.copy(alpha = 0.25f), Color(0xFF15203D)))
+    } else {
+        Brush.verticalGradient(listOf(Color(0xFF1B1B38), Color(0xFF121226)))
+    }
+
+    val bColor = if (selected) HordeColors.SkyBlue else HordeColors.CardBorder.copy(alpha = 0.4f)
+    val shape = CutCornerShape(topStart = 8.dp, bottomEnd = 8.dp, topEnd = 2.dp, bottomStart = 2.dp)
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .scale(s)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape)
             .background(bgColor)
-            .border(if (selected) 2.dp else 0.dp, borderColor, RoundedCornerShape(12.dp))
+            .border(
+                width = if (selected) 1.5.dp else 1.dp,
+                color = bColor,
+                shape = shape
+            )
             .then(
                 if (onClick != null) Modifier.clickable(
                     interactionSource = interactionSource,

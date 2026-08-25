@@ -3,7 +3,7 @@ package com.hordesurvival.ui.screens.upgrades
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.data.model.PlayerSave
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSmallButton
@@ -23,8 +24,7 @@ import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.utils.Constants
 
 /**
- * Meta-progression upgrades screen.
- * Now includes: HP, Gold, Might, Cooldown, Speed, Luck upgrades.
+ * Meta-progression upgrades screen with dark fantasy arcade style.
  */
 @Composable
 fun UpgradesScreen(
@@ -50,11 +50,27 @@ fun UpgradesScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("⬆ Upgrades", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.MintGreen)
-            Spacer(modifier = Modifier.height(6.dp))
-            Text("💰 ${playerSave.totalGold} gold", fontSize = 16.sp, color = HordeColors.GoldColor)
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
+            HordeHeader(
+                title = "UPGRADES",
+                subtitle = "Permanent Meta-Progression Boosts",
+                icon = "⬆️",
+                accentColor = HordeColors.MintGreen
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Box(
+                Modifier
+                    .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
+                    .background(Color(0xFFFFD700).copy(alpha = 0.12f))
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+            ) {
+                Text("💰 ${playerSave.totalGold} Gold", fontSize = 16.sp, fontWeight = FontWeight.Black, color = HordeColors.GoldColor)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             upgrades.forEach { def ->
                 val cost = calculateMetaCost(def.level)
@@ -75,8 +91,8 @@ fun UpgradesScreen(
             // Stats
             HordeItemCard {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text("📊 Stats", fontWeight = FontWeight.Bold, color = Color.White)
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("📊 RUN RECORD", fontWeight = FontWeight.Black, color = HordeColors.Lavender, fontSize = 15.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
                     StatLine("Total Runs", "${playerSave.totalRuns}")
                     StatLine("Total Kills", "${playerSave.totalKills}")
                     StatLine("Best Time", formatTime(playerSave.bestTime))
@@ -84,7 +100,7 @@ fun UpgradesScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             HordeBackButton(onClick = onBack)
         }
@@ -93,7 +109,7 @@ fun UpgradesScreen(
 
 private data class UpgradeDef(
     val icon: String, val title: String, val description: String,
-    val level: Int, val onBuy: (Int) -> Unit  // takes cost
+    val level: Int, val onBuy: (Int) -> Unit
 )
 
 @Composable
@@ -106,19 +122,19 @@ private fun UpgradeRow(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(icon, fontSize = 24.sp)
+            Text(icon, fontSize = 26.sp)
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 15.sp)
-                Text(description, fontSize = 11.sp, color = HordeColors.TextSecondary)
+                Text(title, fontWeight = FontWeight.Black, color = Color.White, fontSize = 16.sp)
+                Text(description, fontSize = 12.sp, color = HordeColors.TextSecondary)
             }
             if (isMaxed) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(HordeColors.MintGreen.copy(alpha = 0.15f))
+                        .clip(CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp))
+                        .background(HordeColors.MintGreen.copy(alpha = 0.2f))
                         .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) { Text("MAX", color = HordeColors.MintGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                ) { Text("MAX", color = HordeColors.MintGreen, fontWeight = FontWeight.Black, fontSize = 12.sp) }
             } else {
                 HordeSmallButton(
                     text = "${cost}💰",
@@ -134,9 +150,9 @@ private fun UpgradeRow(
 private fun StatLine(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, color = HordeColors.TextSecondary, fontSize = 13.sp)
-        Text(value, color = HordeColors.SkyBlue, fontWeight = FontWeight.Medium, fontSize = 13.sp)
+        Text(value, color = HordeColors.SkyBlue, fontWeight = FontWeight.Bold, fontSize = 13.sp)
     }
-    Spacer(modifier = Modifier.height(3.dp))
+    Spacer(modifier = Modifier.height(4.dp))
 }
 
 private fun calculateMetaCost(level: Int): Int = 50 + level * 75

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
@@ -41,41 +42,51 @@ fun SettingsScreen(
 
     HordeScreen {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("⚙ Settings", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach)
+            Spacer(Modifier.height(16.dp))
+
+            HordeHeader(
+                title = "SETTINGS",
+                subtitle = "Audio, Display & Preferences",
+                icon = "⚙️",
+                accentColor = HordeColors.WarmPeach
+            )
+
             Spacer(Modifier.height(24.dp))
 
-            // Music
+            // Audio
+            SectionHeader("🎵 Audio & Feedback")
+            Spacer(Modifier.height(8.dp))
             SliderSetting("🎵 Music Volume", musicVolume, onMusicVolumeChange)
-            Spacer(Modifier.height(12.dp))
-
-            // SFX
+            Spacer(Modifier.height(8.dp))
             SliderSetting("🔊 SFX Volume", sfxVolume, onSfxVolumeChange)
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             // Vibration
             HordeItemCard(onClick = onVibrationToggle) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("📳 Vibration", color = Color.White, fontSize = 16.sp)
+                    Text("📳 Vibration", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     Switch(checked = vibrationEnabled, onCheckedChange = { onVibrationToggle() },
                         colors = SwitchDefaults.colors(checkedThumbColor = HordeColors.SkyBlue, checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)))
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             // Background Music Toggle
             HordeItemCard(onClick = onBgMusicToggle) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("🎵 Background Music", color = Color.White, fontSize = 16.sp)
+                    Text("🎵 Background Music", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     Switch(checked = bgMusicEnabled, onCheckedChange = { onBgMusicToggle() },
                         colors = SwitchDefaults.colors(checkedThumbColor = HordeColors.SkyBlue, checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)))
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(20.dp))
 
             // Background Style
+            SectionHeader("🌌 Atmosphere")
+            Spacer(Modifier.height(8.dp))
             HordeItemCard {
                 Column {
-                    Text("🌌 Background", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Background Style", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))
 
                     val backgrounds = listOf(
@@ -108,12 +119,14 @@ fun SettingsScreen(
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(20.dp))
 
             // Language
+            SectionHeader("🌐 Localization")
+            Spacer(Modifier.height(8.dp))
             HordeItemCard {
                 Column {
-                    Text("🌐 Language", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Select Language", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))
                     val langs = listOf("en" to "English", "fa" to "فارسی", "zh" to "中文", "ja" to "日本語", "ko" to "한국어", "es" to "Español")
                     for (row in langs.chunked(2)) {
@@ -140,12 +153,12 @@ fun SettingsScreen(
 
             // ── Graphics & Performance ──
             SectionHeader("🎨 Graphics & Performance")
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
 
             // Graphics Quality
             HordeItemCard {
                 Column {
-                    Text("Quality Level", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Quality Level", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(10.dp))
                     val qualities = listOf(0 to "⚡ Low", 1 to "⚖️ Medium", 2 to "✨ High")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -172,11 +185,11 @@ fun SettingsScreen(
                     )
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(20.dp))
 
             // ── Accessibility ──
-            SectionHeader("♿ Accessibility")
-            Spacer(Modifier.height(10.dp))
+            SectionHeader("♿ Accessibility & Gameplay")
+            Spacer(Modifier.height(8.dp))
 
             ToggleSetting("💥 Damage Numbers", "Show damage popups on hits", showDamageNumbers, onDamageNumbersToggle)
             Spacer(Modifier.height(8.dp))
@@ -186,7 +199,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
             ToggleSetting("📳 Screen Shake", "Camera shake on hits and bosses", screenShakeEnabled, onScreenShakeToggle)
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(28.dp))
             HordeBackButton(onClick = { showSaveDialog = true })
         }
 
@@ -215,7 +228,7 @@ fun SettingsScreen(
 private fun SliderSetting(label: String, value: Float, onChange: (Float) -> Unit) {
     HordeItemCard {
         Column(Modifier.fillMaxWidth()) {
-            Text(label, color = Color.White, fontSize = 16.sp)
+            Text(label, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             Slider(value = value, onValueChange = onChange,
                 colors = SliderDefaults.colors(thumbColor = HordeColors.SkyBlue, activeTrackColor = HordeColors.SkyBlue))
         }
@@ -224,7 +237,7 @@ private fun SliderSetting(label: String, value: Float, onChange: (Float) -> Unit
 
 @Composable
 private fun SectionHeader(title: String) {
-    Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = HordeColors.Lavender,
+    Text(title, fontSize = 17.sp, fontWeight = FontWeight.Black, color = HordeColors.Lavender,
         modifier = Modifier.fillMaxWidth().padding(start = 4.dp))
 }
 
@@ -233,7 +246,7 @@ private fun ToggleSetting(title: String, description: String, checked: Boolean, 
     HordeItemCard(onClick = onToggle) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(title, color = Color.White, fontSize = 15.sp)
+                Text(title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 Text(description, color = HordeColors.TextSecondary, fontSize = 11.sp)
             }
             Switch(checked = checked, onCheckedChange = { onToggle() },
