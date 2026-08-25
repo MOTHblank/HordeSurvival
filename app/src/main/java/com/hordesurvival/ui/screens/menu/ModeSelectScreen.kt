@@ -1,15 +1,10 @@
 package com.hordesurvival.ui.screens.menu
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,13 +13,15 @@ import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.mode.DailyChallenge
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeItemCard
+import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
 
 @Composable
 fun ModeSelectScreen(onModeSelected: (GameModeType) -> Unit, onBack: () -> Unit, languageCode: String = "en") {
     val L = { k: String -> Locales.getString(k, languageCode) }
     val dailyChallenge = remember { DailyChallenge.getTodayChallenge() }
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface)))) {
+    HordeScreen(contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text(L("select_mode"), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue)
             Spacer(Modifier.height(40.dp))
@@ -45,10 +42,11 @@ fun ModeSelectScreen(onModeSelected: (GameModeType) -> Unit, onBack: () -> Unit,
 
 @Composable
 private fun ModeCard(title: String, desc: String, color: Color, onClick: () -> Unit) {
-    Box(Modifier.fillMaxWidth(0.85f).height(100.dp).clip(RoundedCornerShape(16.dp))
-        .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.3f), HordeColors.DarkCard)))
-        .clickable { onClick() }.padding(16.dp), contentAlignment = Alignment.CenterStart) {
-        Column {
+    HordeItemCard(
+        modifier = Modifier.fillMaxWidth(0.9f).height(100.dp),
+        onClick = onClick
+    ) {
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
             Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = color)
             Spacer(Modifier.height(4.dp))
             Text(desc, fontSize = 14.sp, color = HordeColors.TextSecondary)

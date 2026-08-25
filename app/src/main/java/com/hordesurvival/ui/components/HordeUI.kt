@@ -34,12 +34,15 @@ import com.hordesurvival.ui.theme.HordeColors
  */
 
 @Composable
-fun HordeScreen(content: @Composable BoxScope.() -> Unit) {
+fun HordeScreen(
+    contentAlignment: Alignment = Alignment.TopStart,
+    content: @Composable BoxScope.() -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface))),
-        contentAlignment = Alignment.Center
+        contentAlignment = contentAlignment
     ) {
         content()
     }
@@ -218,5 +221,44 @@ fun HordeCard(
             .padding(20.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth(), content = content)
+    }
+}
+
+@Composable
+fun HordeItemCard(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    selected: Boolean = false,
+    content: @Composable BoxScope.() -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val s by animateFloatAsState(
+        targetValue = if (isPressed && onClick != null) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = 0.7f),
+        label = "HordeItemCardScale"
+    )
+    val bgColor = if (selected) HordeColors.SkyBlue.copy(alpha = 0.15f) else HordeColors.CardBg
+    val borderColor = if (selected) HordeColors.SkyBlue.copy(alpha = 0.5f) else Color.Transparent
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .scale(s)
+            .clip(RoundedCornerShape(12.dp))
+            .background(bgColor)
+            .border(if (selected) 2.dp else 0.dp, borderColor, RoundedCornerShape(12.dp))
+            .then(
+                if (onClick != null) Modifier.clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
+                    onClick()
+                } else Modifier
+            )
+            .padding(14.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
     }
 }
