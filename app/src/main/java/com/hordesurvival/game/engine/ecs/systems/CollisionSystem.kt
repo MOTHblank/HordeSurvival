@@ -53,7 +53,8 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
         }
 
-        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
+        val player = engine.playerEntity ?: return
+        if (!player.has<PlayerComponent>()) return
         val playerTransform = player.get<TransformComponent>() ?: return
         val playerHealth = player.get<HealthComponent>() ?: return
         val playerCollision = player.get<CollisionComponent>() ?: return
