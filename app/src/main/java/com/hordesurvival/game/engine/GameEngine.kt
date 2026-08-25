@@ -82,7 +82,7 @@ class GameEngine {
         entity.clearComponents()
         entity.id = nextEntityId.getAndIncrement()
         entityByIdMap[entity.id] = entity
-        if (tag == "player") {
+        if (tag == "player" && playerEntity == null) {
             playerEntity = entity
         }
         entitiesToAdd.add(entity)
@@ -91,6 +91,9 @@ class GameEngine {
 
     fun removeEntity(entity: Entity) {
         entity.active = false
+        if (entity === playerEntity) {
+            playerEntity = null
+        }
     }
 
     /** Fast O(1) entity lookup by ID */
@@ -105,6 +108,9 @@ class GameEngine {
         while (iter.hasNext()) {
             val e = iter.next()
             if (!e.active && !e.has<PlayerComponent>()) {
+                if (e === playerEntity) {
+                    playerEntity = null
+                }
                 entityByIdMap.remove(e.id)
                 entityPool.free(e)
                 iter.remove()
