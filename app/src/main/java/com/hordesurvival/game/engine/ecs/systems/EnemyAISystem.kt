@@ -21,7 +21,7 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
     private val _healCandidatesBuffer = mutableListOf<Entity>()
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = engine.playerEntity ?: return
+        val player = entities.find { it.tag == "player" } ?: return
         val playerTransform = player.get<TransformComponent>() ?: return
 
         for (i in 0 until entities.size) {

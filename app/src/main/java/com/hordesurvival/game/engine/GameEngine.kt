@@ -26,9 +26,6 @@ class GameEngine {
     // O(1) ID lookup map to eliminate O(N) linear scans during homing/targeting
     private val entityByIdMap = HashMap<Int, Entity>(512)
 
-    // Cache the player entity to avoid O(N) linear scans in system update loops
-    var playerEntity: Entity? = null
-
     // Entity pool for reuse
     private val entityPool = ObjectPool(
         factory = { Entity(-1) },
@@ -84,18 +81,12 @@ class GameEngine {
         entity.clearComponents()
         entity.id = nextEntityId.getAndIncrement()
         entityByIdMap[entity.id] = entity
-        if (tag == "player") {
-            playerEntity = entity
-        }
         entitiesToAdd.add(entity)
         return entity
     }
 
     fun removeEntity(entity: Entity) {
         entity.active = false
-        if (entity === playerEntity) {
-            playerEntity = null
-        }
     }
 
     /** Fast O(1) entity lookup by ID */
@@ -113,7 +104,6 @@ class GameEngine {
                 entityByIdMap.remove(e.id)
                 entityPool.free(e)
                 iter.remove()
-                if (e === playerEntity) playerEntity = null
             } else if (e.active && !e.has<PlayerComponent>()) {
                 // Never recycle weapon state entities — they must persist for weapons to keep firing
                 if (e.has<WeaponStateComponent>()) continue
@@ -239,7 +229,6 @@ class GameEngine {
         entitiesToAdd.clear()
         _activeEntitiesCache.clear()
         entityByIdMap.clear()
-        playerEntity = null
         spatialGrid.clear()
         entityPool.freeAll()
         systems.forEach { it.dispose() }

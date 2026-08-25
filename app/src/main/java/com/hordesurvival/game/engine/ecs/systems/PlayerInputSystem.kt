@@ -1,7 +1,5 @@
 package com.hordesurvival.game.engine.ecs.systems
 
-import com.hordesurvival.game.engine.GameEngine
-
 import com.hordesurvival.game.component.PlayerComponent
 import com.hordesurvival.game.component.VelocityComponent
 import com.hordesurvival.game.engine.ecs.Entity
@@ -13,8 +11,7 @@ import kotlin.math.sqrt
  * Base appears where finger first touches, stick follows drag.
  * Includes dead zone and normalized output.
  */
-
-class PlayerInputSystem(private val engine: GameEngine) : System() {
+class PlayerInputSystem : System() {
 
     // ── Touch State (updated from GameRenderer) ────────────────────
     var touchStartX = 0f
@@ -42,7 +39,7 @@ class PlayerInputSystem(private val engine: GameEngine) : System() {
     }
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = engine.playerEntity ?: return
+        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
         val velocity = player.get<VelocityComponent>() ?: return
 
         if (!isTouching) {

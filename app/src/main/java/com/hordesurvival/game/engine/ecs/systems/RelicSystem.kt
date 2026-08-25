@@ -18,7 +18,7 @@ class RelicSystem(private val engine: GameEngine) : System() {
     private val maxRelics = 5  // max on map at once
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = engine.playerEntity ?: return
+        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
         val playerPos = player.get<TransformComponent>() ?: return
         val playerComp = player.get<PlayerComponent>() ?: return
 

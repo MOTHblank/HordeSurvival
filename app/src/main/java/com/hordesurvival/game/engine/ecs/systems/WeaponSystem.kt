@@ -2,6 +2,7 @@ package com.hordesurvival.game.engine.ecs.systems
 
 import com.hordesurvival.game.component.*
 import com.hordesurvival.game.engine.GameEngine
+import com.badlogic.gdx.utils.IntFloatMap
 import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.System
 import com.badlogic.gdx.math.Vector2
@@ -24,13 +25,13 @@ class WeaponSystem(private val engine: GameEngine) : System() {
     private val tempVec2 = Vector2()
 
     // Per-enemy cooldown for Lightning Ring to prevent per-wave damage stacking
-    private val lightningHitCooldowns = mutableMapOf<Int, Float>()
+    private val lightningHitCooldowns = IntFloatMap()
 
     // Scratch buffers for spatial queries
     private val _enemyQueryResult = mutableListOf<Entity>()
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = engine.playerEntity ?: return
+        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
         val playerTransform = player.get<TransformComponent>() ?: return
         val playerComp = player.get<PlayerComponent>() ?: return
 
@@ -114,16 +115,16 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         while (iter.hasNext()) {
             val entry = iter.next()
             val newTime = entry.value - dt
-            if (newTime <= 0f) iter.remove() else entry.setValue(newTime)
+            if (newTime <= 0f) iter.remove() else lightningHitCooldowns.put(entry.key, newTime)
         }
 
         for (i in 0 until enemies.size) {
             val enemy = enemies[i]
             val hp = enemy.get<HealthComponent>() ?: continue
             // Skip if this enemy was recently hit by lightning
-            if (lightningHitCooldowns[enemy.id] != null && lightningHitCooldowns[enemy.id]!! > 0f) continue
+            if (lightningHitCooldowns.containsKey(enemy.id) && lightningHitCooldowns.get(enemy.id, 0f) > 0f) continue
             hp.takeDamage(damage)
-            lightningHitCooldowns[enemy.id] = 0.3f  // 300ms cooldown per enemy
+            lightningHitCooldowns.put(enemy.id, 0.3f)  // 300ms cooldown per enemy
             // Visual flash effect
             spawnHitEffect(enemy.get<TransformComponent>()?.x ?: pos.x,
                 enemy.get<TransformComponent>()?.y ?: pos.y, 0xFF6BB6FF.toInt())

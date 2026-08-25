@@ -26,7 +26,7 @@ class ProjectileSystem(private val engine: GameEngine) : System() {
     private val TRAIL_INTERVAL = 0.05f  // every 50ms
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = engine.playerEntity
+        val player = entities.find { it.tag == "player" }
         val playerPos = player?.get<TransformComponent>()
 
         trailTimer += dt

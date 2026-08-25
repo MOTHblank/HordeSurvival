@@ -19,7 +19,7 @@ class LootBoxSystem(private val engine: GameEngine) : System() {
     private var baseInterval = 15f  // seconds between spawns
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = engine.playerEntity
+        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() }
         val playerPos = player?.get<TransformComponent>() ?: return
         // FIX: player is non-null here (after ?: return), remove unnecessary safe calls
         val playerComp = player.get<PlayerComponent>()

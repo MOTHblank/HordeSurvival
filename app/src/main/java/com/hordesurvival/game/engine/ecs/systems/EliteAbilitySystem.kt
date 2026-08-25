@@ -13,7 +13,7 @@ import kotlin.math.sqrt
 class EliteAbilitySystem(private val engine: GameEngine) : System() {
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = engine.playerEntity ?: return
+        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
         val playerPos = player.get<TransformComponent>() ?: return
 
         for (entity in entities) {

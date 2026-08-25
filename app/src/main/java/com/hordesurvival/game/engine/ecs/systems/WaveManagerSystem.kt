@@ -38,7 +38,7 @@ class WaveManagerSystem(private val engine: GameEngine) : System() {
     var playerLevel = 1
 
     override fun update(dt: Float, entities: List<Entity>) {
-        val player = engine.playerEntity
+        val player = entities.find { it.tag == "player" }
         val playerPos = player?.get<TransformComponent>() ?: return
 
         // Tower Defense mode uses its own wave system
