@@ -26,7 +26,14 @@ class RelicSystem(private val engine: GameEngine) : System() {
         spawnTimer += dt
         if (spawnTimer >= spawnInterval) {
             spawnTimer = 0f
-            val relicCount = entities.count { it.tag == "relic" && it.active }
+            var relicCount = 0
+            // Bolt: Used indexed loop instead of .count {} to prevent allocating an Iterator/lambda per frame, avoiding GC pressure
+            for (i in 0 until entities.size) {
+                val e = entities[i]
+                if (e.tag == "relic" && e.active) {
+                    relicCount++
+                }
+            }
             if (relicCount < maxRelics) {
                 spawnRelic(playerPos)
             }

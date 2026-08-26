@@ -31,7 +31,6 @@ When querying spatial structures for collisions:
 ## 2024-05-19 - Removed Iterator Allocations in Hot Paths
 **Learning:** Standard `for (entity in entities)` loops implicitly allocate an `Iterator` object per iteration, producing hundreds of GC allocations per frame across ECS systems. Additionally, `entities.find { it.tag == "player" }` executes an O(N) lookup and allocates a lambda closure every frame.
 **Action:** Always use indexed loops (`for (i in 0 until entities.size)`) when iterating through `Array` or `List` structures in `update()` loops, and use the cached `engine.playerEntity` to locate the player instead of searching the entity list.
-
-## 2024-05-19 - Removed DamageNumberData Buffered Allocations
-**Learning:** `CollisionSystem` was instantiating a new `DamageNumberData` wrapper object for every damage event, adding it to a list, and iterating over the list at the end of the update loop. In a horde survival game, this results in hundreds of allocations per second (e.g., using Poison Cloud or Orbiting Shield), creating unnecessary GC pressure. `GameEngine.createEntity` uses deferred addition, so it's perfectly safe to spawn entities inline during loops.
-**Action:** Remove intermediate buffering lists and data classes (like `DamageNumberData`). Directly invoke entity creation inline (`engine.createEntity()`) whenever possible to avoid per-event allocations.
+## $(date +%Y-%m-%d) - [Indexed loops over Collection functions in systems]
+**Learning:** `RelicSystem` and `AchievementSystem` were using Kotlin collection functions like `count {}` and `any {}` which allocate an `Iterator` and lambda per frame, creating GC pressure that hurts mobile performance. Also, the active `entities` list passed to `System.update()` only contains *active* entities, meaning it missed inactive/dead entities (like bosses that were just killed).
+**Action:** Replace `count {}` and `any {}` with indexed `for` loops (e.g. `for (i in 0 until entities.size)`) in hot loop `System.update()` methods. When checking for dead entities, iterate over `engine.entities` instead of the passed `entities` parameter to reliably catch them.
