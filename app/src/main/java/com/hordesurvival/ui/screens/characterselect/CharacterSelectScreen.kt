@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +22,7 @@ import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -118,7 +118,7 @@ private fun CharacterCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
+                    .clip(SmallCutShape)
                     .background(HordeColors.Lavender.copy(alpha = 0.25f)),
                 contentAlignment = Alignment.Center
             ) {

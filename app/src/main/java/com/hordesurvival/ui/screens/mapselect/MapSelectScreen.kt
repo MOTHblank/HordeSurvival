@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +22,7 @@ import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSecondaryButton
+import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -55,7 +55,7 @@ fun MapSelectScreen(
             Spacer(Modifier.height(8.dp))
             Box(
                 Modifier
-                    .clip(CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp))
+                    .clip(SmallCutShape)
                     .background(Color(0xFFFFD700).copy(alpha = 0.12f))
                     .padding(horizontal = 14.dp, vertical = 4.dp)
             ) {
@@ -146,7 +146,7 @@ private fun StatChip(text: String, color: Color) {
         text, fontSize = 9.sp, fontWeight = FontWeight.Bold,
         color = color,
         modifier = Modifier
-            .clip(CutCornerShape(topStart = 2.dp, bottomEnd = 2.dp))
+            .clip(SmallCutShape)
             .background(color.copy(alpha = 0.15f))
             .padding(horizontal = 4.dp, vertical = 1.dp)
     )

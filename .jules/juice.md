@@ -20,3 +20,6 @@
 ## 2026-08-25 - Tradeoff: Global Animated Backgrounds
 **Learning:** Extracting complex animated backgrounds into a shared root component (`HordeScreen`) applies multiple continuous `infiniteRepeatable` animations to every single screen in the app.
 **Action:** While this greatly improves visual consistency and 'juice' across menus, it increases battery usage and baseline rendering cost. If frame drops are observed in heavy menus (like Upgrades or Map Select), the animations should be throttled or simplified based on the `graphicsQuality` setting.
+## 2026-08-25 - Systemic Shape Unification
+**Learning:** Found scattered usages of `RoundedCornerShape(8.dp)`, `RoundedCornerShape(12.dp)`, `CircleShape`, and hardcoded `CutCornerShape(...)` across the codebase (e.g., in `PauseScreen`, `GameScreen`, `HordeUI`, `MapSelectScreen`, `UpgradesScreen`, etc.). This violated the design system rules which dictated the use of the shared `CornerCutShape` and `SmallCutShape`.
+**Action:** Replaced all hardcoded shape usages (`RoundedCornerShape`, `CircleShape` and specific `CutCornerShape(...)`) with `CornerCutShape` or `SmallCutShape` from `HordeUI.kt` to ensure consistent angular arcade aesthetic across the app.

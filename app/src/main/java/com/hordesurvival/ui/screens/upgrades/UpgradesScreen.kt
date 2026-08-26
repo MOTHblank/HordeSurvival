@@ -3,7 +3,6 @@ package com.hordesurvival.ui.screens.upgrades
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +19,7 @@ import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSmallButton
+import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.utils.Constants
 
@@ -63,7 +63,7 @@ fun UpgradesScreen(
 
             Box(
                 Modifier
-                    .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
+                    .clip(SmallCutShape)
                     .background(Color(0xFFFFD700).copy(alpha = 0.12f))
                     .padding(horizontal = 16.dp, vertical = 6.dp)
             ) {
@@ -131,7 +131,7 @@ private fun UpgradeRow(
             if (isMaxed) {
                 Box(
                     modifier = Modifier
-                        .clip(CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp))
+                        .clip(SmallCutShape)
                         .background(HordeColors.MintGreen.copy(alpha = 0.2f))
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) { Text("MAX", color = HordeColors.MintGreen, fontWeight = FontWeight.Black, fontSize = 12.sp) }

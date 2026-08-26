@@ -3,7 +3,6 @@ package com.hordesurvival.ui.screens.shop
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +17,7 @@ import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -50,9 +50,9 @@ fun ItemShopScreen(
 
             Box(
                 Modifier
-                    .clip(CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
+                    .clip(SmallCutShape)
                     .background(Color(0xFFFFD700).copy(alpha = 0.12f))
-                    .border(1.dp, Color(0xFFFFD700).copy(alpha = 0.25f), CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp))
+                    .border(1.dp, Color(0xFFFFD700).copy(alpha = 0.25f), SmallCutShape)
                     .padding(horizontal = 16.dp, vertical = 6.dp)
             ) {
                 Text(
@@ -172,7 +172,7 @@ private fun ShopItemList(items: List<ShopItem>, gold: Int, onPurchase: (String, 
                     Spacer(Modifier.width(12.dp))
                     Box(
                         Modifier
-                            .clip(CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp))
+                            .clip(SmallCutShape)
                             .background(if (canAfford) Color(0xFFFFD700).copy(alpha = 0.15f) else Color.Gray.copy(alpha = 0.1f))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
