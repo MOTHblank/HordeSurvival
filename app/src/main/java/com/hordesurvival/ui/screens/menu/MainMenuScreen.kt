@@ -5,8 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.components.CornerCutShape
+import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import kotlin.math.sin
@@ -94,7 +95,7 @@ fun MainMenuScreen(
             val alpha = 0.15f + 0.1f * sin(f3 * 6.28f + phase)
             val dotSize = 2f + (hash % 30) / 15f
             Box(Modifier.offset(x = animX.dp, y = animY.dp).size(dotSize.dp)
-                .clip(CircleShape).background(Color.White.copy(alpha = alpha)))
+                .clip(SmallCutShape).background(Color.White.copy(alpha = alpha)))
         }
 
         // ── Layer 3: Content ──
@@ -137,8 +138,8 @@ fun MainMenuScreen(
 
             // Gold badge — compact
             if (gold > 0) {
-                Box(Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xFFFFD700).copy(alpha = 0.08f))
-                    .border(0.5.dp, Color(0xFFFFD700).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                Box(Modifier.clip(CornerCutShape).background(Color(0xFFFFD700).copy(alpha = 0.08f))
+                    .border(0.5.dp, Color(0xFFFFD700).copy(alpha = 0.15f), CornerCutShape)
                     .padding(horizontal = 14.dp, vertical = 4.dp)) {
                     Text("💰 $gold", fontSize = 13.sp, color = HordeColors.GoldColor.copy(alpha = 0.9f), fontWeight = FontWeight.SemiBold)
                 }
