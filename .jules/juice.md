@@ -7,3 +7,9 @@
 ## 2024-05-24 - Unifying the Card System
 **Learning:** Migrating hardcoded `Box` card layouts to a unified `HordeItemCard` provides a consistent "juice" across the app by introducing scale-on-press animations, unified rounded corners, and easy visual selection states. `HordeScreen` was updated to support custom `contentAlignment` which made migrating everything much easier.
 **Action:** When adding new screens, always use `HordeItemCard` for lists, settings rows, grids, and selections. Do not write custom `Box` components that mimic cards.
+## 2026-08-25 - Extracted Animated Background to HordeScreen
+**Learning:** Extracting the animated orbs, particles, and dynamic gradient from `MainMenuScreen` into `HordeScreen` instantly propagates a high-quality, juicy background to all out-of-game UI screens (e.g. Mode Select, Settings, GameOver).
+**Action:** When a visually pleasing and complex background pattern is found in a specific screen (like a main menu), consider pushing it down into the core shared UI components to elevate the visual baseline of the entire app.
+## 2026-08-25 - Tradeoff: Global Animated Backgrounds
+**Learning:** Extracting complex animated backgrounds into a shared root component (`HordeScreen`) applies multiple continuous `infiniteRepeatable` animations to every single screen in the app.
+**Action:** While this greatly improves visual consistency and 'juice' across menus, it increases battery usage and baseline rendering cost. If frame drops are observed in heavy menus (like Upgrades or Map Select), the animations should be throttled or simplified based on the `graphicsQuality` setting.
