@@ -7,6 +7,13 @@
 ## 2024-05-24 - Unifying the Card System
 **Learning:** Migrating hardcoded `Box` card layouts to a unified `HordeItemCard` provides a consistent "juice" across the app by introducing scale-on-press animations, unified rounded corners, and easy visual selection states. `HordeScreen` was updated to support custom `contentAlignment` which made migrating everything much easier.
 **Action:** When adding new screens, always use `HordeItemCard` for lists, settings rows, grids, and selections. Do not write custom `Box` components that mimic cards.
+## 2026-08-25 - Hardcoded Shapes vs Shared Styles
+**Learning:** Hardcoding shape configurations like `CutCornerShape(topStart = 8.dp...)` across multiple screens reduces maintainability, clutters code, and makes systemic style updates difficult.
+**Action:** Always extract common visual motifs (like angular cuts or specific radii) into public, shared constants within `HordeUI.kt` (e.g., `CornerCutShape`, `SmallCutShape`) and reuse them across all screens.
+
+## 2026-08-25 - Functional Information in Visual Redesigns
+**Learning:** When decluttering UI (e.g., converting a verbose text-based weapon list into a sleek row of icons), it's easy to accidentally drop functional information (like the weapon name), which is a regression for the player.
+**Action:** Find creative ways to retain vital text information in redesigned components, such as using a much smaller font size placed directly underneath or adjacent to the new visual elements.
 ## 2026-08-25 - Extracted Animated Background to HordeScreen
 **Learning:** Extracting the animated orbs, particles, and dynamic gradient from `MainMenuScreen` into `HordeScreen` instantly propagates a high-quality, juicy background to all out-of-game UI screens (e.g. Mode Select, Settings, GameOver).
 **Action:** When a visually pleasing and complex background pattern is found in a specific screen (like a main menu), consider pushing it down into the core shared UI components to elevate the visual baseline of the entire app.

@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +22,8 @@ import com.hordesurvival.game.upgrade.UpgradeOption
 import com.hordesurvival.game.upgrade.UpgradeType
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.components.CornerCutShape
+import com.hordesurvival.ui.components.SmallCutShape
 
 /**
  * Level-up screen with animated cards, rarity glow, and satisfying selection.
@@ -131,7 +132,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
     Box(
         modifier = modifier
             .scale(pressScale)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(CornerCutShape)
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
@@ -143,7 +144,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
             .border(
                 width = if (isEvolution) 2.5.dp else 1.5.dp,
                 color = if (isEvolution) Color(0xFFFFD700).copy(alpha = evoGlow) else rarityColor.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(16.dp)
+                shape = CornerCutShape
             )
             .clickable {
                 isPressed = true
@@ -160,7 +161,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
             Box(
                 modifier = Modifier
                     .size(52.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                    .clip(CornerCutShape)
                     .background(rarityColor.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -207,7 +208,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
             // Rarity badge
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(SmallCutShape)
                     .background(rarityColor.copy(alpha = 0.15f))
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {

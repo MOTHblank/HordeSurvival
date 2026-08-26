@@ -5,8 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.components.CornerCutShape
+import com.hordesurvival.ui.components.SmallCutShape
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.sin
@@ -74,29 +75,26 @@ fun GameHud(
             Box(Modifier.fillMaxSize().background(Color(0xFFFF4444).copy(alpha = pulseAlpha)))
         }
 
-        // ── Top center — bars ────────────────────────────────────
+        // ── Top — full-width XP bar ─────────────────────────────
+        Box(
+            modifier = Modifier.fillMaxWidth().height(12.dp).align(Alignment.TopCenter).background(Color(0xFF1A1A3F))
+        ) {
+            Box(Modifier.fillMaxHeight().fillMaxWidth(xpRatio).background(Brush.horizontalGradient(listOf(HordeColors.XpBarFill, HordeColors.SkyBlue.copy(alpha = 0.6f)))))
+            Text("Lv.$playerLevel", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.align(Alignment.Center))
+        }
+
+        // ── Top center — HP bar and Boss bar ────────────────────
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).align(Alignment.TopCenter)
+            modifier = Modifier.fillMaxWidth(0.6f).padding(top = 16.dp).align(Alignment.TopCenter)
         ) {
             // HP
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("❤️", fontSize = 12.sp)
                 Spacer(Modifier.width(4.dp))
-                Box(Modifier.weight(1f).height(14.dp).clip(RoundedCornerShape(7.dp)).background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(7.dp))) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(hpRatio).clip(RoundedCornerShape(7.dp)).background(Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f)))))
+                Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
+                    Box(Modifier.fillMaxHeight().fillMaxWidth(hpRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f)))))
                     Text("${playerHp.toInt()} / ${playerMaxHp.toInt()}", fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f), modifier = Modifier.align(Alignment.Center))
                 }
-            }
-            Spacer(Modifier.height(4.dp))
-            // XP
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("⭐", fontSize = 12.sp)
-                Spacer(Modifier.width(4.dp))
-                Box(Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(5.dp)).background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(5.dp))) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(xpRatio).clip(RoundedCornerShape(5.dp)).background(Brush.horizontalGradient(listOf(HordeColors.XpBarFill, HordeColors.SkyBlue.copy(alpha = 0.6f)))))
-                }
-                Spacer(Modifier.width(8.dp))
-                Text("Lv.$playerLevel", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue)
             }
 
             // Boss HP bar (only when boss is active)
@@ -106,8 +104,8 @@ fun GameHud(
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("👹", fontSize = 14.sp)
                     Spacer(Modifier.width(4.dp))
-                    Box(Modifier.weight(1f).height(16.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF1A1A3F)).border(1.dp, Color(0xFFFFAB91).copy(alpha = 0.4f), RoundedCornerShape(8.dp))) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(RoundedCornerShape(8.dp)).background(Brush.horizontalGradient(listOf(Color(0xFFFF6E40), Color(0xFFFFAB91)))))
+                    Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color(0xFFFFAB91).copy(alpha = 0.4f), CornerCutShape)) {
+                        Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(Color(0xFFFF6E40), Color(0xFFFFAB91)))))
                         Text("BOSS ${bossHp.toInt()}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
                     }
                 }
@@ -117,7 +115,7 @@ fun GameHud(
         // ── Top right — stats ────────────────────────────────────
         Column(
             modifier = Modifier.align(Alignment.TopEnd).padding(12.dp)
-                .clip(RoundedCornerShape(10.dp)).background(Color.Black.copy(alpha = 0.3f))
+                .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.3f))
                 .padding(horizontal = 10.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.End
         ) {
@@ -175,8 +173,8 @@ fun GameHud(
             // Pause button
             Box(
                 modifier = Modifier.size(44.dp)
-                    .clip(CircleShape).background(Color.Black.copy(alpha = 0.4f))
-                    .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                    .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.4f))
+                    .border(1.dp, Color.White.copy(alpha = 0.15f), CornerCutShape)
                     .clickable { onPauseClick() },
                 contentAlignment = Alignment.Center
             ) { Text("⏸", fontSize = 18.sp) }
@@ -189,7 +187,7 @@ fun GameHud(
                     val sel = gameSpeed == speed
                     Box(
                         modifier = Modifier.size(28.dp)
-                            .clip(CircleShape)
+                            .clip(CornerCutShape)
                             .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.3f))
                             .clickable { onSpeedChange(speed) },
                         contentAlignment = Alignment.Center
@@ -205,9 +203,9 @@ fun GameHud(
         Box(
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 80.dp)
                 .size(56.dp)
-                .clip(CircleShape)
+                .clip(CornerCutShape)
                 .background(if (abilityReady) Color(0xFF66BB6A).copy(alpha = 0.6f) else Color.Gray.copy(alpha = 0.3f))
-                .border(1.5.dp, if (abilityReady) Color(0xFF66BB6A) else Color.Gray.copy(alpha = 0.5f), CircleShape)
+                .border(1.5.dp, if (abilityReady) Color(0xFF66BB6A) else Color.Gray.copy(alpha = 0.5f), CornerCutShape)
                 .clickable(enabled = abilityReady) { onAbilityClick() },
             contentAlignment = Alignment.Center
         ) {
@@ -229,22 +227,25 @@ fun GameHud(
             }
         }
 
-        // ── Bottom left — weapon loadout with tiers ──────────────
+        // ── Bottom left — weapon loadout row ─────────────────────
         if (currentWeapons.isNotEmpty()) {
-            Column(
+            Row(
                 modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)
-                    .clip(RoundedCornerShape(10.dp)).background(Color.Black.copy(alpha = 0.4f))
-                    .padding(8.dp)
+                    .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.4f))
+                    .padding(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text("⚔️ Weapons", fontSize = 10.sp, color = HordeColors.TextSecondary, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(4.dp))
                 currentWeapons.forEach { weapon ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(weaponEmoji(weapon), fontSize = 12.sp)
-                        Spacer(Modifier.width(4.dp))
-                        Text(weapon.displayName, fontSize = 11.sp, color = Color.White.copy(alpha = 0.8f))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            modifier = Modifier.size(32.dp).clip(SmallCutShape).background(Color.White.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(weaponEmoji(weapon), fontSize = 18.sp)
+                        }
+                        Spacer(Modifier.height(2.dp))
+                        Text(weapon.displayName, fontSize = 8.sp, color = Color.White.copy(alpha = 0.8f))
                     }
-                    Spacer(Modifier.height(2.dp))
                 }
             }
         }

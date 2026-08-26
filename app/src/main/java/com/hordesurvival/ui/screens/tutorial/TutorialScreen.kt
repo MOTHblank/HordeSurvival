@@ -5,8 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.CornerCutShape
+import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.theme.HordeColors
 
@@ -65,11 +66,11 @@ fun TutorialScreen(
         ) {
             // Progress bar
             Box(
-                Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp))
+                Modifier.fillMaxWidth().height(4.dp).clip(SmallCutShape)
                     .background(Color(0xFF1A1A3F))
             ) {
                 Box(
-                    Modifier.fillMaxHeight().fillMaxWidth(progress).clip(RoundedCornerShape(2.dp))
+                    Modifier.fillMaxHeight().fillMaxWidth(progress).clip(SmallCutShape)
                         .background(Brush.horizontalGradient(listOf(HordeColors.SkyBlue, HordeColors.Lavender)))
                 )
             }
@@ -127,7 +128,7 @@ fun TutorialScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     repeat(steps.size) { i ->
                         Box(
-                            Modifier.size(8.dp).clip(CircleShape)
+                            Modifier.size(8.dp).clip(SmallCutShape)
                                 .background(if (i == step) HordeColors.SkyBlue else Color(0xFF1A1A3F))
                         )
                     }
