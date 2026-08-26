@@ -22,9 +22,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.theme.HordeColors
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Unified UI component system for Horde Survival.
@@ -40,23 +46,67 @@ fun HordeScreen(
     contentAlignment: Alignment = Alignment.TopStart,
     content: @Composable BoxScope.() -> Unit
 ) {
+    // Smooth animations
+    val inf = rememberInfiniteTransition(label = "menu")
+    val f1 by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(10000, easing = LinearEasing)), label = "f1")
+    val f2 by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(14000, easing = LinearEasing)), label = "f2")
+    val f3 by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(7000, easing = LinearEasing)), label = "f3")
+
+    val config = androidx.compose.ui.platform.LocalConfiguration.current
+    val screenW = config.screenWidthDp.toFloat()
+    val screenH = config.screenHeightDp.toFloat()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF1E1E3F),
-                        Color(0xFF0F0F23),
-                        Color(0xFF070711)
-                    ),
-                    center = Offset(0.5f, 0.4f),
-                    radius = 1800f
-                )
-            ),
-        contentAlignment = contentAlignment
+            .background(Color(0xFF06060F))
+            .drawBehind {
+                drawRect(Brush.verticalGradient(
+                    listOf(Color(0xFF08081A), Color(0xFF0A0A20), Color(0xFF060612))
+                ))
+            }
     ) {
-        content()
+        // Render background layers in an alignment-agnostic container
+        Box(Modifier.fillMaxSize()) {
+            // ── Layer 1: Large ambient orbs ──
+            val orb1X = screenW * 0.25f + sin(f1 * 6.28f) * screenW * 0.15f
+            val orb1Y = screenH * 0.3f + cos(f2 * 6.28f) * screenH * 0.1f
+            Box(Modifier.offset(x = orb1X.dp, y = orb1Y.dp).size(350.dp)
+                .background(Brush.radialGradient(listOf(HordeColors.Lavender.copy(alpha = 0.04f), Color.Transparent))))
+
+            val orb2X = screenW * 0.65f + cos(f2 * 6.28f) * screenW * 0.12f
+            val orb2Y = screenH * 0.55f + sin(f1 * 6.28f) * screenH * 0.08f
+            Box(Modifier.offset(x = orb2X.dp, y = orb2Y.dp).size(280.dp)
+                .background(Brush.radialGradient(listOf(HordeColors.SkyBlue.copy(alpha = 0.035f), Color.Transparent))))
+
+            val orb3X = screenW * 0.5f + sin(f3 * 6.28f) * screenW * 0.2f
+            val orb3Y = screenH * 0.15f + cos(f3 * 6.28f) * screenH * 0.05f
+            Box(Modifier.offset(x = orb3X.dp, y = orb3Y.dp).size(200.dp)
+                .background(Brush.radialGradient(listOf(Color(0xFFFF6E40).copy(alpha = 0.025f), Color.Transparent))))
+
+            // ── Layer 2: Floating particles ──
+            for (i in 0 until 12) {
+                val hash = (i * 7919 + 42) % 10000
+                val px = (hash % 1000) / 1000f * screenW
+                val py = ((hash / 1000) * 3571) % 10000 / 10000f * screenH
+                val speed = 0.3f + (hash % 50) / 100f
+                val phase = hash.toFloat()
+                val animX = px + sin(f1 * 6.28f * speed + phase) * 30f
+                val animY = py + cos(f2 * 6.28f * speed + phase) * 20f
+                val alpha = 0.15f + 0.1f * sin(f3 * 6.28f + phase)
+                val dotSize = 2f + (hash % 30) / 15f
+                Box(Modifier.offset(x = animX.dp, y = animY.dp).size(dotSize.dp)
+                    .clip(CircleShape).background(Color.White.copy(alpha = alpha)))
+            }
+        }
+
+        // Render content with specified alignment
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = contentAlignment
+        ) {
+            content()
+        }
     }
 }
 

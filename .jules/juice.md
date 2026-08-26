@@ -14,3 +14,9 @@
 ## 2026-08-25 - Functional Information in Visual Redesigns
 **Learning:** When decluttering UI (e.g., converting a verbose text-based weapon list into a sleek row of icons), it's easy to accidentally drop functional information (like the weapon name), which is a regression for the player.
 **Action:** Find creative ways to retain vital text information in redesigned components, such as using a much smaller font size placed directly underneath or adjacent to the new visual elements.
+## 2026-08-25 - Extracted Animated Background to HordeScreen
+**Learning:** Extracting the animated orbs, particles, and dynamic gradient from `MainMenuScreen` into `HordeScreen` instantly propagates a high-quality, juicy background to all out-of-game UI screens (e.g. Mode Select, Settings, GameOver).
+**Action:** When a visually pleasing and complex background pattern is found in a specific screen (like a main menu), consider pushing it down into the core shared UI components to elevate the visual baseline of the entire app.
+## 2026-08-25 - Tradeoff: Global Animated Backgrounds
+**Learning:** Extracting complex animated backgrounds into a shared root component (`HordeScreen`) applies multiple continuous `infiniteRepeatable` animations to every single screen in the app.
+**Action:** While this greatly improves visual consistency and 'juice' across menus, it increases battery usage and baseline rendering cost. If frame drops are observed in heavy menus (like Upgrades or Map Select), the animations should be throttled or simplified based on the `graphicsQuality` setting.

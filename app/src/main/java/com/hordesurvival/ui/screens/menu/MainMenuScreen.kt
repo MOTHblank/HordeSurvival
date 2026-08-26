@@ -6,21 +6,18 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
@@ -28,9 +25,8 @@ import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.components.CornerCutShape
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.components.HordeButton
+import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSecondaryButton
-import kotlin.math.sin
-import kotlin.math.cos
 
 @Composable
 fun MainMenuScreen(
@@ -48,9 +44,6 @@ fun MainMenuScreen(
 
     // Smooth animations
     val inf = rememberInfiniteTransition(label = "menu")
-    val f1 by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(10000, easing = LinearEasing)), label = "f1")
-    val f2 by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(14000, easing = LinearEasing)), label = "f2")
-    val f3 by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(7000, easing = LinearEasing)), label = "f3")
     val glow by inf.animateFloat(0.5f, 1f, infiniteRepeatable(tween(2500, easing = EaseInOut), RepeatMode.Reverse), label = "glow")
     val breathe by inf.animateFloat(0.97f, 1.03f, infiniteRepeatable(tween(3000, easing = EaseInOut), RepeatMode.Reverse), label = "breathe")
 
