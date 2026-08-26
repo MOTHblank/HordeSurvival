@@ -42,13 +42,34 @@ class AchievementSystem(private val engine: GameEngine) : System() {
         val time = engine.gameTime
         val combo = player.get<ComboComponent>()?.maxCombo ?: 0
         val weaponCount = comp.weapons.size
-        val hasEvolution = comp.weapons.any { weapon ->
+        var hasEvolution = false
+        // Bolt: Used indexed loop instead of .any {} to prevent allocating an Iterator/lambda per frame, avoiding GC pressure
+        for (i in 0 until comp.weapons.size) {
+            val weapon = comp.weapons[i]
             val tier = comp.passiveLevels["WPN_${weapon.name}"] ?: 1
-            WeaponEvolution.findEvolution(weapon, comp.passiveLevels) != null && tier >= 5
+            if (WeaponEvolution.findEvolution(weapon, comp.passiveLevels) != null && tier >= 5) {
+                hasEvolution = true
+                break
+            }
         }
 
         // Boss kills — track via entity count changes
-        val currentBossKills = entities.count { it.tag == "enemy" && it.get<EnemyComponent>()?.isBoss == true && !it.active && it.get<HealthComponent>()?.isDead == true }
+        var currentBossKills = 0
+        // Bolt: Used indexed loop instead of .count {} to prevent allocating an Iterator/lambda per frame, avoiding GC pressure.
+        // We use engine.entities here because we need to count dead (inactive) bosses, which may not be in the 'entities' cache.
+        val allEntities = engine.entities
+        for (i in 0 until allEntities.size) {
+            val e = allEntities[i]
+            if (e.tag == "enemy" && !e.active) {
+                val enemyComp = e.get<EnemyComponent>()
+                if (enemyComp != null && enemyComp.isBoss) {
+                    val healthComp = e.get<HealthComponent>()
+                    if (healthComp != null && healthComp.isDead) {
+                        currentBossKills++
+                    }
+                }
+            }
+        }
 
         check(AchievementType.FIRST_KILL, kills >= 1)
         check(AchievementType.KILL_100, kills >= 100)
