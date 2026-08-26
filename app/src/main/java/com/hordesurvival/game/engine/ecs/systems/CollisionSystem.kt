@@ -26,7 +26,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
     private val tempVec2 = Vector2()
 
     // Reusable collections — no allocation per frame
-    private val damageNumbers = mutableListOf<DamageNumberData>()
     private val _enemies = mutableListOf<Entity>()
     private val _projectiles = mutableListOf<Entity>()
     private val _enemyProjectiles = mutableListOf<Entity>()
@@ -40,8 +39,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
 
     // Maximum possible enemy collision radius (bosses can be up to 40f)
     private val MAX_ENEMY_RADIUS = 40f
-
-    data class DamageNumberData(val x: Float, val y: Float, val amount: Float, val isCrit: Boolean)
 
     override fun update(dt: Float, entities: List<Entity>) {
         // Rebuild SpatialGrid with updated entity positions after MovementSystem/EnemyAISystem ran
@@ -88,8 +85,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             val newTime = entry.value - dt
             if (newTime <= 0f) cooldownIter.remove() else entry.value = newTime
         }
-
-        damageNumbers.clear()
 
         // ── Player vs Enemy contact damage ──────────────────────────────
         _nearbyEnemiesBuffer.clear()
@@ -371,12 +366,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         if (playerComp.regenRate > 0f) {
             playerHealth.heal(playerComp.regenRate * dt)
         }
-
-        // ── Spawn damage numbers ──────────────────────────────────
-        for (i in 0 until damageNumbers.size) {
-            val dn = damageNumbers[i]
-            spawnDamageNumberEntity(dn.x, dn.y, dn.amount, dn.isCrit)
-        }
     }
 
     private fun applyAoeDamage(x: Float, y: Float, radius: Float, damage: Float) {
@@ -434,10 +423,6 @@ class CollisionSystem(private val engine: GameEngine) : System() {
     }
 
     private fun spawnDamageNumber(x: Float, y: Float, amount: Float, isCrit: Boolean) {
-        damageNumbers.add(DamageNumberData(x, y, amount, isCrit))
-    }
-
-    private fun spawnDamageNumberEntity(x: Float, y: Float, amount: Float, isCrit: Boolean) {
         val p = engine.createEntity("damage_number")
         p.add(TransformComponent(x, y))
         p.add(DamageNumberComponent(
