@@ -31,3 +31,7 @@ When querying spatial structures for collisions:
 ## 2024-05-19 - Removed Iterator Allocations in Hot Paths
 **Learning:** Standard `for (entity in entities)` loops implicitly allocate an `Iterator` object per iteration, producing hundreds of GC allocations per frame across ECS systems. Additionally, `entities.find { it.tag == "player" }` executes an O(N) lookup and allocates a lambda closure every frame.
 **Action:** Always use indexed loops (`for (i in 0 until entities.size)`) when iterating through `Array` or `List` structures in `update()` loops, and use the cached `engine.playerEntity` to locate the player instead of searching the entity list.
+
+## 2024-05-19 - Removed DamageNumberData Buffered Allocations
+**Learning:** `CollisionSystem` was instantiating a new `DamageNumberData` wrapper object for every damage event, adding it to a list, and iterating over the list at the end of the update loop. In a horde survival game, this results in hundreds of allocations per second (e.g., using Poison Cloud or Orbiting Shield), creating unnecessary GC pressure. `GameEngine.createEntity` uses deferred addition, so it's perfectly safe to spawn entities inline during loops.
+**Action:** Remove intermediate buffering lists and data classes (like `DamageNumberData`). Directly invoke entity creation inline (`engine.createEntity()`) whenever possible to avoid per-event allocations.
