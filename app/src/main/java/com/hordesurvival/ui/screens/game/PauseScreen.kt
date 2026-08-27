@@ -50,7 +50,8 @@ fun PauseScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxWidth(0.88f)
+                .widthIn(max = 400.dp)
+                .fillMaxWidth(0.9f)
                 .padding(16.dp)
         ) {
             Text(
@@ -147,14 +148,14 @@ fun PauseScreen(
             } else {
                 // Main pause buttons
                 HordeButton(
-                    modifier = Modifier.fillMaxWidth(0.75f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
                     text = Locales.getString("resume", languageCode),
                     icon = "▶",
                     onClick = onResume
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 HordeSecondaryButton(
-                    modifier = Modifier.fillMaxWidth(0.75f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
                     text = Locales.getString("settings", languageCode),
                     icon = "⚙",
                     onClick = { showSettings = true }
@@ -162,7 +163,7 @@ fun PauseScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Game speed control card
-                HordeItemCard(modifier = Modifier.fillMaxWidth(0.75f)) {
+                HordeItemCard(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -198,7 +199,7 @@ fun PauseScreen(
                 Spacer(Modifier.height(24.dp))
 
                 HordeSecondaryButton(
-                    modifier = Modifier.fillMaxWidth(0.75f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
                     text = Locales.getString("quit", languageCode),
                     icon = "🏠",
                     onClick = onQuit

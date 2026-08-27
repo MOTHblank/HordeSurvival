@@ -101,7 +101,7 @@ fun LevelUpScreen(
                     UpgradeCard(
                         option = option,
                         onClick = { onSelect(option) },
-                        modifier = Modifier.weight(1f).scale(cardScale),
+                        modifier = Modifier.widthIn(max = 160.dp).weight(1f).scale(cardScale),
                         languageCode = languageCode
                     )
                 }
