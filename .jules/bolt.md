@@ -34,6 +34,9 @@ When querying spatial structures for collisions:
 ## $(date +%Y-%m-%d) - [Indexed loops over Collection functions in systems]
 **Learning:** `RelicSystem` and `AchievementSystem` were using Kotlin collection functions like `count {}` and `any {}` which allocate an `Iterator` and lambda per frame, creating GC pressure that hurts mobile performance. Also, the active `entities` list passed to `System.update()` only contains *active* entities, meaning it missed inactive/dead entities (like bosses that were just killed).
 **Action:** Replace `count {}` and `any {}` with indexed `for` loops (e.g. `for (i in 0 until entities.size)`) in hot loop `System.update()` methods. When checking for dead entities, iterate over `engine.entities` instead of the passed `entities` parameter to reliably catch them.
+## 2024-11-20 - [ECS Entity Recycling and Entity Count Optimization]
+**Learning:** `ArrayList` iterator removal inside a loop (like `GameEngine.recycleEntities()`) creates O(N^2) shifting behavior and generates per-frame `Iterator` allocations leading to GC pressure. Calling `GameEngine.getEntityCount()` iterating the list every time when thousands of projectiles want to check if they can spawn particles causes O(N*M) loop iterations per frame where N is number of total entities and M is the number of projectiles.
+**Action:** Use an O(N) two-pointer (write index) approach for in-place array compaction when repeatedly removing from a large ArrayList during hot paths. Replace iterating loops with O(1) checks against existing cached values (like `_activeEntitiesCache.size`) for global states.
 
 ## 2024-05-20 - Removed Autoboxing overhead in ComboSystem
 **Learning:** `mutableSetOf<Int>()` autoboxes `Int` to `Integer` on every insertion. In a hot path like `ComboSystem` checking deaths per frame, this allocates `Integer` instances repeatedly and creates GC churn.
