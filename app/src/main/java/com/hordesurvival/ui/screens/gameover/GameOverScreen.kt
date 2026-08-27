@@ -17,6 +17,7 @@ import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 import com.hordesurvival.ui.viewmodel.RunSummary
 
 @Composable
@@ -41,29 +42,29 @@ fun GameOverScreen(
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(28.dp)) {
             Text("💀", fontSize = 48.sp)
             Spacer(Modifier.height(8.dp))
-            Text(L("game_over"), fontSize = 36.sp, fontWeight = FontWeight.Black, color = HordeColors.SoftPink, letterSpacing = 2.sp)
+            Text(L("game_over"), style = HordeTypography.Title.copy(fontSize = 36.sp, color = HordeColors.SoftPink, letterSpacing = 2.sp))
             Spacer(Modifier.height(32.dp))
 
             // Stats card
             HordeCard(Modifier.scale(ss).fillMaxWidth(0.88f)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(L("time_survived"), fontSize = 15.sp, color = HordeColors.TextSecondary)
-                    Text(formatTime(summary.timeSurvived), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue)
+                    Text(L("time_survived"), style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
+                    Text(formatTime(summary.timeSurvived), style = HordeTypography.Value.copy(color = HordeColors.SkyBlue))
                 }
                 Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(L("enemies_killed"), fontSize = 15.sp, color = HordeColors.TextSecondary)
-                    Text("${summary.kills}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.SoftPink)
+                    Text(L("enemies_killed"), style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
+                    Text("${summary.kills}", style = HordeTypography.Value.copy(color = HordeColors.SoftPink))
                 }
                 Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(L("level_reached"), fontSize = 15.sp, color = HordeColors.TextSecondary)
-                    Text("${summary.level}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.Lavender)
+                    Text(L("level_reached"), style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
+                    Text("${summary.level}", style = HordeTypography.Value.copy(color = HordeColors.Lavender))
                 }
                 Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(L("gold_earned"), fontSize = 15.sp, color = HordeColors.TextSecondary)
-                    Text("${summary.goldEarned}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.GoldColor)
+                    Text(L("gold_earned"), style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
+                    Text("${summary.goldEarned}", style = HordeTypography.Value.copy(color = HordeColors.GoldColor))
                 }
             }
 

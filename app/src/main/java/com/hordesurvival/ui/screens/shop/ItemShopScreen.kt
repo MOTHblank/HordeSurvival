@@ -19,6 +19,7 @@ import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 /**
  * Item shop between runs — spend gold on permanent upgrades.
@@ -57,9 +58,7 @@ fun ItemShopScreen(
             ) {
                 Text(
                     "💰 $gold Gold",
-                    fontSize = 17.sp,
-                    color = HordeColors.GoldColor,
-                    fontWeight = FontWeight.Black
+                    style = HordeTypography.Value.copy(color = HordeColors.GoldColor, fontWeight = FontWeight.Black)
                 )
             }
 
@@ -78,9 +77,10 @@ fun ItemShopScreen(
                     ) {
                         Text(
                             label,
-                            color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                            fontWeight = if (sel) FontWeight.Black else FontWeight.Normal,
-                            fontSize = 14.sp
+                            style = HordeTypography.Body.copy(
+                                color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
+                                fontWeight = if (sel) FontWeight.Black else FontWeight.Normal
+                            )
                         )
                     }
                 }
@@ -159,14 +159,17 @@ private fun ShopItemList(items: List<ShopItem>, gold: Int, onPurchase: (String, 
                     Column(Modifier.weight(1f)) {
                         Text(
                             item.name,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (canAfford) Color.White else Color.White.copy(alpha = 0.4f)
+                            style = HordeTypography.Body.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = if (canAfford) Color.White else Color.White.copy(alpha = 0.4f)
+                            )
                         )
                         Text(
                             item.description,
-                            fontSize = 11.sp,
-                            color = HordeColors.TextSecondary
+                            style = HordeTypography.Label.copy(
+                                fontSize = 11.sp,
+                                color = HordeColors.TextSecondary
+                            )
                         )
                     }
                     Spacer(Modifier.width(12.dp))
@@ -178,9 +181,11 @@ private fun ShopItemList(items: List<ShopItem>, gold: Int, onPurchase: (String, 
                     ) {
                         Text(
                             "💰 ${item.cost}",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (canAfford) HordeColors.GoldColor else Color.Gray
+                            style = HordeTypography.Label.copy(
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (canAfford) HordeColors.GoldColor else Color.Gray
+                            )
                         )
                     }
                 }

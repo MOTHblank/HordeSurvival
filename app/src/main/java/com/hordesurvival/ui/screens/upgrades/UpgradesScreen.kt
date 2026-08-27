@@ -21,6 +21,7 @@ import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSmallButton
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 import com.hordesurvival.utils.Constants
 
 /**
@@ -67,7 +68,7 @@ fun UpgradesScreen(
                     .background(Color(0xFFFFD700).copy(alpha = 0.12f))
                     .padding(horizontal = 16.dp, vertical = 6.dp)
             ) {
-                Text("💰 ${playerSave.totalGold} Gold", fontSize = 16.sp, fontWeight = FontWeight.Black, color = HordeColors.GoldColor)
+                Text("💰 ${playerSave.totalGold} Gold", style = HordeTypography.Value.copy(color = HordeColors.GoldColor, fontWeight = FontWeight.Black))
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -91,7 +92,7 @@ fun UpgradesScreen(
             // Stats
             HordeItemCard {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text("📊 RUN RECORD", fontWeight = FontWeight.Black, color = HordeColors.Lavender, fontSize = 15.sp)
+                    Text("📊 RUN RECORD", style = HordeTypography.Body.copy(fontWeight = FontWeight.Black, color = HordeColors.Lavender, fontSize = 15.sp))
                     Spacer(modifier = Modifier.height(10.dp))
                     StatLine("Total Runs", "${playerSave.totalRuns}")
                     StatLine("Total Kills", "${playerSave.totalKills}")
@@ -125,8 +126,8 @@ private fun UpgradeRow(
             Text(icon, fontSize = 26.sp)
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontWeight = FontWeight.Black, color = Color.White, fontSize = 16.sp)
-                Text(description, fontSize = 12.sp, color = HordeColors.TextSecondary)
+                Text(title, style = HordeTypography.Value.copy(fontWeight = FontWeight.Black))
+                Text(description, style = HordeTypography.Label)
             }
             if (isMaxed) {
                 Box(
@@ -134,7 +135,7 @@ private fun UpgradeRow(
                         .clip(SmallCutShape)
                         .background(HordeColors.MintGreen.copy(alpha = 0.2f))
                         .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) { Text("MAX", color = HordeColors.MintGreen, fontWeight = FontWeight.Black, fontSize = 12.sp) }
+                ) { Text("MAX", style = HordeTypography.Label.copy(color = HordeColors.MintGreen, fontWeight = FontWeight.Black)) }
             } else {
                 HordeSmallButton(
                     text = "${cost}💰",
@@ -149,8 +150,8 @@ private fun UpgradeRow(
 @Composable
 private fun StatLine(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = HordeColors.TextSecondary, fontSize = 13.sp)
-        Text(value, color = HordeColors.SkyBlue, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text(label, style = HordeTypography.Label.copy(fontSize = 13.sp))
+        Text(value, style = HordeTypography.Body.copy(color = HordeColors.SkyBlue, fontWeight = FontWeight.Bold, fontSize = 13.sp))
     }
     Spacer(modifier = Modifier.height(4.dp))
 }

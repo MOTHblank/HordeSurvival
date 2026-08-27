@@ -23,10 +23,16 @@ import com.hordesurvival.ui.screens.settings.SettingsScreen
 import com.hordesurvival.ui.screens.shop.ItemShopScreen
 import com.hordesurvival.ui.screens.stats.StatsScreen
 import com.hordesurvival.ui.screens.tutorial.TutorialScreen
+import com.hordesurvival.ui.components.HordeBackground
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.hordesurvival.ui.screens.upgrades.UpgradesScreen
 import com.hordesurvival.ui.viewmodel.MainViewModel
 import com.hordesurvival.ui.viewmodel.GameViewModel
 import com.hordesurvival.ui.viewmodel.RunSummary
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +55,31 @@ fun HordeSurvivalGameNav() {
     var canContinue by remember { mutableStateOf(false) }
     var isContinuing by remember { mutableStateOf(false) }
 
-    NavHost(navController = nav, startDestination = "main_menu", modifier = Modifier.fillMaxSize()) {
+    val currentBackStackEntry by nav.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (currentRoute != "game") {
+            HordeBackground()
+        }
+
+        NavHost(
+            navController = nav,
+            startDestination = "main_menu",
+            modifier = Modifier.fillMaxSize(),
+            enterTransition = {
+                fadeIn(animationSpec = tween(400)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400))
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(400)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400))
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(400)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400))
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(400)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400))
+            }
+        ) {
 
         composable("tutorial") {
             TutorialScreen(
@@ -221,5 +251,6 @@ fun HordeSurvivalGameNav() {
                 onScreenShakeToggle = { vm.toggleScreenShake() },
                 onBack = { nav.popBackStack() })
         }
+    }
     }
 }
