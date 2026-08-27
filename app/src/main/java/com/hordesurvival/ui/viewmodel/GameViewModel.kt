@@ -330,8 +330,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             _gameTime.value = engine.gameTime
-            // Track enemy count incrementally instead of scanning every frame
-            _enemyCount.value = engine.getActiveEntities().count { it.tag == "enemy" }  // TODO: make incremental
+            // Bolt: Zero-allocation enemy count calculation using indexed loop instead of lambda filter/count
+            var enemyCountTemp = 0
+            val activeEntities = engine.cachedActiveEntities
+            for (i in 0 until activeEntities.size) {
+                if (activeEntities[i].tag == "enemy") {
+                    enemyCountTemp++
+                }
+            }
+            _enemyCount.value = enemyCountTemp
 
             // Tower Defense: sync ship position to player entity
             val td = _waveManager?.towerDefense
@@ -549,9 +556,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             _showLevelUp.value = false; pendingLevelUp = false; _isPaused.value = false; engine.isPaused = false
+            // Bolt: Reset lastUpdateTimeNs when unpausing from level-up screen to prevent 100ms dt delta spike
+            lastUpdateTimeNs = System.nanoTime()
         } catch (e: Exception) {
             Log.e("GameViewModel", "selectUpgrade error", e)
             _showLevelUp.value = false; pendingLevelUp = false; _isPaused.value = false; engine.isPaused = false
+            lastUpdateTimeNs = System.nanoTime()
         }
     }
 
