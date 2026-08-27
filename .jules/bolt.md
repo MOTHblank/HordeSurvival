@@ -38,3 +38,9 @@ When querying spatial structures for collisions:
 ## 2024-05-20 - Removed Autoboxing overhead in ComboSystem
 **Learning:** `mutableSetOf<Int>()` autoboxes `Int` to `Integer` on every insertion. In a hot path like `ComboSystem` checking deaths per frame, this allocates `Integer` instances repeatedly and creates GC churn.
 **Action:** Always prefer LibGDX's primitive collections like `IntSet` over `mutableSetOf<Int>()` when tracking primitive IDs (like entity IDs) to prevent autoboxing overhead.
+
+## 2026-03-31 - Reset Delta-Time Timestamp on Unpause & Zero-Allocation Enemy Counter
+
+**Learning:** When resuming gameplay after an in-game pause or level-up screen selection, `lastUpdateTimeNs` in `GameViewModel` was retaining the timestamp from before the pause. On the first frame after unpausing, the computed delta time `(System.nanoTime() - lastUpdateTimeNs)` spiked to seconds/minutes (capped at `0.1s`), causing a 100ms delta-step frame burst that resulted in freezing and dropped frame rates down to 0 FPS. Additionally, `engine.getActiveEntities().count { it.tag == "enemy" }` was allocating lambda objects and list iterators every frame.
+
+**Action:** Always reset `lastUpdateTimeNs = System.nanoTime()` in all unpause / state resume methods (such as `selectUpgrade()`). Replace `.count {}` with an indexed loop (`for (i in 0 until activeEntities.size)`) over `engine.cachedActiveEntities` to eliminate GC allocation churn in the core update loop.
