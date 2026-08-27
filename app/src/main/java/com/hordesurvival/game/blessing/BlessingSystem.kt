@@ -38,7 +38,7 @@ object BlessingSystem {
         Blessing(BlessingType.RESILIENCE, "Blessing of Resilience", "+5 armor", "🛡️"),
         Blessing(BlessingType.REGEN, "Blessing of Regeneration", "+0.3 HP/sec regen", "💚"),
         Blessing(BlessingType.LUCK, "Blessing of Luck", "+5% luck for better drops", "🍀"),
-        Blessing(BlessingType.PERSISTENCE, "Blessing of Persistence", "+1 extra life per run", "💀"),
+        Blessing(BlessingType.PERSISTENCE, "Blessing of Persistence", "+1 extra life per run", "💖"),
         Blessing(BlessingType.ARCANE, "Blessing of the Arcane", "+1 starting projectile", "✨")
     )
 

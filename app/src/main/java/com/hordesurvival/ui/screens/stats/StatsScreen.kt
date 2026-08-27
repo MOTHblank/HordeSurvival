@@ -36,7 +36,7 @@ fun StatsScreen(
             HordeCard {
                 StatRow("🏃 ${L("total_runs")}", "${save.totalRuns}")
                 Spacer(Modifier.height(12.dp))
-                StatRow("💀 ${L("total_kills")}", "${save.totalKills}")
+                StatRow("👾 ${L("total_kills")}", "${save.totalKills}")
                 Spacer(Modifier.height(12.dp))
                 StatRow("⏱ ${L("best_time")}", formatTime(save.bestTime))
                 Spacer(Modifier.height(12.dp))

@@ -40,10 +40,12 @@ fun GameOverScreen(
 
     HordeScreen(contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(28.dp)) {
-            Text("💀", fontSize = 48.sp)
+            Text("😵💫", fontSize = 48.sp)
             Spacer(Modifier.height(8.dp))
-            Text(L("game_over"), style = HordeTypography.Title.copy(fontSize = 36.sp, color = HordeColors.SoftPink, letterSpacing = 2.sp))
-            Spacer(Modifier.height(32.dp))
+            Text(L("game_over"), style = HordeTypography.Title.copy(fontSize = 36.sp, color = HordeColors.WarmPeach, letterSpacing = 2.sp))
+            Spacer(Modifier.height(4.dp))
+            Text("Monster Bouncer! 🌟", style = HordeTypography.Label.copy(fontSize = 14.sp, color = HordeColors.MintGreen))
+            Spacer(Modifier.height(28.dp))
 
             // Stats card
             HordeCard(Modifier.scale(ss).widthIn(max = 400.dp).fillMaxWidth(0.9f)) {
@@ -53,8 +55,8 @@ fun GameOverScreen(
                 }
                 Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(L("enemies_killed"), style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
-                    Text("${summary.kills}", style = HordeTypography.Value.copy(color = HordeColors.SoftPink))
+                    Text("👾 ${L("enemies_killed")}", style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
+                    Text("${summary.kills}", style = HordeTypography.Value.copy(color = HordeColors.MintGreen))
                 }
                 Spacer(Modifier.height(14.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

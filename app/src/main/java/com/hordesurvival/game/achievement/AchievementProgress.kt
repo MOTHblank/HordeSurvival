@@ -22,9 +22,9 @@ object AchievementProgress {
 
     val allAchievements = listOf(
         AchievementTracker("first_kill", "First Blood", "Kill your first enemy", "⚔️", 1),
-        AchievementTracker("kill_100", "Centurion", "Kill 100 enemies", "💀", 100),
-        AchievementTracker("kill_1000", "Genocide", "Kill 1,000 enemies", "🗡️", 1000),
-        AchievementTracker("kill_5000", "Exterminator", "Kill 5,000 enemies", "☠️", 5000),
+        AchievementTracker("kill_100", "Centurion", "Kill 100 enemies", "👾", 100),
+        AchievementTracker("kill_1000", "Mega Boper", "Boop 1,000 monsters", "🗡️", 1000),
+        AchievementTracker("kill_5000", "Monster Sweeper", "Boop 5,000 monsters", "✨", 5000),
         AchievementTracker("survive_5min", "Survivor", "Survive for 5 minutes", "⏱️", 300),
         AchievementTracker("survive_10min", "Veteran", "Survive for 10 minutes", "🏅", 600),
         AchievementTracker("survive_30min", "Legend", "Survive for 30 minutes", "👑", 1800),

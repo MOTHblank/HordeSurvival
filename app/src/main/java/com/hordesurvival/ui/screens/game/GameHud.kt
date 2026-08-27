@@ -66,13 +66,13 @@ fun GameHud(
     // Force LTR layout so button positions stay fixed regardless of system language
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Low HP warning
+        // Low HP warning - soft warm coral pulse
         if (hpRatio < 0.25f) {
             val pulseAlpha by animateFloatAsState(
                 targetValue = 0.15f + 0.1f * sin(System.currentTimeMillis() / 200f).toFloat(),
                 label = "hp_pulse"
             )
-            Box(Modifier.fillMaxSize().background(Color(0xFFFF4444).copy(alpha = pulseAlpha)))
+            Box(Modifier.fillMaxSize().background(Color(0xFFFFAB91).copy(alpha = pulseAlpha)))
         }
 
         // ── Top — full-width XP bar ─────────────────────────────
@@ -164,7 +164,7 @@ fun GameHud(
             ) {
                 StatText("⏱", formatTime(gameTime), HordeColors.TextSecondary)
                 StatText("💰", "${gold.toInt()}", HordeColors.GoldColor)
-                StatText("💀", "$kills", HordeColors.SoftPink)
+                StatText("👾", "$kills", HordeColors.MintGreen)
             }
         }
 

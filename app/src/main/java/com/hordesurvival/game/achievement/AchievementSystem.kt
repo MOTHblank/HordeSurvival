@@ -16,7 +16,7 @@ enum class Achievement(
         { it.killsThisRun >= 100 }),
     KILLER_500("War Machine", "Kill 500 enemies in one run", "🔥", 100,
         { it.killsThisRun >= 500 }),
-    KILLER_1000("Genocide", "Kill 1000 enemies in one run", "💀", 200,
+    KILLER_1000("Mega Boper", "Boop 1000 monsters in one run", "👾", 200,
         { it.killsThisRun >= 1000 }),
     SURVIVOR_5("Survivor", "Survive for 5 minutes", "⏱️", 30,
         { it.gameTime >= 300f }),
