@@ -27,8 +27,8 @@ object AchievementRewards {
 
     val rewards = listOf(
         AchievementReward("first_kill", "First Blood", "Kill your first enemy", RewardType.GOLD, 50f, icon = "⚔️"),
-        AchievementReward("kill_100", "Centurion", "Kill 100 enemies in one run", RewardType.GOLD, 200f, icon = "💀"),
-        AchievementReward("kill_1000", "Genocide", "Kill 1000 enemies in one run", RewardType.PASSIVE_BUFF, 0.05f, "Might +5%", "🗡️"),
+        AchievementReward("kill_100", "Centurion", "Boop 100 monsters in one run", RewardType.GOLD, 200f, icon = "👾"),
+        AchievementReward("kill_1000", "Mega Boper", "Boop 1000 monsters in one run", RewardType.PASSIVE_BUFF, 0.05f, "Might +5%", "🗡️"),
         AchievementReward("survive_5min", "Survivor", "Survive for 5 minutes", RewardType.GOLD, 100f, icon = "⏱️"),
         AchievementReward("survive_10min", "Veteran", "Survive for 10 minutes", RewardType.GOLD, 300f, icon = "🏅"),
         AchievementReward("survive_30min", "Legend", "Survive for 30 minutes", RewardType.PASSIVE_BUFF, 0.10f, "HP +10%", "👑"),
