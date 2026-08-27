@@ -5,6 +5,7 @@ import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.GameEngine
 import com.hordesurvival.game.engine.ecs.System
 import com.hordesurvival.game.audio.SoundManager
+import com.badlogic.gdx.utils.IntSet
 
 /**
  * Tracks kill combos — consecutive kills within a time window.
@@ -14,7 +15,9 @@ import com.hordesurvival.game.audio.SoundManager
 class ComboSystem(private val engine: GameEngine) : System() {
 
     // Track entity IDs that have already been counted as kills this cycle
-    private val countedKills = mutableSetOf<Int>()
+    // Bolt: Use libGDX IntSet instead of mutableSetOf<Int> to prevent autoboxing
+    // Integer objects on every kill, reducing GC pressure during gameplay.
+    private val countedKills = IntSet()
 
     override fun update(dt: Float, entities: List<Entity>) {
         val player = engine.playerEntity ?: return
@@ -33,7 +36,7 @@ class ComboSystem(private val engine: GameEngine) : System() {
             val entity = entities[i]
             if (entity.tag != "enemy") continue
             val health = entity.get<HealthComponent>() ?: continue
-            if (health.isDead && entity.active && entity.id !in countedKills) {
+            if (health.isDead && entity.active && !countedKills.contains(entity.id)) {
                 countedKills.add(entity.id)
                 combo.addKill()
                 SoundManager.playCombo(combo.count)
