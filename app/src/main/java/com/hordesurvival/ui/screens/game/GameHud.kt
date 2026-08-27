@@ -83,45 +83,89 @@ fun GameHud(
             Text("Lv.$playerLevel", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.align(Alignment.Center))
         }
 
-        // ── Top center — HP bar and Boss bar ────────────────────
-        Column(
-            modifier = Modifier.fillMaxWidth(0.6f).padding(top = 16.dp).align(Alignment.TopCenter)
+        // ── Top row container (Pause, HP, Stats) ─────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 12.dp, top = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            // HP
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("❤️", fontSize = 12.sp)
-                Spacer(Modifier.width(4.dp))
-                Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(hpRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f)))))
-                    Text("${playerHp.toInt()} / ${playerMaxHp.toInt()}", fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f), modifier = Modifier.align(Alignment.Center))
-                }
-            }
+            // ── Top left — pause + speed control ──
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Pause button
+                Box(
+                    modifier = Modifier.size(44.dp)
+                        .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.4f))
+                        .border(1.dp, Color.White.copy(alpha = 0.15f), CornerCutShape)
+                        .clickable { onPauseClick() },
+                    contentAlignment = Alignment.Center
+                ) { Text("⏸", fontSize = 18.sp) }
 
-            // Boss HP bar (only when boss is active)
-            if (bossActive && bossMaxHp > 0f) {
                 Spacer(Modifier.height(6.dp))
-                val bossRatio = (bossHp / bossMaxHp).coerceIn(0f, 1f)
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("👹", fontSize = 14.sp)
-                    Spacer(Modifier.width(4.dp))
-                    Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color(0xFFFFAB91).copy(alpha = 0.4f), CornerCutShape)) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(Color(0xFFFF6E40), Color(0xFFFFAB91)))))
-                        Text("BOSS ${bossHp.toInt()}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+
+                // Speed control buttons
+                Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    listOf(0.5f to "½", 1f to "1", 2f to "2", 3f to "3").forEach { (speed, label) ->
+                        val sel = gameSpeed == speed
+                        Box(
+                            modifier = Modifier.size(28.dp)
+                                .clip(CornerCutShape)
+                                .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.3f))
+                                .clickable { onSpeedChange(speed) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(label, fontSize = 10.sp, color = if (sel) Color.White else Color.White.copy(alpha = 0.5f),
+                                fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal)
+                        }
                     }
                 }
             }
-        }
 
-        // ── Top right — stats ────────────────────────────────────
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd).padding(12.dp)
-                .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.3f))
-                .padding(horizontal = 10.dp, vertical = 6.dp),
-            horizontalAlignment = Alignment.End
-        ) {
-            StatText("⏱", formatTime(gameTime), HordeColors.TextSecondary)
-            StatText("💰", "${gold.toInt()}", HordeColors.GoldColor)
-            StatText("💀", "$kills", HordeColors.SoftPink)
+            // ── Top center — HP bar and Boss bar ────────────────────
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp, end = 12.dp)
+            ) {
+                // HP
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("❤️", fontSize = 12.sp)
+                    Spacer(Modifier.width(4.dp))
+                    Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
+                        Box(Modifier.fillMaxHeight().fillMaxWidth(hpRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f)))))
+                        Text("${playerHp.toInt()} / ${playerMaxHp.toInt()}", fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f), modifier = Modifier.align(Alignment.Center))
+                    }
+                }
+
+                // Boss HP bar (only when boss is active)
+                if (bossActive && bossMaxHp > 0f) {
+                    Spacer(Modifier.height(6.dp))
+                    val bossRatio = (bossHp / bossMaxHp).coerceIn(0f, 1f)
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("👹", fontSize = 14.sp)
+                        Spacer(Modifier.width(4.dp))
+                        Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color(0xFFFFAB91).copy(alpha = 0.4f), CornerCutShape)) {
+                            Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(Color(0xFFFF6E40), Color(0xFFFFAB91)))))
+                            Text("BOSS ${bossHp.toInt()}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+                        }
+                    }
+                }
+            }
+
+            // ── Top right — stats ────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.3f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                StatText("⏱", formatTime(gameTime), HordeColors.TextSecondary)
+                StatText("💰", "${gold.toInt()}", HordeColors.GoldColor)
+                StatText("💀", "$kills", HordeColors.SoftPink)
+            }
         }
 
         // ── Combo counter (right side) ───────────────────────────
@@ -161,40 +205,6 @@ fun GameHud(
                         color = Color(0xFFAAE6BA),
                         fontWeight = FontWeight.Medium
                     )
-                }
-            }
-        }
-
-        // ── Top left — pause + speed control ──
-        Column(
-            modifier = Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 68.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Pause button
-            Box(
-                modifier = Modifier.size(44.dp)
-                    .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.4f))
-                    .border(1.dp, Color.White.copy(alpha = 0.15f), CornerCutShape)
-                    .clickable { onPauseClick() },
-                contentAlignment = Alignment.Center
-            ) { Text("⏸", fontSize = 18.sp) }
-
-            Spacer(Modifier.height(6.dp))
-
-            // Speed control buttons
-            Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                listOf(0.5f to "½", 1f to "1", 2f to "2", 3f to "3").forEach { (speed, label) ->
-                    val sel = gameSpeed == speed
-                    Box(
-                        modifier = Modifier.size(28.dp)
-                            .clip(CornerCutShape)
-                            .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.3f))
-                            .clickable { onSpeedChange(speed) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(label, fontSize = 10.sp, color = if (sel) Color.White else Color.White.copy(alpha = 0.5f),
-                            fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal)
-                    }
                 }
             }
         }

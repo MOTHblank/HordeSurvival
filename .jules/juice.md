@@ -23,3 +23,6 @@
 ## 2026-08-25 - Systemic Shape Unification
 **Learning:** Found scattered usages of `RoundedCornerShape(8.dp)`, `RoundedCornerShape(12.dp)`, `CircleShape`, and hardcoded `CutCornerShape(...)` across the codebase (e.g., in `PauseScreen`, `GameScreen`, `HordeUI`, `MapSelectScreen`, `UpgradesScreen`, etc.). This violated the design system rules which dictated the use of the shared `CornerCutShape` and `SmallCutShape`.
 **Action:** Replaced all hardcoded shape usages (`RoundedCornerShape`, `CircleShape` and specific `CutCornerShape(...)`) with `CornerCutShape` or `SmallCutShape` from `HordeUI.kt` to ensure consistent angular arcade aesthetic across the app.
+## 2026-10-27 - Responsive Constraints
+**Learning:** Found multiple instances where `.fillMaxWidth(0.9f)` was used on UI elements inside `GameHud.kt`, `PauseScreen.kt`, and `GameOverScreen.kt`. While this works well on standard mobile aspect ratios, these elements stretch excessively horizontally when the game is played on a tablet or a wider screen in landscape mode.
+**Action:** Always combine `.fillMaxWidth()` with a bounded maximum width using `.widthIn(max = ...)` (e.g., `Modifier.widthIn(max = 400.dp).fillMaxWidth(0.9f)`) to ensure UI components look proportionate on larger screens while maintaining their percentage-based width on smaller ones.

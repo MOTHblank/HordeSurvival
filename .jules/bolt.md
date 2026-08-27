@@ -37,3 +37,7 @@ When querying spatial structures for collisions:
 ## 2024-11-20 - [ECS Entity Recycling and Entity Count Optimization]
 **Learning:** `ArrayList` iterator removal inside a loop (like `GameEngine.recycleEntities()`) creates O(N^2) shifting behavior and generates per-frame `Iterator` allocations leading to GC pressure. Calling `GameEngine.getEntityCount()` iterating the list every time when thousands of projectiles want to check if they can spawn particles causes O(N*M) loop iterations per frame where N is number of total entities and M is the number of projectiles.
 **Action:** Use an O(N) two-pointer (write index) approach for in-place array compaction when repeatedly removing from a large ArrayList during hot paths. Replace iterating loops with O(1) checks against existing cached values (like `_activeEntitiesCache.size`) for global states.
+
+## 2024-05-20 - Removed Autoboxing overhead in ComboSystem
+**Learning:** `mutableSetOf<Int>()` autoboxes `Int` to `Integer` on every insertion. In a hot path like `ComboSystem` checking deaths per frame, this allocates `Integer` instances repeatedly and creates GC churn.
+**Action:** Always prefer LibGDX's primitive collections like `IntSet` over `mutableSetOf<Int>()` when tracking primitive IDs (like entity IDs) to prevent autoboxing overhead.
