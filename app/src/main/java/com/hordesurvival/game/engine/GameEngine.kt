@@ -104,39 +104,47 @@ class GameEngine {
 
     /** Return inactive entities to pool + force-kill stale entities */
     private fun recycleEntities() {
-        val iter = entities.iterator()
-        while (iter.hasNext()) {
-            val e = iter.next()
+        var writeIndex = 0
+        for (i in 0 until entities.size) {
+            val e = entities[i]
+
             if (!e.active && !e.has<PlayerComponent>()) {
                 if (e === playerEntity) {
                     playerEntity = null
                 }
                 entityByIdMap.remove(e.id)
                 entityPool.free(e)
-                iter.remove()
-            } else if (e.active && !e.has<PlayerComponent>()) {
-                // Never recycle weapon state entities — they must persist for weapons to keep firing
-                if (e.has<WeaponStateComponent>()) continue
-
-                // Force-kill entities that lived too long (stale cleanup)
-                val maxAge = when (e.tag) {
-                    "particle" -> 5f
-                    "damage_number" -> 3f
-                    "projectile" -> 6f
-                    "enemy_projectile" -> 6f
-                    "xp_gem" -> 30f
-                    "health_gem" -> 30f
-                    "loot_box" -> 25f
-                    "relic" -> 60f
-                    "poison_cloud" -> 15f
-                    "orbit_shield" -> Float.MAX_VALUE  // never expire
-                    "enemy" -> 120f  // enemies: 2 min max
-                    else -> 30f
+            } else {
+                if (e.active && !e.has<PlayerComponent>()) {
+                    // Never recycle weapon state entities — they must persist for weapons to keep firing
+                    if (!e.has<WeaponStateComponent>()) {
+                        // Force-kill entities that lived too long (stale cleanup)
+                        val maxAge = when (e.tag) {
+                            "particle" -> 5f
+                            "damage_number" -> 3f
+                            "projectile" -> 6f
+                            "enemy_projectile" -> 6f
+                            "xp_gem" -> 30f
+                            "health_gem" -> 30f
+                            "loot_box" -> 25f
+                            "relic" -> 60f
+                            "poison_cloud" -> 15f
+                            "orbit_shield" -> Float.MAX_VALUE  // never expire
+                            "enemy" -> 120f  // enemies: 2 min max
+                            else -> 30f
+                        }
+                        if (e.age > maxAge) {
+                            e.active = false
+                        }
+                    }
                 }
-                if (e.age > maxAge) {
-                    e.active = false
-                }
+                entities[writeIndex++] = e
             }
+        }
+
+        // Remove trailing elements to avoid O(N^2) shifting from iterator removal
+        while (entities.size > writeIndex) {
+            entities.removeAt(entities.size - 1)
         }
     }
 
@@ -175,9 +183,7 @@ class GameEngine {
     fun getActiveEntities(): List<Entity> = _activeEntitiesCache
 
     fun getEntityCount(): Int {
-        var count = 0
-        for (e in entities) { if (e.active) count++ }
-        return count
+        return _activeEntitiesCache.size
     }
 
     fun update(dt: Float) {
