@@ -19,6 +19,7 @@ import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 @Composable
 fun ModeSelectScreen(onModeSelected: (GameModeType) -> Unit, onBack: () -> Unit, languageCode: String = "en") {
@@ -70,9 +71,9 @@ private fun ModeCard(title: String, desc: String, color: Color, onClick: () -> U
         onClick = onClick
     ) {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-            Text(title, fontSize = 18.sp, fontWeight = FontWeight.Black, color = color)
+            Text(title, style = HordeTypography.SubHeader.copy(fontSize = 18.sp, color = color))
             Spacer(Modifier.height(4.dp))
-            Text(desc, fontSize = 13.sp, color = HordeColors.TextSecondary)
+            Text(desc, style = HordeTypography.Label.copy(fontSize = 13.sp))
         }
     }
 }

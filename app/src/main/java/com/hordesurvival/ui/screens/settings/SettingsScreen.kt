@@ -17,6 +17,7 @@ import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 @Composable
 fun SettingsScreen(
@@ -64,7 +65,7 @@ fun SettingsScreen(
             // Vibration
             HordeItemCard(onClick = onVibrationToggle) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("📳 Vibration", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text("📳 Vibration", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
                     Switch(checked = vibrationEnabled, onCheckedChange = { onVibrationToggle() },
                         colors = SwitchDefaults.colors(checkedThumbColor = HordeColors.SkyBlue, checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)))
                 }
@@ -74,7 +75,7 @@ fun SettingsScreen(
             // Background Music Toggle
             HordeItemCard(onClick = onBgMusicToggle) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("🎵 Background Music", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text("🎵 Background Music", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
                     Switch(checked = bgMusicEnabled, onCheckedChange = { onBgMusicToggle() },
                         colors = SwitchDefaults.colors(checkedThumbColor = HordeColors.SkyBlue, checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)))
                 }
@@ -86,7 +87,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
             HordeItemCard {
                 Column {
-                    Text("Background Style", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text("Background Style", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
                     Spacer(Modifier.height(10.dp))
 
                     val backgrounds = listOf(
@@ -109,8 +110,11 @@ fun SettingsScreen(
                                     onClick = { onBackgroundChange(id) },
                                     selected = sel
                                 ) {
-                                    Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 13.sp)
+                                    Text(label, style = HordeTypography.Label.copy(
+                                        color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
+                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
+                                        fontSize = 13.sp
+                                    ))
                                 }
                             }
                             if (row.size == 1) Spacer(Modifier.weight(1f))
@@ -126,7 +130,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
             HordeItemCard {
                 Column {
-                    Text("Select Language", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text("Select Language", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
                     Spacer(Modifier.height(10.dp))
                     val langs = listOf("en" to "English", "fa" to "فارسی", "zh" to "中文", "ja" to "日本語", "ko" to "한국어", "es" to "Español")
                     for (row in langs.chunked(2)) {
@@ -138,8 +142,10 @@ fun SettingsScreen(
                                     onClick = { onLanguageChange(code) },
                                     selected = sel
                                 ) {
-                                    Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 14.sp)
+                                    Text(label, style = HordeTypography.Body.copy(
+                                        color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
+                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal
+                                    ))
                                 }
                             }
                             if (row.size == 1) Spacer(Modifier.weight(1f))
@@ -158,7 +164,7 @@ fun SettingsScreen(
             // Graphics Quality
             HordeItemCard {
                 Column {
-                    Text("Quality Level", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text("Quality Level", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
                     Spacer(Modifier.height(10.dp))
                     val qualities = listOf(0 to "⚡ Low", 1 to "⚖️ Medium", 2 to "✨ High")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -169,8 +175,11 @@ fun SettingsScreen(
                                 onClick = { onGraphicsQualityChange(id) },
                                 selected = sel
                             ) {
-                                Text(label, color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                    fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, fontSize = 13.sp)
+                                Text(label, style = HordeTypography.Label.copy(
+                                    color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
+                                    fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 13.sp
+                                ))
                             }
                         }
                     }
@@ -181,7 +190,7 @@ fun SettingsScreen(
                             1 -> "Balanced performance and visuals"
                             else -> "Full effects, all particles, max enemies"
                         },
-                        fontSize = 11.sp, color = HordeColors.TextSecondary
+                        style = HordeTypography.Label.copy(fontSize = 11.sp)
                     )
                 }
             }
@@ -207,16 +216,16 @@ fun SettingsScreen(
         if (showSaveDialog) {
             AlertDialog(
                 onDismissRequest = { showSaveDialog = false },
-                title = { Text("Save Settings?", fontWeight = FontWeight.Bold) },
-                text = { Text("Do you want to save your changes?") },
+                title = { Text("Save Settings?", style = HordeTypography.Value) },
+                text = { Text("Do you want to save your changes?", style = HordeTypography.Body) },
                 confirmButton = {
                     TextButton(onClick = { showSaveDialog = false; onBack() }) {
-                        Text("Save & Exit", color = HordeColors.SkyBlue)
+                        Text("Save & Exit", style = HordeTypography.Button.copy(color = HordeColors.SkyBlue))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showSaveDialog = false }) {
-                        Text("Cancel", color = HordeColors.TextSecondary)
+                        Text("Cancel", style = HordeTypography.Button.copy(color = HordeColors.TextSecondary))
                     }
                 }
             )
@@ -228,7 +237,7 @@ fun SettingsScreen(
 private fun SliderSetting(label: String, value: Float, onChange: (Float) -> Unit) {
     HordeItemCard {
         Column(Modifier.fillMaxWidth()) {
-            Text(label, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text(label, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
             Slider(value = value, onValueChange = onChange,
                 colors = SliderDefaults.colors(thumbColor = HordeColors.SkyBlue, activeTrackColor = HordeColors.SkyBlue))
         }
@@ -237,7 +246,7 @@ private fun SliderSetting(label: String, value: Float, onChange: (Float) -> Unit
 
 @Composable
 private fun SectionHeader(title: String) {
-    Text(title, fontSize = 17.sp, fontWeight = FontWeight.Black, color = HordeColors.Lavender,
+    Text(title, style = HordeTypography.SubHeader.copy(fontSize = 17.sp, color = HordeColors.Lavender),
         modifier = Modifier.fillMaxWidth().padding(start = 4.dp))
 }
 
@@ -246,8 +255,8 @@ private fun ToggleSetting(title: String, description: String, checked: Boolean, 
     HordeItemCard(onClick = onToggle) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                Text(description, color = HordeColors.TextSecondary, fontSize = 11.sp)
+                Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+                Text(description, style = HordeTypography.Label.copy(fontSize = 11.sp))
             }
             Switch(checked = checked, onCheckedChange = { onToggle() },
                 colors = SwitchDefaults.colors(checkedThumbColor = HordeColors.SkyBlue, checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)))

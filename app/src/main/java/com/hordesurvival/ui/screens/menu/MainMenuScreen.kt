@@ -23,6 +23,7 @@ import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 @Composable
 fun MainMenuScreen(
@@ -79,20 +80,20 @@ fun MainMenuScreen(
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = "HORDE",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Black,
-                        color = HordeColors.SkyBlue.copy(alpha = glow),
-                        letterSpacing = 8.sp,
-                        style = TextStyle(
+                        style = HordeTypography.Title.copy(
+                            fontSize = 22.sp,
+                            color = HordeColors.SkyBlue.copy(alpha = glow),
+                            letterSpacing = 8.sp,
                             shadow = Shadow(color = HordeColors.SkyBlue.copy(alpha = 0.3f), offset = Offset(0f, 0f), blurRadius = 20f)
                         )
                     )
                     Text(
                         text = "SURVIVAL",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = HordeColors.TextSecondary.copy(alpha = 0.5f),
-                        letterSpacing = 6.sp
+                        style = HordeTypography.Label.copy(
+                            fontSize = 14.sp,
+                            color = HordeColors.TextSecondary.copy(alpha = 0.5f),
+                            letterSpacing = 6.sp
+                        )
                     )
                 }
             }
@@ -110,9 +111,11 @@ fun MainMenuScreen(
                 ) {
                     Text(
                         text = "💰 $gold",
-                        fontSize = 13.sp,
-                        color = HordeColors.GoldColor.copy(alpha = 0.9f),
-                        fontWeight = FontWeight.SemiBold
+                        style = HordeTypography.Body.copy(
+                            fontSize = 13.sp,
+                            color = HordeColors.GoldColor.copy(alpha = 0.9f),
+                            fontWeight = FontWeight.SemiBold
+                        )
                     )
                 }
             }
@@ -190,7 +193,7 @@ fun MainMenuScreen(
 
             // Footer — subtle
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("v1.2.9", fontSize = 10.sp, color = Color.White.copy(alpha = 0.15f))
+                Text("v1.2.9", style = HordeTypography.Label.copy(fontSize = 10.sp, color = Color.White.copy(alpha = 0.15f)))
             }
             Spacer(Modifier.height(16.dp))
         }

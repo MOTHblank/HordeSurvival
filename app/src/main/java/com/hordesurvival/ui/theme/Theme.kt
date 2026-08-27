@@ -1,6 +1,9 @@
 package com.hordesurvival.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 /**
  * Horde Survival color theme — relaxing pastel palette.
@@ -40,4 +43,42 @@ object HordeColors {
     // ── Card Colors ────────────────────────────────────────────────
     val CardBg = Color(0xFF1E1E3F)
     val CardBorder = Color(0xFF3A3A6A)
+}
+
+object HordeTypography {
+    val Title = TextStyle(
+        fontSize = 32.sp,
+        fontWeight = FontWeight.Black,
+        color = Color.White
+    )
+    val Header = TextStyle(
+        fontSize = 28.sp,
+        fontWeight = FontWeight.Black,
+        color = HordeColors.SkyBlue
+    )
+    val SubHeader = TextStyle(
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold,
+        color = HordeColors.WarmPeach
+    )
+    val Body = TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Normal,
+        color = Color.White
+    )
+    val Label = TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        color = HordeColors.TextSecondary
+    )
+    val Value = TextStyle(
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White
+    )
+    val Button = TextStyle(
+        fontSize = 15.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White
+    )
 }

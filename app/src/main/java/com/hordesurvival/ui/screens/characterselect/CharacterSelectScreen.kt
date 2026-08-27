@@ -24,6 +24,7 @@ import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 /**
  * Character selection screen with heroic tiles and arcade styling.
@@ -132,16 +133,18 @@ private fun CharacterCard(
 
             Text(
                 text = character.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Black,
-                color = if (character.isUnlocked) Color.White else HordeColors.TextSecondary
+                style = HordeTypography.Value.copy(
+                    fontWeight = FontWeight.Black,
+                    color = if (character.isUnlocked) Color.White else HordeColors.TextSecondary
+                )
             )
 
             Text(
                 text = character.description,
-                fontSize = 11.sp,
-                color = HordeColors.TextSecondary,
-                textAlign = TextAlign.Center,
+                style = HordeTypography.Label.copy(
+                    fontSize = 11.sp,
+                    textAlign = TextAlign.Center
+                ),
                 maxLines = 2
             )
 
@@ -153,9 +156,11 @@ private fun CharacterCard(
                 ) {
                     Text(
                         "🔒 Unlock (500💰)",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (gold >= 500) HordeColors.GoldColor else HordeColors.TextSecondary
+                        style = HordeTypography.Label.copy(
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (gold >= 500) HordeColors.GoldColor else HordeColors.TextSecondary
+                        )
                     )
                 }
             }

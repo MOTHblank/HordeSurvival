@@ -14,6 +14,7 @@ import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 /**
  * Stats overview screen — shows player lifetime stats.
@@ -28,7 +29,7 @@ fun StatsScreen(
 
     HordeScreen {
         Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("📊 ${L("your_stats")}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach)
+            Text("📊 ${L("your_stats")}", style = HordeTypography.Header.copy(color = HordeColors.WarmPeach))
             Spacer(Modifier.height(24.dp))
 
             // Stats card
@@ -63,8 +64,8 @@ fun StatsScreen(
 @Composable
 private fun StatRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, fontSize = 15.sp, color = HordeColors.TextSecondary)
-        Text(value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue)
+        Text(label, style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
+        Text(value, style = HordeTypography.Value.copy(color = HordeColors.SkyBlue))
     }
 }
 

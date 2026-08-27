@@ -41,10 +41,7 @@ val CornerCutShape = CutCornerShape(topStart = 10.dp, bottomEnd = 10.dp, topEnd 
 val SmallCutShape = CutCornerShape(topStart = 6.dp, bottomEnd = 6.dp, topEnd = 2.dp, bottomStart = 2.dp)
 
 @Composable
-fun HordeScreen(
-    contentAlignment: Alignment = Alignment.TopStart,
-    content: @Composable BoxScope.() -> Unit
-) {
+fun HordeBackground(modifier: Modifier = Modifier) {
     // Smooth animations
     val inf = rememberInfiniteTransition(label = "menu")
     val f1 by inf.animateFloat(0f, 1f, infiniteRepeatable(tween(10000, easing = LinearEasing)), label = "f1")
@@ -56,7 +53,7 @@ fun HordeScreen(
     val screenH = config.screenHeightDp.toFloat()
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF06060F))
             .drawBehind {
@@ -98,14 +95,19 @@ fun HordeScreen(
                     .clip(SmallCutShape).background(Color.White.copy(alpha = alpha)))
             }
         }
+    }
+}
 
-        // Render content with specified alignment
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = contentAlignment
-        ) {
-            content()
-        }
+@Composable
+fun HordeScreen(
+    contentAlignment: Alignment = Alignment.TopStart,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = contentAlignment
+    ) {
+        content()
     }
 }
 
