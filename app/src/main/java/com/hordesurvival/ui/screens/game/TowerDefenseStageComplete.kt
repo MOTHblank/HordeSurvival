@@ -55,7 +55,8 @@ fun TowerDefenseStageComplete(
         HordeCard(
             modifier = Modifier
                 .scale(scale)
-                .fillMaxWidth(0.85f)
+                .widthIn(max = 400.dp)
+                .fillMaxWidth(0.9f)
                 .padding(16.dp)
         ) {
             Column(
@@ -83,7 +84,7 @@ fun TowerDefenseStageComplete(
 
                 // Stats cards
                 Column(
-                    Modifier.fillMaxWidth(0.9f),
+                    Modifier.widthIn(max = 400.dp).fillMaxWidth(0.9f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     StatRow("🎯 ${Locales.getString("enemies_killed", languageCode)}", "$kills")
@@ -97,7 +98,7 @@ fun TowerDefenseStageComplete(
                 if (!isVictory) {
                     // Next Stage
                     HordeButton(
-                        modifier = Modifier.fillMaxWidth(0.8f),
+                        modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
                         text = "Next Stage",
                         icon = "▶",
                         color = Color(0xFF66BB6A),
@@ -109,7 +110,7 @@ fun TowerDefenseStageComplete(
 
                 // Replay
                 HordeSecondaryButton(
-                    modifier = Modifier.fillMaxWidth(0.8f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
                     text = "Replay Stage",
                     icon = "🔄",
                     onClick = onReplayStage
@@ -119,7 +120,7 @@ fun TowerDefenseStageComplete(
 
                 // Main Menu
                 HordeSecondaryButton(
-                    modifier = Modifier.fillMaxWidth(0.8f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
                     text = Locales.getString("main_menu", languageCode),
                     icon = "🏠",
                     onClick = onMainMenu

@@ -29,3 +29,6 @@
 ## 2026-08-27 - Typography System & Continuous Background
 **Learning:** Hardcoded text styles lead to massive inconsistency. HordeScreen redrawing an animated background on every navigation caused jitter and restarted animations.
 **Action:** Extract backgrounds to MainActivity behind the NavHost for seamless looping across screen transitions, and strictly use HordeTypography for all text to enforce consistency.
+## 2026-10-27 - Responsive Constraints
+**Learning:** Found multiple instances where `.fillMaxWidth(0.9f)` was used on UI elements inside `GameHud.kt`, `PauseScreen.kt`, and `GameOverScreen.kt`. While this works well on standard mobile aspect ratios, these elements stretch excessively horizontally when the game is played on a tablet or a wider screen in landscape mode.
+**Action:** Always combine `.fillMaxWidth()` with a bounded maximum width using `.widthIn(max = ...)` (e.g., `Modifier.widthIn(max = 400.dp).fillMaxWidth(0.9f)`) to ensure UI components look proportionate on larger screens while maintaining their percentage-based width on smaller ones.

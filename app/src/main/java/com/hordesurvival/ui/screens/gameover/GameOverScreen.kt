@@ -46,7 +46,7 @@ fun GameOverScreen(
             Spacer(Modifier.height(32.dp))
 
             // Stats card
-            HordeCard(Modifier.scale(ss).fillMaxWidth(0.88f)) {
+            HordeCard(Modifier.scale(ss).widthIn(max = 400.dp).fillMaxWidth(0.9f)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(L("time_survived"), style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
                     Text(formatTime(summary.timeSurvived), style = HordeTypography.Value.copy(color = HordeColors.SkyBlue))
@@ -73,7 +73,7 @@ fun GameOverScreen(
             // Continue button
             if (canContinue && !continueUsed) {
                 Column(Modifier.scale(bs), horizontalAlignment = Alignment.CenterHorizontally) {
-                    HordeButton(modifier = Modifier.fillMaxWidth(0.7f),
+                    HordeButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.8f),
                         text = "Continue",
                         icon = "💚",
                         color = Color(0xFF66BB6A),
@@ -88,14 +88,14 @@ fun GameOverScreen(
 
             // Main buttons
             Column(Modifier.scale(bs), horizontalAlignment = Alignment.CenterHorizontally) {
-                HordeButton(modifier = Modifier.fillMaxWidth(0.7f),
+                HordeButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.8f),
                     text = L("play_again"),
                     icon = "🔄",
                     color = HordeColors.SkyBlue,
                     onClick = onPlayAgain
                 )
                 Spacer(Modifier.height(12.dp))
-                HordeSecondaryButton(modifier = Modifier.fillMaxWidth(0.7f),
+                HordeSecondaryButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.8f),
                     text = L("main_menu"),
                     icon = "🏠",
                     onClick = onMainMenu
