@@ -6,8 +6,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Horde Survival color theme — relaxing pastel palette.
- * Avoids harsh reds and high-contrast combinations.
+ * Horde Survival color theme — cheerful light fantasy palette for children.
+ * Features bright pastel accents and inviting magical tones.
  */
 object HordeColors {
     // ── Primary ────────────────────────────────────────────────────
@@ -20,9 +20,9 @@ object HordeColors {
     val Cream = Color(0xFFFFF5E1)
 
     // ── Background ─────────────────────────────────────────────────
-    val DarkBg = Color(0xFF1A1A2E)
-    val DarkSurface = Color(0xFF16213E)
-    val DarkCard = Color(0xFF0F3460)
+    val DarkBg = Color(0xFF1B173D)
+    val DarkSurface = Color(0xFF252054)
+    val DarkCard = Color(0xFF283670)
 
     // ── UI Elements ────────────────────────────────────────────────
     val ButtonPrimary = Color(0xFF6BB6FF)
@@ -30,7 +30,7 @@ object HordeColors {
     val TextPrimary = Color(0xFFFFFFFF)
     val TextSecondary = Color(0xFFB0BEC5)
     val XpBarFill = Color(0xFFAAE6BA)
-    val XpBarBg = Color(0xFF2A2A4A)
+    val XpBarBg = Color(0xFF2D2A5A)
     val HpBarFill = Color(0xFFFFB7B2)
     val GoldColor = Color(0xFFFFD700)
 
@@ -41,8 +41,8 @@ object HordeColors {
     val Legendary = Color(0xFFFFD700)
 
     // ── Card Colors ────────────────────────────────────────────────
-    val CardBg = Color(0xFF1E1E3F)
-    val CardBorder = Color(0xFF3A3A6A)
+    val CardBg = Color(0xFF22204E)
+    val CardBorder = Color(0xFF4A4A82)
 }
 
 object HordeTypography {

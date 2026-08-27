@@ -39,7 +39,7 @@ object SoundManager {
         HIT, HIT_CRIT, DEATH, PICKUP, PICKUP_BIG,
         DAMAGE, LEVEL_UP, BOSS_WARNING, GAME_OVER,
         COMBO_5, COMBO_10, COMBO_25, COMBO_50,
-        EVOLUTION, ACHIEVEMENT, CLICK, PAUSE
+        EVOLUTION, ACHIEVEMENT, CLICK, HOVER, PAUSE
     }
 
     fun initialize(context: Context? = null) {
@@ -182,6 +182,7 @@ object SoundManager {
     fun playBossWarning() = play(SoundType.BOSS_WARNING)
     fun playGameOver() = play(SoundType.GAME_OVER)
     fun playClick() = play(SoundType.CLICK)
+    fun playHover() = play(SoundType.HOVER)
     fun playPause() = play(SoundType.PAUSE)
     fun playEvolution() = play(SoundType.EVOLUTION)
     fun playAchievement() = play(SoundType.ACHIEVEMENT)
@@ -239,7 +240,8 @@ object SoundManager {
             SoundType.EVOLUTION -> synthArpeggio(notes = floatArrayOf(261.63f, 392f, 523.25f, 659.25f, 783.99f, 1046.5f), noteDuration = 0.06f, amplitude = 0.3f)
             SoundType.ACHIEVEMENT -> synthArpeggio(notes = floatArrayOf(783.99f, 1046.5f, 1318.51f), noteDuration = 0.08f, amplitude = 0.28f)
 
-            SoundType.CLICK -> synthPop(freq = 700f, durationSec = 0.018f, amplitude = 0.2f)
+            SoundType.CLICK -> synthPop(freq = 880f, durationSec = 0.025f, amplitude = 0.25f)
+            SoundType.HOVER -> synthChime(frequencies = floatArrayOf(1318.51f, 1760f), durationSec = 0.025f, amplitude = 0.12f)
             SoundType.PAUSE -> synthPop(freq = 440f, durationSec = 0.03f, amplitude = 0.2f)
         }
 
