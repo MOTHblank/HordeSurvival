@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.DisposableEffect
@@ -24,6 +23,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.weapon.WeaponType
+import com.hordesurvival.ui.components.CornerCutShape
 import com.hordesurvival.ui.viewmodel.GameViewModel
 import com.hordesurvival.ui.viewmodel.RunSummary
 
@@ -250,7 +250,7 @@ fun GameScreen(
         if (achievementPopup != null) {
             Box(
                 modifier = Modifier.align(androidx.compose.ui.Alignment.TopCenter).padding(top = 100.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(CornerCutShape)
                     .background(Color(0xFFFFD700).copy(alpha = 0.85f))
                     .padding(horizontal = 20.dp, vertical = 10.dp)
             ) {

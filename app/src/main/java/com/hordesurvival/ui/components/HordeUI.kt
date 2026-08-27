@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -96,7 +95,7 @@ fun HordeScreen(
                 val alpha = 0.15f + 0.1f * sin(f3 * 6.28f + phase)
                 val dotSize = 2f + (hash % 30) / 15f
                 Box(Modifier.offset(x = animX.dp, y = animY.dp).size(dotSize.dp)
-                    .clip(CircleShape).background(Color.White.copy(alpha = alpha)))
+                    .clip(SmallCutShape).background(Color.White.copy(alpha = alpha)))
             }
         }
 

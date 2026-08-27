@@ -3,7 +3,6 @@ package com.hordesurvival.ui.screens.game
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +18,7 @@ import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeSecondaryButton
+import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -179,7 +179,7 @@ fun PauseScreen(
                                 val sel = gameSpeed == speed
                                 Box(
                                     Modifier
-                                        .clip(RoundedCornerShape(8.dp))
+                                        .clip(SmallCutShape)
                                         .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.3f) else Color.Transparent)
                                         .clickable { onSpeedChange(speed) }
                                         .padding(horizontal = 8.dp, vertical = 4.dp)
