@@ -77,7 +77,7 @@ fun GameHud(
 
         // ── Top — full-width XP bar ─────────────────────────────
         Box(
-            modifier = Modifier.fillMaxWidth().height(12.dp).align(Alignment.TopCenter).background(Color(0xFF1A1A3F))
+            modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().height(12.dp).align(Alignment.TopCenter).background(Color(0xFF1A1A3F))
         ) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(xpRatio).background(Brush.horizontalGradient(listOf(HordeColors.XpBarFill, HordeColors.SkyBlue.copy(alpha = 0.6f)))))
             Text("Lv.$playerLevel", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.align(Alignment.Center))
@@ -131,7 +131,7 @@ fun GameHud(
                     .padding(start = 12.dp, end = 12.dp)
             ) {
                 // HP
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("❤️", fontSize = 12.sp)
                     Spacer(Modifier.width(4.dp))
                     Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
@@ -144,7 +144,7 @@ fun GameHud(
                 if (bossActive && bossMaxHp > 0f) {
                     Spacer(Modifier.height(6.dp))
                     val bossRatio = (bossHp / bossMaxHp).coerceIn(0f, 1f)
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("👹", fontSize = 14.sp)
                         Spacer(Modifier.width(4.dp))
                         Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color(0xFFFFAB91).copy(alpha = 0.4f), CornerCutShape)) {
@@ -292,7 +292,7 @@ fun BossWarningBanner(visible: Boolean, onDismiss: () -> Unit) {
     val inf = rememberInfiniteTransition(label = "boss")
     val alpha by inf.animateFloat(0.6f, 1f, infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "a")
     Box(
-        Modifier.fillMaxWidth()
+        Modifier.widthIn(max = 600.dp).fillMaxWidth()
             .background(Brush.horizontalGradient(listOf(Color(0xFFB19CD9).copy(alpha = alpha * 0.7f), Color(0xFF6BB6FF).copy(alpha = alpha * 0.4f), Color(0xFFB19CD9).copy(alpha = alpha * 0.7f))))
             .clickable { onDismiss() }.padding(vertical = 20.dp),
         contentAlignment = Alignment.Center

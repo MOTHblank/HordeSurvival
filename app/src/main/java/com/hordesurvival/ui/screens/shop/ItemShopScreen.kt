@@ -37,7 +37,7 @@ fun ItemShopScreen(
     val tabs = listOf("⚔️ Weap", "🛡️ Pass", "🎨 Skins")
 
     HordeScreen(contentAlignment = Alignment.TopCenter) {
-        Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.widthIn(max = 600.dp).fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.height(16.dp))
 
             HordeHeader(

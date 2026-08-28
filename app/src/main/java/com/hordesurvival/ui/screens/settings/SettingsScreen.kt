@@ -42,7 +42,7 @@ fun SettingsScreen(
     var showSaveDialog by remember { mutableStateOf(false) }
 
     HordeScreen {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.widthIn(max = 600.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.height(16.dp))
 
             HordeHeader(

@@ -65,12 +65,12 @@ fun ModeSelectScreen(onModeSelected: (GameModeType) -> Unit, onBack: () -> Unit,
 @Composable
 private fun ModeCard(title: String, desc: String, color: Color, onClick: () -> Unit) {
     HordeItemCard(
-        modifier = Modifier
+        modifier = Modifier.widthIn(max = 500.dp)
             .fillMaxWidth(0.92f)
             .height(90.dp),
         onClick = onClick
     ) {
-        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+        Column(modifier = Modifier.widthIn(max = 500.dp).fillMaxWidth(), horizontalAlignment = Alignment.Start) {
             Text(title, style = HordeTypography.SubHeader.copy(fontSize = 18.sp, color = color))
             Spacer(Modifier.height(4.dp))
             Text(desc, style = HordeTypography.Label.copy(fontSize = 13.sp))

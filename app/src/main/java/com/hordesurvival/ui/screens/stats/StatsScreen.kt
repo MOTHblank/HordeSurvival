@@ -33,7 +33,7 @@ fun StatsScreen(
             Spacer(Modifier.height(24.dp))
 
             // Stats card
-            HordeCard {
+            HordeCard(modifier = Modifier.widthIn(max = 500.dp).fillMaxWidth()) {
                 StatRow("🏃 ${L("total_runs")}", "${save.totalRuns}")
                 Spacer(Modifier.height(12.dp))
                 StatRow("👾 ${L("total_kills")}", "${save.totalKills}")
