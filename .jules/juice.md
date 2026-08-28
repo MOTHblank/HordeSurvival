@@ -39,3 +39,6 @@
 ## 2026-10-27 - Weight Modifier and Max Widths
 **Learning:** When trying to constrain the maximum width of an element inside a `Row` using `Modifier.weight(1f)`, it won't work by default. `weight(1f)` uses `fill = true` by default, passing tight constraints that bypass `widthIn`.
 **Action:** Use `Modifier.weight(1f, fill = false).widthIn(max = X.dp)` to allow the element to shrink or stay within its max bounds instead of forcing it to stretch.
+## 2024-05-24 - [Replace standard Material components with custom Horde equivalents]
+**Learning:** Hardcoded standard components (`Switch`, `Slider`, `AlertDialog`) break the cohesive visual style, especially when the theme heavily relies on custom shapes (like `SmallCutShape` and `CornerCutShape`).
+**Action:** Replaced usage of standard components with custom equivalents (`HordeSwitch`, `HordeSlider`, `HordeDialog`) defined in the shared `HordeUI.kt` file. Always look out for standard components and replace them with custom ones if they don't match the design system.

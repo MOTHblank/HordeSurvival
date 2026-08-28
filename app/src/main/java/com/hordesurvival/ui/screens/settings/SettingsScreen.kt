@@ -13,9 +13,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeDialog
 import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
+import com.hordesurvival.ui.components.HordeSlider
+import com.hordesurvival.ui.components.HordeSwitch
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.theme.HordeTypography
 
@@ -66,8 +69,7 @@ fun SettingsScreen(
             HordeItemCard(onClick = onVibrationToggle) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("📳 Vibration", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
-                    Switch(checked = vibrationEnabled, onCheckedChange = { onVibrationToggle() },
-                        colors = SwitchDefaults.colors(checkedThumbColor = HordeColors.SkyBlue, checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)))
+                    HordeSwitch(checked = vibrationEnabled, onCheckedChange = { onVibrationToggle() })
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -76,8 +78,7 @@ fun SettingsScreen(
             HordeItemCard(onClick = onBgMusicToggle) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("🎵 Background Music", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
-                    Switch(checked = bgMusicEnabled, onCheckedChange = { onBgMusicToggle() },
-                        colors = SwitchDefaults.colors(checkedThumbColor = HordeColors.SkyBlue, checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)))
+                    HordeSwitch(checked = bgMusicEnabled, onCheckedChange = { onBgMusicToggle() })
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -214,20 +215,14 @@ fun SettingsScreen(
 
         // Save confirmation dialog
         if (showSaveDialog) {
-            AlertDialog(
+            HordeDialog(
                 onDismissRequest = { showSaveDialog = false },
-                title = { Text("Save Settings?", style = HordeTypography.Value) },
-                text = { Text("Do you want to save your changes?", style = HordeTypography.Body) },
-                confirmButton = {
-                    TextButton(onClick = { showSaveDialog = false; onBack() }) {
-                        Text("Save & Exit", style = HordeTypography.Button.copy(color = HordeColors.SkyBlue))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showSaveDialog = false }) {
-                        Text("Cancel", style = HordeTypography.Button.copy(color = HordeColors.TextSecondary))
-                    }
-                }
+                title = "Save Settings?",
+                text = "Do you want to save your changes?",
+                confirmButtonText = "Save & Exit",
+                onConfirm = { showSaveDialog = false; onBack() },
+                dismissButtonText = "Cancel",
+                onDismiss = { showSaveDialog = false }
             )
         }
     }
@@ -238,8 +233,7 @@ private fun SliderSetting(label: String, value: Float, onChange: (Float) -> Unit
     HordeItemCard {
         Column(Modifier.fillMaxWidth()) {
             Text(label, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
-            Slider(value = value, onValueChange = onChange,
-                colors = SliderDefaults.colors(thumbColor = HordeColors.SkyBlue, activeTrackColor = HordeColors.SkyBlue))
+            HordeSlider(value = value, onValueChange = onChange)
         }
     }
 }
@@ -258,8 +252,7 @@ private fun ToggleSetting(title: String, description: String, checked: Boolean, 
                 Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
                 Text(description, style = HordeTypography.Label.copy(fontSize = 11.sp))
             }
-            Switch(checked = checked, onCheckedChange = { onToggle() },
-                colors = SwitchDefaults.colors(checkedThumbColor = HordeColors.SkyBlue, checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)))
+            HordeSwitch(checked = checked, onCheckedChange = { onToggle() })
         }
     }
 }
