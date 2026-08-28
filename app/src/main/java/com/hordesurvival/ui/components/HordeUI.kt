@@ -644,6 +644,51 @@ fun HordeSlider(
 }
 
 @Composable
+fun HordeProgressBar(
+    progress: Float,
+    text: String,
+    modifier: Modifier = Modifier,
+    fillColor: Color = HordeColors.HpBarFill,
+    bgColor: Color = HordeColors.XpBarBg,
+    borderColor: Color = Color.White.copy(alpha = 0.15f),
+    icon: String? = null
+) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        if (icon != null) {
+            Text(icon, fontSize = 14.sp)
+            Spacer(Modifier.width(6.dp))
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(16.dp)
+                .clip(CornerCutShape)
+                .background(bgColor)
+                .border(1.dp, borderColor, CornerCutShape)
+        ) {
+            Box(
+                Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(progress.coerceIn(0f, 1f))
+                    .clip(CornerCutShape)
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(fillColor, fillColor.copy(alpha = 0.7f))
+                        )
+                    )
+            )
+            Text(
+                text = text,
+                fontSize = 10.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+    }
+}
+
+@Composable
 fun HordeDialog(
     onDismissRequest: () -> Unit,
     title: String,

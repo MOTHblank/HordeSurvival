@@ -42,3 +42,6 @@
 ## 2024-05-24 - [Replace standard Material components with custom Horde equivalents]
 **Learning:** Hardcoded standard components (`Switch`, `Slider`, `AlertDialog`) break the cohesive visual style, especially when the theme heavily relies on custom shapes (like `SmallCutShape` and `CornerCutShape`).
 **Action:** Replaced usage of standard components with custom equivalents (`HordeSwitch`, `HordeSlider`, `HordeDialog`) defined in the shared `HordeUI.kt` file. Always look out for standard components and replace them with custom ones if they don't match the design system.
+## 2024-08-28 - Unifying HUD Progress Bars
+**Learning:** Hardcoded progress bars in `GameHud.kt` used explicit colors and size modifiers that were inconsistent with the shared `HordeColors` theme. Refactoring them into a single `HordeProgressBar` simplifies the HUD and unifies the style.
+**Action:** When creating a shared progress bar component, expose the `Modifier` parameter so parent layouts (like the Game HUD) can re-apply critical maximum width constraints (like `widthIn(max = 800.dp)`) to prevent the UI from stretching endlessly on ultrawide screens.
