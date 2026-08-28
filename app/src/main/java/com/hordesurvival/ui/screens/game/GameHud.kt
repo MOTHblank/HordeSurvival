@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.components.CornerCutShape
+import com.hordesurvival.ui.components.HordeProgressBar
 import com.hordesurvival.ui.components.SmallCutShape
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -76,12 +77,13 @@ fun GameHud(
         }
 
         // ── Top — full-width XP bar ─────────────────────────────
-        Box(
-            modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().height(12.dp).align(Alignment.TopCenter).background(Color(0xFF1A1A3F))
-        ) {
-            Box(Modifier.fillMaxHeight().fillMaxWidth(xpRatio).background(Brush.horizontalGradient(listOf(HordeColors.XpBarFill, HordeColors.SkyBlue.copy(alpha = 0.6f)))))
-            Text("Lv.$playerLevel", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.align(Alignment.Center))
-        }
+        HordeProgressBar(
+            progress = xpRatio,
+            text = "Lv.$playerLevel",
+            fillColor = HordeColors.XpBarFill,
+            bgColor = HordeColors.XpBarBg,
+            modifier = Modifier.align(Alignment.TopCenter).widthIn(max = 800.dp).fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp)
+        )
 
         // ── Top row container (Pause, HP, Stats) ─────────────────
         Row(
@@ -98,8 +100,8 @@ fun GameHud(
                 // Pause button
                 Box(
                     modifier = Modifier.size(44.dp)
-                        .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.4f))
-                        .border(1.dp, Color.White.copy(alpha = 0.15f), CornerCutShape)
+                        .clip(CornerCutShape).background(HordeColors.CardBg.copy(alpha = 0.8f))
+                        .border(1.dp, HordeColors.CardBorder, CornerCutShape)
                         .clickable { onPauseClick() },
                     contentAlignment = Alignment.Center
                 ) { Text("⏸", fontSize = 18.sp) }
@@ -131,35 +133,34 @@ fun GameHud(
                     .padding(start = 12.dp, end = 12.dp)
             ) {
                 // HP
-                Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("❤️", fontSize = 12.sp)
-                    Spacer(Modifier.width(4.dp))
-                    Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(hpRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f)))))
-                        Text("${playerHp.toInt()} / ${playerMaxHp.toInt()}", fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f), modifier = Modifier.align(Alignment.Center))
-                    }
-                }
+                HordeProgressBar(
+                    progress = hpRatio,
+                    text = "${playerHp.toInt()} / ${playerMaxHp.toInt()}",
+                    fillColor = hpColor,
+                    icon = "❤️",
+                    modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth()
+                )
 
                 // Boss HP bar (only when boss is active)
                 if (bossActive && bossMaxHp > 0f) {
                     Spacer(Modifier.height(6.dp))
                     val bossRatio = (bossHp / bossMaxHp).coerceIn(0f, 1f)
-                    Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text("👹", fontSize = 14.sp)
-                        Spacer(Modifier.width(4.dp))
-                        Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color(0xFFFFAB91).copy(alpha = 0.4f), CornerCutShape)) {
-                            Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(Color(0xFFFF6E40), Color(0xFFFFAB91)))))
-                            Text("BOSS ${bossHp.toInt()}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
-                        }
-                    }
+                    HordeProgressBar(
+                        progress = bossRatio,
+                        text = "BOSS ${bossHp.toInt()}",
+                        fillColor = Color(0xFFFF6E40),
+                        icon = "👹",
+                        modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth()
+                    )
                 }
             }
 
             // ── Top right — stats ────────────────────────────────────
             Column(
                 modifier = Modifier
-                    .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.3f))
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    .clip(CornerCutShape).background(HordeColors.CardBg.copy(alpha = 0.8f))
+                    .border(1.dp, HordeColors.CardBorder, CornerCutShape)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.End
             ) {
                 StatText("⏱", formatTime(gameTime), HordeColors.TextSecondary)
@@ -241,20 +242,24 @@ fun GameHud(
         if (currentWeapons.isNotEmpty()) {
             Row(
                 modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)
-                    .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.4f))
-                    .padding(6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    .clip(CornerCutShape).background(HordeColors.CardBg.copy(alpha = 0.8f))
+                    .border(1.dp, HordeColors.CardBorder, CornerCutShape)
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 currentWeapons.forEach { weapon ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
-                            modifier = Modifier.size(32.dp).clip(SmallCutShape).background(Color.White.copy(alpha = 0.1f)),
+                            modifier = Modifier.size(36.dp)
+                                .clip(SmallCutShape)
+                                .background(HordeColors.DarkSurface.copy(alpha = 0.8f))
+                                .border(1.dp, HordeColors.CardBorder.copy(alpha = 0.5f), SmallCutShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(weaponEmoji(weapon), fontSize = 18.sp)
+                            Text(weaponEmoji(weapon), fontSize = 20.sp)
                         }
-                        Spacer(Modifier.height(2.dp))
-                        Text(weapon.displayName, fontSize = 8.sp, color = Color.White.copy(alpha = 0.8f))
+                        Spacer(Modifier.height(4.dp))
+                        Text(weapon.displayName, fontSize = 9.sp, color = HordeColors.TextSecondary, fontWeight = FontWeight.Bold)
                     }
                 }
             }
