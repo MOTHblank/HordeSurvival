@@ -50,7 +50,13 @@ class RelicSystem(private val engine: GameEngine) {
 
     fun update(dt: Float, playerPos: TransformComponent, playerComp: PlayerComponent, playerHealth: HealthComponent) {
         spawnTimer += dt
-        val relicsOnMap = engine.getActiveEntities().count { it.tag == "relic" }
+        val activeEntities = engine.getActiveEntities()
+        var relicsOnMap = 0
+        for (i in 0 until activeEntities.size) {
+            if (activeEntities[i].tag == "relic") {
+                relicsOnMap++
+            }
+        }
 
         if (spawnTimer >= spawnInterval && relicsOnMap < maxRelicsOnMap) {
             spawnTimer = 0f
@@ -124,15 +130,31 @@ class RelicSystem(private val engine: GameEngine) {
         }
     }
 
-    fun hasRelic(type: RelicType): Boolean = activeRelics.any { it.type == type }
+    fun hasRelic(type: RelicType): Boolean {
+        for (i in 0 until activeRelics.size) {
+            if (activeRelics[i].type == type) return true
+        }
+        return false
+    }
 
     fun isVoidHeartActive(): Boolean {
-        val relic = activeRelics.find { it.type == RelicType.VOID_HEART }
-        return relic != null && relic.timer > 0f
+        for (i in 0 until activeRelics.size) {
+            val relic = activeRelics[i]
+            if (relic.type == RelicType.VOID_HEART) {
+                return relic.timer > 0f
+            }
+        }
+        return false
     }
 
     fun triggerVoidHeart() {
-        activeRelics.find { it.type == RelicType.VOID_HEART }?.timer = 0.5f
+        for (i in 0 until activeRelics.size) {
+            val relic = activeRelics[i]
+            if (relic.type == RelicType.VOID_HEART) {
+                relic.timer = 0.5f
+                break
+            }
+        }
     }
 
     fun getActiveRelics(): List<ActiveRelic> = activeRelics.toList()

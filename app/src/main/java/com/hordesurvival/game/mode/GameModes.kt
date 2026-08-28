@@ -91,6 +91,10 @@ class TowerDefenseMode(private val engine: GameEngine) {
         val weaponUnlockIndex: Int = -1
     )
 
+    // ── Reusable Scratch Buffers (Zero Allocation) ─────────────────
+    private val _shieldScratch = mutableListOf<com.hordesurvival.game.engine.ecs.Entity>()
+    private val _enemyScratch = mutableListOf<com.hordesurvival.game.engine.ecs.Entity>()
+
     // ── State ─────────────────────────────────────────────────────
     var currentStage = 1
     var currentWave = 0
@@ -239,10 +243,17 @@ class TowerDefenseMode(private val engine: GameEngine) {
 
         val stage = getStage(currentStage)
 
+        val activeEntities = engine.getActiveEntities()
+
         // Check boss
         if (bossActive) {
-            val bossAlive = engine.getActiveEntities().any {
-                it.tag == "enemy" && it.active && it.get<EnemyComponent>()?.isBoss == true && !(it.get<HealthComponent>()?.isDead ?: true)
+            var bossAlive = false
+            for (i in 0 until activeEntities.size) {
+                val it = activeEntities[i]
+                if (it.tag == "enemy" && it.active && it.get<EnemyComponent>()?.isBoss == true && !(it.get<HealthComponent>()?.isDead ?: true)) {
+                    bossAlive = true
+                    break
+                }
             }
             if (!bossAlive && !bossDefeated) {
                 bossDefeated = true
@@ -253,8 +264,12 @@ class TowerDefenseMode(private val engine: GameEngine) {
         }
 
         // Count active enemies to cap spawning
-        val activeEnemies = engine.getActiveEntities().count {
-            it.tag == "enemy" && it.active && !(it.get<HealthComponent>()?.isDead ?: true)
+        var activeEnemies = 0
+        for (i in 0 until activeEntities.size) {
+            val it = activeEntities[i]
+            if (it.tag == "enemy" && it.active && !(it.get<HealthComponent>()?.isDead ?: true)) {
+                activeEnemies++
+            }
         }
         val maxEnemiesPerStage = (stage.enemiesPerWave * 2 + currentStage * 3).coerceAtMost(40)
 
@@ -276,8 +291,12 @@ class TowerDefenseMode(private val engine: GameEngine) {
             }
         } else {
             // All waves spawned, check if all enemies dead → boss
-            val enemiesAlive = engine.getActiveEntities().count {
-                it.tag == "enemy" && it.active && !(it.get<HealthComponent>()?.isDead ?: true)
+            var enemiesAlive = 0
+            for (i in 0 until activeEntities.size) {
+                val it = activeEntities[i]
+                if (it.tag == "enemy" && it.active && !(it.get<HealthComponent>()?.isDead ?: true)) {
+                    enemiesAlive++
+                }
             }
             if (enemiesAlive == 0 && !levelComplete) {
                 spawnBoss(stage)
@@ -494,7 +513,16 @@ class TowerDefenseMode(private val engine: GameEngine) {
     private fun updateShieldOrbit(dt: Float) {
         val shieldCount = activeWeapon.currentProjectileCount.coerceAtMost(6)
         val orbitRadius = 60f + activeWeapon.level * 5f
-        val existing = engine.getActiveEntities().filter { it.tag == "orbit_shield" && it.active }
+
+        _shieldScratch.clear()
+        val activeEntities = engine.getActiveEntities()
+        for (i in 0 until activeEntities.size) {
+            val it = activeEntities[i]
+            if (it.tag == "orbit_shield" && it.active) {
+                _shieldScratch.add(it)
+            }
+        }
+        val existing = _shieldScratch
 
         // Create/update shields
         for (i in 0 until shieldCount) {
@@ -551,9 +579,15 @@ class TowerDefenseMode(private val engine: GameEngine) {
 
     // ── Enemy Shooting — enemies fire bullets at player ───────────
     private fun enemyShootAtPlayer() {
-        val enemies = engine.getActiveEntities().filter {
-            it.tag == "enemy" && it.active && !(it.get<HealthComponent>()?.isDead ?: true)
+        _enemyScratch.clear()
+        val activeEntities = engine.getActiveEntities()
+        for (i in 0 until activeEntities.size) {
+            val it = activeEntities[i]
+            if (it.tag == "enemy" && it.active && !(it.get<HealthComponent>()?.isDead ?: true)) {
+                _enemyScratch.add(it)
+            }
         }
+        val enemies = _enemyScratch
         // Only some enemies shoot (turrets, mages, bosses)
         for (enemy in enemies) {
             val type = enemy.get<EnemyComponent>()?.type ?: continue
