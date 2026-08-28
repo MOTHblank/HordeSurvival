@@ -17,6 +17,8 @@ import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.components.HordeItemCard
+import com.hordesurvival.ui.components.HordeSlider
+import com.hordesurvival.ui.components.HordeSwitch
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
@@ -87,13 +89,9 @@ fun PauseScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Switch(
+                            HordeSwitch(
                                 checked = bgMusicEnabled,
-                                onCheckedChange = { onBgMusicToggle() },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = HordeColors.SkyBlue,
-                                    checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f)
-                                )
+                                onCheckedChange = { onBgMusicToggle() }
                             )
                         }
                     }
@@ -107,13 +105,9 @@ fun PauseScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Slider(
+                            HordeSlider(
                                 value = musicVolume,
-                                onValueChange = onMusicVolumeChange,
-                                colors = SliderDefaults.colors(
-                                    thumbColor = HordeColors.SkyBlue,
-                                    activeTrackColor = HordeColors.SkyBlue
-                                )
+                                onValueChange = onMusicVolumeChange
                             )
                         }
                     }
@@ -127,13 +121,9 @@ fun PauseScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Slider(
+                            HordeSlider(
                                 value = sfxVolume,
-                                onValueChange = onSfxVolumeChange,
-                                colors = SliderDefaults.colors(
-                                    thumbColor = HordeColors.SkyBlue,
-                                    activeTrackColor = HordeColors.SkyBlue
-                                )
+                                onValueChange = onSfxVolumeChange
                             )
                         }
                     }

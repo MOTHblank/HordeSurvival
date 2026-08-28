@@ -9,8 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -489,4 +489,92 @@ fun HordeItemCard(
     ) {
         content()
     }
+}
+
+@Composable
+fun HordeSwitch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = HordeColors.SkyBlue,
+            checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f),
+            uncheckedThumbColor = HordeColors.TextSecondary,
+            uncheckedTrackColor = Color.DarkGray.copy(alpha = 0.4f),
+            uncheckedBorderColor = Color.Transparent
+        ),
+        thumbContent = if (checked) {
+            {
+                Box(modifier = Modifier.fillMaxSize().clip(SmallCutShape).background(HordeColors.SkyBlue))
+            }
+        } else {
+            {
+                Box(modifier = Modifier.fillMaxSize().clip(SmallCutShape).background(HordeColors.TextSecondary))
+            }
+        }
+    )
+}
+
+@Composable
+fun HordeSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Slider(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        colors = SliderDefaults.colors(
+            thumbColor = HordeColors.SkyBlue,
+            activeTrackColor = HordeColors.SkyBlue,
+            inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f)
+        )
+    )
+}
+
+@Composable
+fun HordeDialog(
+    onDismissRequest: () -> Unit,
+    title: String,
+    text: String,
+    confirmButtonText: String,
+    onConfirm: () -> Unit,
+    dismissButtonText: String? = null,
+    onDismiss: (() -> Unit)? = null
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        shape = CornerCutShape,
+        containerColor = HordeColors.CardBg,
+        titleContentColor = HordeColors.SkyBlue,
+        textContentColor = Color.White,
+        title = {
+            Text(title, style = HordeTypography.SubHeader)
+        },
+        text = {
+            Text(text, style = HordeTypography.Body)
+        },
+        confirmButton = {
+            HordeSmallButton(
+                text = confirmButtonText,
+                onClick = onConfirm,
+                color = HordeColors.SkyBlue
+            )
+        },
+        dismissButton = if (dismissButtonText != null && onDismiss != null) {
+            {
+                HordeSmallButton(
+                    text = dismissButtonText,
+                    onClick = onDismiss,
+                    color = HordeColors.TextSecondary
+                )
+            }
+        } else null
+    )
 }
