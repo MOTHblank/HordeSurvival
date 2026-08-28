@@ -25,7 +25,7 @@ import com.hordesurvival.ui.theme.HordeTypography
 import com.hordesurvival.utils.Constants
 
 /**
- * Meta-progression upgrades screen with dark fantasy arcade style.
+ * Meta-progression upgrades screen with light fantasy arcade style for children.
  */
 @Composable
 fun UpgradesScreen(
