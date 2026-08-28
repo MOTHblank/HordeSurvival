@@ -77,7 +77,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         val isEvolved = ws.specialEffect == "orbit_homing"
 
         for (i in 0 until count) {
-            val target = nearestEnemies.getOrNull(i)
+            val target = if (i < nearestEnemies.size) nearestEnemies[i] else null
             val angle = if (target != null) {
                 val t = target.get<TransformComponent>()
                 if (t != null) GameMath.angleTo(pos.x, pos.y, t.x, t.y)
@@ -376,20 +376,60 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         return engine.findNearest(x, y, "enemy", maxDist)
     }
 
-    private fun findNearestEnemies(x: Float, y: Float, count: Int, maxDist: Float): List<Entity> {
+    /**
+     * Finds the nearest `count` enemies without allocating lambda closures or lists.
+     * Uses an in-place partial selection sort to avoid O(N log N) GC churn.
+     * Modifies and returns the reusable `_enemyQueryResult` list.
+     */
+    private fun findNearestEnemies(x: Float, y: Float, count: Int, maxDist: Float): MutableList<Entity> {
         _enemyQueryResult.clear()
         engine.spatialGrid.queryRange(x, y, maxDist, "enemy", _enemyQueryResult)
-        if (_enemyQueryResult.size <= count) return _enemyQueryResult.toList()
+        val size = _enemyQueryResult.size
+        if (size <= count) return _enemyQueryResult
 
-        _enemyQueryResult.sortBy { e ->
-            val t = e.get<TransformComponent>()
-            if (t != null) {
-                val dx = t.x - x
-                val dy = t.y - y
-                dx * dx + dy * dy
-            } else Float.MAX_VALUE
+        val targetCount = minOf(count, size)
+
+        // In-place partial selection sort to find top K nearest
+        for (i in 0 until targetCount) {
+            var minIdx = i
+            var minSq = Float.MAX_VALUE
+
+            val eMin = _enemyQueryResult[minIdx]
+            val tMin = eMin.get<TransformComponent>()
+            if (tMin != null) {
+                val dx = tMin.x - x
+                val dy = tMin.y - y
+                minSq = dx * dx + dy * dy
+            }
+
+            for (j in i + 1 until size) {
+                val e = _enemyQueryResult[j]
+                val t = e.get<TransformComponent>()
+                if (t != null) {
+                    val dx = t.x - x
+                    val dy = t.y - y
+                    val distSq = dx * dx + dy * dy
+
+                    if (distSq < minSq) {
+                        minIdx = j
+                        minSq = distSq
+                    }
+                }
+            }
+
+            if (minIdx != i) {
+                val temp = _enemyQueryResult[i]
+                _enemyQueryResult[i] = _enemyQueryResult[minIdx]
+                _enemyQueryResult[minIdx] = temp
+            }
         }
-        return _enemyQueryResult.take(count)
+
+        // Trim list to target count to prevent caller from iterating beyond K
+        while (_enemyQueryResult.size > targetCount) {
+            _enemyQueryResult.removeAt(_enemyQueryResult.size - 1)
+        }
+
+        return _enemyQueryResult
     }
 
     private fun getWeaponColor(type: WeaponType): Int = when (type) {
