@@ -134,12 +134,12 @@ fun MainMenuScreen(
                     icon = "▶",
                     onClick = onPlayClick,
                     color = HordeColors.SkyBlue,
-                    modifier = Modifier.fillMaxWidth(0.7f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.7f),
                     breathe = breathe
                 )
 
                 // Secondary buttons — compact grid
-                Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.widthIn(max = 400.dp).fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HordeSecondaryButton(
                         text = L("characters"),
                         onClick = onCharactersClick,
@@ -155,7 +155,7 @@ fun MainMenuScreen(
                         icon = "⬆"
                     )
                 }
-                Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.widthIn(max = 400.dp).fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HordeSecondaryButton(
                         text = L("shop"),
                         onClick = onShopClick,
@@ -171,7 +171,7 @@ fun MainMenuScreen(
                         icon = "📊"
                     )
                 }
-                Row(Modifier.fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.widthIn(max = 400.dp).fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HordeSecondaryButton(
                         text = L("settings"),
                         onClick = onSettingsClick,

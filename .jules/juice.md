@@ -32,3 +32,10 @@
 ## 2026-10-27 - Responsive Constraints
 **Learning:** Found multiple instances where `.fillMaxWidth(0.9f)` was used on UI elements inside `GameHud.kt`, `PauseScreen.kt`, and `GameOverScreen.kt`. While this works well on standard mobile aspect ratios, these elements stretch excessively horizontally when the game is played on a tablet or a wider screen in landscape mode.
 **Action:** Always combine `.fillMaxWidth()` with a bounded maximum width using `.widthIn(max = ...)` (e.g., `Modifier.widthIn(max = 400.dp).fillMaxWidth(0.9f)`) to ensure UI components look proportionate on larger screens while maintaining their percentage-based width on smaller ones.
+## 2026-10-27 - Responsive Modifier Constraints
+**Learning:** In Jetpack Compose, `Modifier.fillMaxWidth()` coerces both the minimum and maximum incoming constraints to the exact width of the parent. If a `.widthIn(max = ...)` modifier is placed *after* `fillMaxWidth()`, it receives this tight constraint and is forced to scale its max value up to match the min constraint, rendering it completely useless. The max width constraint must be applied *before* `fillMaxWidth()`.
+**Action:** Always write `.widthIn(max = X.dp).fillMaxWidth()` when trying to limit the horizontal stretching of a responsive component.
+
+## 2026-10-27 - Weight Modifier and Max Widths
+**Learning:** When trying to constrain the maximum width of an element inside a `Row` using `Modifier.weight(1f)`, it won't work by default. `weight(1f)` uses `fill = true` by default, passing tight constraints that bypass `widthIn`.
+**Action:** Use `Modifier.weight(1f, fill = false).widthIn(max = X.dp)` to allow the element to shrink or stay within its max bounds instead of forcing it to stretch.

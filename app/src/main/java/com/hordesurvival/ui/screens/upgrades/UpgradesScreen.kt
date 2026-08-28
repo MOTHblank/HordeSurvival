@@ -45,7 +45,7 @@ fun UpgradesScreen(
 
     HordeScreen(contentAlignment = Alignment.TopCenter) {
         Column(
-            modifier = Modifier
+            modifier = Modifier.widthIn(max = 600.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),

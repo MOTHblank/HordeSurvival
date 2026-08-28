@@ -62,7 +62,7 @@ fun TutorialScreen(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.widthIn(max = 600.dp).padding(32.dp)
         ) {
             // Progress bar
             Box(
