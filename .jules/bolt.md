@@ -50,3 +50,6 @@ When querying spatial structures for collisions:
 ## $(date +%Y-%m-%d) - [Zero-Allocation filtering in GameModes and RelicSystem]
 **Learning:** `GameModes.kt` and `RelicSystem.kt` were using Kotlin collection functions like `any {}`, `count {}`, and `filter {}` which allocate an `Iterator`, lambda closures, and even entire lists per frame, creating severe GC pressure that causes frame-time hitches on mobile devices.
 **Action:** Replaced `.any {}` and `.count {}` with manual indexed `for` loops. Replaced `.filter {}` with class-level pre-allocated scratch lists (e.g. `_shieldScratch`, `_enemyScratch`) that are cleared and populated manually within indexed loops to achieve zero GC allocations per frame.
+## 2026-08-28 - Zero-Allocation Partial Selection Sort for Target Queries
+**Learning:** Querying the spatial grid and then using Kotlin's `.sortBy { e -> distSq }` and `.take(count)` to find the nearest N enemies (e.g., for Magic Missile) allocates lambda closures, autoboxes primitive `Float` distances, and creates new `List` instances every frame/shot, severely contributing to GC churn in hot combat loops.
+**Action:** Always use primitive, in-place algorithms like partial selection sort within a reusable `MutableList` when querying for the 'top K' elements by distance. Limit list consumption directly by index to avoid intermediate collections.

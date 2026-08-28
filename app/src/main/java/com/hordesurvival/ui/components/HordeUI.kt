@@ -6,11 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import com.hordesurvival.game.audio.SoundManager
 import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,13 +29,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
  * Unified UI component system for Horde Survival.
- * Stylized dark-fantasy arcade aesthetic featuring rich glowing borders, angled cuts,
- * tactile push animations, and high visual personality.
+ * Stylized cheerful light-fantasy arcade aesthetic for children, featuring rich glowing borders, angled cuts,
+ * bouncy elastic animations, and high visual personality.
  */
 
 val CornerCutShape = CutCornerShape(topStart = 10.dp, bottomEnd = 10.dp, topEnd = 2.dp, bottomStart = 2.dp)
@@ -55,10 +57,10 @@ fun HordeBackground(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF06060F))
+            .background(Color(0xFF120F2D))
             .drawBehind {
                 drawRect(Brush.verticalGradient(
-                    listOf(Color(0xFF08081A), Color(0xFF0A0A20), Color(0xFF060612))
+                    listOf(Color(0xFF1B1545), Color(0xFF231B58), Color(0xFF140F33))
                 ))
             }
     ) {
@@ -68,17 +70,17 @@ fun HordeBackground(modifier: Modifier = Modifier) {
             val orb1X = screenW * 0.25f + sin(f1 * 6.28f) * screenW * 0.15f
             val orb1Y = screenH * 0.3f + cos(f2 * 6.28f) * screenH * 0.1f
             Box(Modifier.offset(x = orb1X.dp, y = orb1Y.dp).size(350.dp)
-                .background(Brush.radialGradient(listOf(HordeColors.Lavender.copy(alpha = 0.04f), Color.Transparent))))
+                .background(Brush.radialGradient(listOf(HordeColors.Lavender.copy(alpha = 0.08f), Color.Transparent))))
 
             val orb2X = screenW * 0.65f + cos(f2 * 6.28f) * screenW * 0.12f
             val orb2Y = screenH * 0.55f + sin(f1 * 6.28f) * screenH * 0.08f
             Box(Modifier.offset(x = orb2X.dp, y = orb2Y.dp).size(280.dp)
-                .background(Brush.radialGradient(listOf(HordeColors.SkyBlue.copy(alpha = 0.035f), Color.Transparent))))
+                .background(Brush.radialGradient(listOf(HordeColors.SkyBlue.copy(alpha = 0.07f), Color.Transparent))))
 
             val orb3X = screenW * 0.5f + sin(f3 * 6.28f) * screenW * 0.2f
             val orb3Y = screenH * 0.15f + cos(f3 * 6.28f) * screenH * 0.05f
             Box(Modifier.offset(x = orb3X.dp, y = orb3Y.dp).size(200.dp)
-                .background(Brush.radialGradient(listOf(Color(0xFFFF6E40).copy(alpha = 0.025f), Color.Transparent))))
+                .background(Brush.radialGradient(listOf(HordeColors.WarmPeach.copy(alpha = 0.06f), Color.Transparent))))
 
             // ── Layer 2: Floating particles ──
             for (i in 0 until 12) {
@@ -174,9 +176,26 @@ fun HordeButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    LaunchedEffect(isHovered) {
+        if (isHovered && enabled) {
+            SoundManager.playHover()
+        }
+    }
+
+    val targetScale = when {
+        isPressed && enabled -> 0.92f
+        isHovered && enabled -> 1.06f
+        else -> 1f
+    }
+
     val s by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.94f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 400f),
+        targetValue = targetScale,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
         label = "HordeButtonScale"
     )
 
@@ -223,6 +242,7 @@ fun HordeButton(
                     interactionSource = interactionSource,
                     indication = null
                 ) {
+                    SoundManager.playClick()
                     onClick()
                 } else Modifier
             ),
@@ -267,9 +287,26 @@ fun HordeSecondaryButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    LaunchedEffect(isHovered) {
+        if (isHovered) {
+            SoundManager.playHover()
+        }
+    }
+
+    val targetScale = when {
+        isPressed -> 0.93f
+        isHovered -> 1.05f
+        else -> 1f
+    }
+
     val s by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = 0.7f),
+        targetValue = targetScale,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
         label = "HordeSecondaryButtonScale"
     )
 
@@ -300,6 +337,7 @@ fun HordeSecondaryButton(
                 interactionSource = interactionSource,
                 indication = null
             ) {
+                SoundManager.playClick()
                 onClick()
             },
         contentAlignment = Alignment.Center
@@ -333,9 +371,26 @@ fun HordeSmallButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    LaunchedEffect(isHovered) {
+        if (isHovered && enabled) {
+            SoundManager.playHover()
+        }
+    }
+
+    val targetScale = when {
+        isPressed && enabled -> 0.92f
+        isHovered && enabled -> 1.06f
+        else -> 1f
+    }
+
     val s by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.94f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f),
+        targetValue = targetScale,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
         label = "HordeSmallButtonScale"
     )
 
@@ -356,7 +411,10 @@ fun HordeSmallButton(
                 if (enabled) Modifier.clickable(
                     interactionSource = interactionSource,
                     indication = null
-                ) { onClick() } else Modifier
+                ) {
+                    SoundManager.playClick()
+                    onClick()
+                } else Modifier
             )
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
@@ -377,9 +435,38 @@ fun HordeBackButton(
     modifier: Modifier = Modifier,
     color: Color = HordeColors.TextSecondary
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    LaunchedEffect(isHovered) {
+        if (isHovered) {
+            SoundManager.playHover()
+        }
+    }
+
+    val targetScale = when {
+        isPressed -> 0.93f
+        isHovered -> 1.05f
+        else -> 1f
+    }
+
+    val s by animateFloatAsState(
+        targetValue = targetScale,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "HordeBackButtonScale"
+    )
+
     TextButton(
-        onClick = onClick,
-        modifier = modifier
+        onClick = {
+            SoundManager.playClick()
+            onClick()
+        },
+        interactionSource = interactionSource,
+        modifier = modifier.scale(s)
     ) {
         Text(
             text = text,
@@ -451,9 +538,26 @@ fun HordeItemCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    LaunchedEffect(isHovered) {
+        if (isHovered && onClick != null) {
+            SoundManager.playHover()
+        }
+    }
+
+    val targetScale = when {
+        isPressed && onClick != null -> 0.95f
+        isHovered && onClick != null -> 1.04f
+        else -> 1f
+    }
+
     val s by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null) 0.97f else 1f,
-        animationSpec = spring(dampingRatio = 0.7f),
+        targetValue = targetScale,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
         label = "HordeItemCardScale"
     )
 
@@ -481,6 +585,7 @@ fun HordeItemCard(
                     interactionSource = interactionSource,
                     indication = null
                 ) {
+                    SoundManager.playClick()
                     onClick()
                 } else Modifier
             )
@@ -489,4 +594,92 @@ fun HordeItemCard(
     ) {
         content()
     }
+}
+
+@Composable
+fun HordeSwitch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = HordeColors.SkyBlue,
+            checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f),
+            uncheckedThumbColor = HordeColors.TextSecondary,
+            uncheckedTrackColor = Color.DarkGray.copy(alpha = 0.4f),
+            uncheckedBorderColor = Color.Transparent
+        ),
+        thumbContent = if (checked) {
+            {
+                Box(modifier = Modifier.fillMaxSize().clip(SmallCutShape).background(HordeColors.SkyBlue))
+            }
+        } else {
+            {
+                Box(modifier = Modifier.fillMaxSize().clip(SmallCutShape).background(HordeColors.TextSecondary))
+            }
+        }
+    )
+}
+
+@Composable
+fun HordeSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Slider(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        colors = SliderDefaults.colors(
+            thumbColor = HordeColors.SkyBlue,
+            activeTrackColor = HordeColors.SkyBlue,
+            inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f)
+        )
+    )
+}
+
+@Composable
+fun HordeDialog(
+    onDismissRequest: () -> Unit,
+    title: String,
+    text: String,
+    confirmButtonText: String,
+    onConfirm: () -> Unit,
+    dismissButtonText: String? = null,
+    onDismiss: (() -> Unit)? = null
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        shape = CornerCutShape,
+        containerColor = HordeColors.CardBg,
+        titleContentColor = HordeColors.SkyBlue,
+        textContentColor = Color.White,
+        title = {
+            Text(title, style = HordeTypography.SubHeader)
+        },
+        text = {
+            Text(text, style = HordeTypography.Body)
+        },
+        confirmButton = {
+            HordeSmallButton(
+                text = confirmButtonText,
+                onClick = onConfirm,
+                color = HordeColors.SkyBlue
+            )
+        },
+        dismissButton = if (dismissButtonText != null && onDismiss != null) {
+            {
+                HordeSmallButton(
+                    text = dismissButtonText,
+                    onClick = onDismiss,
+                    color = HordeColors.TextSecondary
+                )
+            }
+        } else null
+    )
 }
