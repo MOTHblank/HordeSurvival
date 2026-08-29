@@ -710,3 +710,113 @@ fun HordeProgressBar(
         content()
     }
 }
+
+// ── Shared Settings Widgets ──
+
+@Composable
+fun HordeToggleSetting(
+    title: String,
+    checked: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    icon: String? = null
+) {
+    HordeItemCard(modifier = modifier, onClick = onToggle) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                if (icon != null) {
+                    Text(icon, fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                }
+                Column {
+                    Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+                    if (description != null) {
+                        Text(description, style = HordeTypography.Label.copy(fontSize = 11.sp))
+                    }
+                }
+            }
+            HordeSwitch(checked = checked, onCheckedChange = { onToggle() })
+        }
+    }
+}
+
+@Composable
+fun HordeSliderSetting(
+    title: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    valueText: String? = null,
+    icon: String? = null
+) {
+    HordeItemCard(modifier = modifier) {
+        Column(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (icon != null) {
+                        Text(icon, fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                    }
+                    Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+                }
+                if (valueText != null) {
+                    Text(valueText, style = HordeTypography.Label.copy(fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue))
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            HordeSlider(value = value, onValueChange = onValueChange, modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+@Composable
+fun <T> HordeSelectorSetting(
+    title: String,
+    options: List<Pair<T, String>>,
+    selectedOption: T,
+    onOptionSelected: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    columns: Int = 2,
+    icon: String? = null
+) {
+    HordeItemCard(modifier = modifier) {
+        Column(Modifier.fillMaxWidth()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (icon != null) {
+                    Text(icon, fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                }
+                Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+            }
+            if (description != null) {
+                Text(description, style = HordeTypography.Label.copy(fontSize = 11.sp))
+            }
+            Spacer(Modifier.height(12.dp))
+
+            val chunked = options.chunked(columns)
+            for (row in chunked) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    row.forEach { (value, label) ->
+                        val sel = selectedOption == value
+                        HordeItemCard(
+                            modifier = Modifier.weight(1f),
+                            onClick = { onOptionSelected(value) },
+                            selected = sel
+                        ) {
+                            Text(label, style = HordeTypography.Label.copy(
+                                color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
+                                fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 13.sp
+                            ))
+                        }
+                    }
+                    if (row.size < columns) {
+                        for (i in 0 until (columns - row.size)) {
+                            Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+        }
+    }
+}
