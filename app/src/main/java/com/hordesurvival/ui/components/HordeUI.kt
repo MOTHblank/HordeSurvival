@@ -683,3 +683,30 @@ fun HordeDialog(
         } else null
     )
 }
+
+@Composable
+fun HordeProgressBar(
+    progress: Float,
+    modifier: Modifier = Modifier,
+    fillBrush: Brush = Brush.horizontalGradient(listOf(HordeColors.SkyBlue, HordeColors.Lavender)),
+    backgroundColor: Color = Color(0xFF1A1A3F),
+    borderColor: Color = Color.Transparent,
+    shape: androidx.compose.ui.graphics.Shape = SmallCutShape,
+    content: @Composable BoxScope.() -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(backgroundColor)
+            .border(1.dp, borderColor, shape)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .clip(shape)
+                .background(fillBrush)
+        )
+        content()
+    }
+}
