@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import com.hordesurvival.ui.theme.HordeColors
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
@@ -41,7 +42,7 @@ fun Minimap(
         val scale = w / (mapRadius * 2f)
 
         // Background
-        drawRect(Color.Black.copy(alpha = 0.6f), topLeft = Offset.Zero, size = Size(w, h))
+        drawRect(HordeColors.OverlayMedium, topLeft = Offset.Zero, size = Size(w, h))
 
         // Border
         drawRect(Color.White.copy(alpha = 0.2f), topLeft = Offset.Zero, size = Size(w, h), style = Stroke(width = 1f))
@@ -66,24 +67,24 @@ fun Minimap(
             when (e.tag) {
                 "enemy" -> {
                     val isBoss = e.get<EnemyComponent>()?.isBoss == true
-                    val color = if (isBoss) Color(0xFFFF6E40) else Color(0xFFEF5350)
+                    val color = if (isBoss) HordeColors.Warning else HordeColors.Danger
                     val radius = if (isBoss) 3f else 1.5f
                     drawCircle(color, radius = radius, center = Offset(sx, sy))
                 }
                 "loot_box" -> {
-                    drawCircle(Color(0xFFFFD700), radius = 2f, center = Offset(sx, sy))
+                    drawCircle(HordeColors.GoldColor, radius = 2f, center = Offset(sx, sy))
                 }
                 "health_gem" -> {
-                    drawCircle(Color(0xFF66BB6A), radius = 1.5f, center = Offset(sx, sy))
+                    drawCircle(HordeColors.Success, radius = 1.5f, center = Offset(sx, sy))
                 }
                 "xp_gem" -> {
-                    drawCircle(Color(0xFFAAE6BA).copy(alpha = 0.4f), radius = 0.8f, center = Offset(sx, sy))
+                    drawCircle(HordeColors.MintGreen.copy(alpha = 0.4f), radius = 0.8f, center = Offset(sx, sy))
                 }
             }
         }
 
         // Draw player (always center)
-        drawCircle(Color(0xFF6BB6FF), radius = 3f, center = Offset(cx, cy))
+        drawCircle(HordeColors.SkyBlue, radius = 3f, center = Offset(cx, cy))
         drawCircle(Color.White.copy(alpha = 0.6f), radius = 3f, center = Offset(cx, cy), style = Stroke(width = 0.5f))
 
         // Range circle

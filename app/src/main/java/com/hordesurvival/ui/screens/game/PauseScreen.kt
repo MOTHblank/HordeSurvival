@@ -46,7 +46,7 @@ fun PauseScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.65f)),
+            .background(HordeColors.OverlayDark),
         contentAlignment = Alignment.Center
     ) {
         Column(

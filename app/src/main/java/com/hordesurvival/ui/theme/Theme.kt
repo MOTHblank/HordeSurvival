@@ -34,6 +34,32 @@ object HordeColors {
     val HpBarFill = Color(0xFFFFB7B2)
     val GoldColor = Color(0xFFFFD700)
 
+    // ── Additional Semantic Colors ─────────────────────────────────
+    val Success = Color(0xFF66BB6A)
+    val Danger = Color(0xFFEF5350)
+    val Warning = Color(0xFFFF6E40) // Orange
+    val Info = Color(0xFF42A5F5)
+
+    // ── UI Surface Colors ──────────────────────────────────────────
+    val SurfaceDark = Color(0xFF120F2D) // Darker variant
+    val SurfaceLight = Color(0xFF333344) // Lighter variant
+    val PanelBgStart = Color(0xFF1D1D3A)
+    val PanelBgEnd = Color(0xFF101026)
+
+    // ── Gameplay Specific ──────────────────────────────────────────
+    val BossHpStart = Color(0xFFFF6E40)
+    val BossHpEnd = Color(0xFFFFAB91)
+    val HealthGem = Color(0xFF66BB6A)
+    val XpGem = Color(0xFFAAE6BA)
+    val EnemyDot = Color(0xFFEF5350)
+    val BossDot = Color(0xFFFF6E40)
+    val PlayerDot = Color(0xFF6BB6FF)
+
+    // ── Transparent Overlays ───────────────────────────────────────
+    val OverlayDark = Color.Black.copy(alpha = 0.75f)
+    val OverlayMedium = Color.Black.copy(alpha = 0.6f)
+    val OverlayLight = Color.Black.copy(alpha = 0.3f)
+
     // ── Rarity Colors ──────────────────────────────────────────────
     val Common = Color(0xFFB0BEC5)
     val Rare = Color(0xFF6BB6FF)

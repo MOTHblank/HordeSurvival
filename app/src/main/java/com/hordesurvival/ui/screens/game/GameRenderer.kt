@@ -1,6 +1,7 @@
 package com.hordesurvival.ui.screens.game
 
 import androidx.compose.foundation.Canvas
+import com.hordesurvival.ui.theme.HordeColors
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
@@ -200,11 +201,11 @@ fun GameRenderer(
                     val alpha = e.get<SpriteComponent>()?.alpha ?: 0.3f
                     drawCircle(
                         brush = Brush.radialGradient(
-                            colors = listOf(Color(0xFFAAE6BA).copy(alpha = alpha * 0.5f), Color(0xFF7CB68A).copy(alpha = alpha * 0.15f), Color.Transparent),
+                            colors = listOf(HordeColors.MintGreen.copy(alpha = alpha * 0.5f), Color(0xFF7CB68A).copy(alpha = alpha * 0.15f), Color.Transparent),
                             center = Offset(sx, sy), radius = c.radius * 1.3f
                         ), radius = c.radius * 1.3f, center = Offset(sx, sy)
                     )
-                    drawCircle(color = Color(0xFFAAE6BA).copy(alpha = alpha * 0.4f), radius = c.radius, center = Offset(sx, sy))
+                    drawCircle(color = HordeColors.MintGreen.copy(alpha = alpha * 0.4f), radius = c.radius, center = Offset(sx, sy))
                 }
                 continue
             }
@@ -287,7 +288,7 @@ fun GameRenderer(
                     if (isMagnetized && playerPos != null) {
                         val px = playerPos.x + offX
                         val py = playerPos.y + offY
-                        drawLine(Color(0xFF42A5F5).copy(alpha = 0.3f), Offset(sx, sy), Offset(px, py), strokeWidth = 1.5f)
+                        drawLine(HordeColors.Info.copy(alpha = 0.3f), Offset(sx, sy), Offset(px, py), strokeWidth = 1.5f)
                     }
                 }
                 "health_gem" -> drawHealthGem(sx, sy, w, engine.gameTime, scratchPath)
@@ -319,7 +320,7 @@ fun GameRenderer(
                 val textResult = damageTextCache.getOrPut(cacheKey) {
                     val scale = if (dn.isCrit) 1.3f else 1f
                     val fontSize = (14f * scale).sp
-                    val color = if (dn.isCrit) Color(0xFFFFD700) else Color.White
+                    val color = if (dn.isCrit) HordeColors.GoldColor else Color.White
                     textMeasurer.measure(
                         text = AnnotatedString(text),
                         style = TextStyle(
@@ -353,7 +354,7 @@ fun GameRenderer(
                 val alpha = intensity * 0.15f * pulse
                 drawRect(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color.Transparent, Color(0xFFFF1744).copy(alpha = alpha)),
+                        colors = listOf(Color.Transparent, HordeColors.Danger.copy(alpha = alpha)),
                         center = Offset(size.width / 2f, size.height / 2f),
                         radius = size.width * 0.7f
                     ),
@@ -365,7 +366,7 @@ fun GameRenderer(
         // ── BOSS INTRO FLASH ──────────────────────────────────────
         if (engine.bossIntroTimer > 0f) {
             val flashAlpha = (engine.bossIntroTimer / 0.3f).coerceIn(0f, 1f) * 0.4f
-            drawRect(Color(0xFFFF6E40).copy(alpha = flashAlpha), topLeft = Offset.Zero, size = size)
+            drawRect(HordeColors.Warning.copy(alpha = flashAlpha), topLeft = Offset.Zero, size = size)
         }
 
         } // end scale
@@ -385,7 +386,7 @@ private fun DrawScope.drawPlayer(
     val pulse = 1f + 0.06f * sin(time * 5f)
     drawCircle(
         brush = Brush.radialGradient(
-            colors = listOf(Color(0xFF6BB6FF).copy(alpha = 0.4f), Color(0xFF4A90D9).copy(alpha = 0.15f), Color.Transparent),
+            colors = listOf(HordeColors.SkyBlue.copy(alpha = 0.4f), Color(0xFF4A90D9).copy(alpha = 0.15f), Color.Transparent),
             center = Offset(x, y), radius = size * 2.5f * pulse
         ), radius = size * 2.5f * pulse, center = Offset(x, y)
     )
@@ -444,7 +445,7 @@ private fun DrawScope.drawEnemy(
     if (enemy?.isBoss == true) {
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(Color(0xFFFFAB91).copy(alpha = 0.35f), Color(0xFFFF6E40).copy(alpha = 0.1f), Color.Transparent),
+                colors = listOf(HordeColors.BossHpEnd.copy(alpha = 0.35f), HordeColors.Warning.copy(alpha = 0.1f), Color.Transparent),
                 center = Offset(x, y), radius = w * 2.5f
             ), radius = w * 2.5f, center = Offset(x, y)
         )
@@ -480,7 +481,7 @@ private fun DrawScope.drawEnemy(
         val barW = w * 0.8f; val barH = 3f; val barY = y - h / 2f - 8f
         drawRoundRect(Color.Black.copy(alpha = 0.5f), topLeft = Offset(x - barW / 2f, barY), size = Size(barW, barH), cornerRadius = CornerRadius(2f))
         val fill = barW * (hp.currentHp / hp.maxHp).coerceIn(0f, 1f)
-        val hpCol = if (hp.currentHp / hp.maxHp > 0.5f) Color(0xFFAAE6BA) else if (hp.currentHp / hp.maxHp > 0.25f) Color(0xFFFFDAC1) else Color(0xFFFFB7B2)
+        val hpCol = if (hp.currentHp / hp.maxHp > 0.5f) HordeColors.MintGreen else if (hp.currentHp / hp.maxHp > 0.25f) HordeColors.WarmPeach else HordeColors.SoftPink
         drawRoundRect(hpCol, topLeft = Offset(x - barW / 2f, barY), size = Size(fill, barH), cornerRadius = CornerRadius(2f))
     }
 }
@@ -516,7 +517,7 @@ private fun DrawScope.drawProjectile(
             val trailColor = when (proj.weaponType) {
                 WeaponType.FIREBALL -> Color(0xFFFF8A65)
                 WeaponType.ICE_SHARD -> Color(0xFF80CBC4)
-                WeaponType.MAGIC_MISSILE -> Color(0xFF6BB6FF)
+                WeaponType.MAGIC_MISSILE -> HordeColors.SkyBlue
                 WeaponType.DIVINE_SPEAR -> Color(0xFFFFF5E1)
                 else -> color
             }
@@ -565,7 +566,7 @@ private fun DrawScope.drawXpGem(
     scratchPath: Path, magnetized: Boolean = false
 ) {
     val pulse = 1f + 0.12f * sin(time * 6f + x * 0.01f)
-    val gemColor = if (magnetized) Color(0xFF42A5F5) else color
+    val gemColor = if (magnetized) HordeColors.Info else color
     val glowAlpha = if (magnetized) 0.6f else 0.4f
     val glowRadius = if (magnetized) w * 3.5f else w * 2.5f
     drawCircle(
@@ -615,13 +616,13 @@ private fun DrawScope.drawMagnet(color: Color, x: Float, y: Float, size: Float) 
         size = arcSize,
         style = Stroke(width = s * 0.35f, cap = StrokeCap.Round)
     )
-    drawCircle(Color(0xFFEF5350), radius = s * 0.2f, center = Offset(x - s * 0.8f, y + s * 0.4f))
-    drawCircle(Color(0xFF42A5F5), radius = s * 0.2f, center = Offset(x + s * 0.8f, y + s * 0.4f))
+    drawCircle(HordeColors.Danger, radius = s * 0.2f, center = Offset(x - s * 0.8f, y + s * 0.4f))
+    drawCircle(HordeColors.Info, radius = s * 0.2f, center = Offset(x + s * 0.8f, y + s * 0.4f))
 }
 
 private fun DrawScope.drawHealthGem(x: Float, y: Float, w: Float, time: Float, scratchPath: Path) {
     val pulse = 1f + 0.1f * kotlin.math.sin(time * 5f + x * 0.01f)
-    val red = Color(0xFFEF5350)
+    val red = HordeColors.Danger
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(red.copy(alpha = 0.4f), red.copy(alpha = 0.1f), Color.Transparent),
@@ -639,11 +640,11 @@ private fun DrawScope.drawOrbitShield(x: Float, y: Float, w: Float, time: Float,
     val glow = 0.3f + 0.15f * sin(time * 5f)
     drawCircle(
         brush = Brush.radialGradient(
-            colors = listOf(Color(0xFFB19CD9).copy(alpha = glow), Color.Transparent),
+            colors = listOf(HordeColors.Lavender.copy(alpha = glow), Color.Transparent),
             center = Offset(x, y), radius = w * 2f
         ), radius = w * 2f, center = Offset(x, y)
     )
-    drawDiamond(Color(0xFFB19CD9), x, y, w, w, scratchPath)
+    drawDiamond(HordeColors.Lavender, x, y, w, w, scratchPath)
     drawDiamond(Color(0xFFD1C4E9).copy(alpha = 0.5f), x, y, w * 0.4f, w * 0.4f, scratchPath)
 }
 
@@ -680,7 +681,7 @@ private fun DrawScope.drawLootBox(
         }
         LootType.GOLD -> {
             drawCircle(color.copy(alpha = 0.9f), radius = halfW, center = Offset(x, by))
-            drawCircle(Color(0xFFFFD700).copy(alpha = 0.5f), radius = halfW * 0.5f, center = Offset(x, by))
+            drawCircle(HordeColors.GoldColor.copy(alpha = 0.5f), radius = halfW * 0.5f, center = Offset(x, by))
             drawCircle(Color.White.copy(alpha = 0.3f), radius = halfW * 0.2f, center = Offset(x - halfW * 0.2f, by - halfW * 0.2f))
         }
         LootType.DAMAGE_BOOST -> {

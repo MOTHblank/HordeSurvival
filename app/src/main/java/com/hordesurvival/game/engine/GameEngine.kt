@@ -24,7 +24,7 @@ class GameEngine {
     val spatialGrid = SpatialGrid(cellSize = 128f)
 
     // O(1) ID lookup map to eliminate O(N) linear scans during homing/targeting
-    private val entityByIdMap = HashMap<Int, Entity>(512)
+    private val entityByIdMap = com.badlogic.gdx.utils.IntMap<Entity>(512)
 
     // Entity pool for reuse
     private val entityPool = ObjectPool(
@@ -81,7 +81,7 @@ class GameEngine {
         entity.tag = tag
         entity.clearComponents()
         entity.id = nextEntityId.getAndIncrement()
-        entityByIdMap[entity.id] = entity
+        entityByIdMap.put(entity.id, entity)
         if (tag == "player" && playerEntity == null) {
             playerEntity = entity
         }
@@ -98,7 +98,7 @@ class GameEngine {
 
     /** Fast O(1) entity lookup by ID */
     fun getEntityById(id: Int): Entity? {
-        val e = entityByIdMap[id]
+        val e = entityByIdMap.get(id)
         return if (e != null && e.active) e else null
     }
 

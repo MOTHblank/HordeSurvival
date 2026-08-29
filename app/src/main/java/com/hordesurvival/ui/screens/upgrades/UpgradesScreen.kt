@@ -65,7 +65,7 @@ fun UpgradesScreen(
             Box(
                 Modifier
                     .clip(SmallCutShape)
-                    .background(Color(0xFFFFD700).copy(alpha = 0.12f))
+                    .background(HordeColors.GoldColor.copy(alpha = 0.12f))
                     .padding(horizontal = 16.dp, vertical = 6.dp)
             ) {
                 Text("💰 ${playerSave.totalGold} Gold", style = HordeTypography.Value.copy(color = HordeColors.GoldColor, fontWeight = FontWeight.Black))

@@ -105,8 +105,8 @@ fun MainMenuScreen(
                 Box(
                     Modifier
                         .clip(CornerCutShape)
-                        .background(Color(0xFFFFD700).copy(alpha = 0.08f))
-                        .border(0.5.dp, Color(0xFFFFD700).copy(alpha = 0.15f), CornerCutShape)
+                        .background(HordeColors.GoldColor.copy(alpha = 0.08f))
+                        .border(0.5.dp, HordeColors.GoldColor.copy(alpha = 0.15f), CornerCutShape)
                         .padding(horizontal = 14.dp, vertical = 4.dp)
                 ) {
                     Text(
