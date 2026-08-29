@@ -53,3 +53,7 @@ When querying spatial structures for collisions:
 ## 2026-08-28 - Zero-Allocation Partial Selection Sort for Target Queries
 **Learning:** Querying the spatial grid and then using Kotlin's `.sortBy { e -> distSq }` and `.take(count)` to find the nearest N enemies (e.g., for Magic Missile) allocates lambda closures, autoboxes primitive `Float` distances, and creates new `List` instances every frame/shot, severely contributing to GC churn in hot combat loops.
 **Action:** Always use primitive, in-place algorithms like partial selection sort within a reusable `MutableList` when querying for the 'top K' elements by distance. Limit list consumption directly by index to avoid intermediate collections.
+
+## 2024-05-24 - [Avoid Boxed Collections in Hot Paths]
+**Learning:** `GameEngine.entityByIdMap` (HashMap<Int, Entity>) and `SpatialGrid` structures (HashMap<Long, MutableList<Entity>>, ArrayList<Long>) used boxed collections which caused autoboxing allocations per insert/lookup, putting pressure on GC each frame.
+**Action:** Replaced them with libGDX primitive-friendly collections (`IntMap`, `LongMap`, `LongArray`) to achieve zero-allocation logic.

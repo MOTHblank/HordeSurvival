@@ -14,8 +14,8 @@ import kotlin.math.floor
 class SpatialGrid(val cellSize: Float = 128f) {
 
     // Pool of lists mapped by cell hash key to avoid per-frame allocations
-    private val cells = HashMap<Long, MutableList<Entity>>(512)
-    private val activeKeys = ArrayList<Long>(512)
+    private val cells = com.badlogic.gdx.utils.LongMap<MutableList<Entity>>(512)
+    private val activeKeys = com.badlogic.gdx.utils.LongArray(512)
     private val listPool = ArrayList<MutableList<Entity>>(256)
 
     // Reusable list for queries when caller doesn't provide one
@@ -26,8 +26,8 @@ class SpatialGrid(val cellSize: Float = 128f) {
      */
     fun clear() {
         for (i in 0 until activeKeys.size) {
-            val key = activeKeys[i]
-            cells[key]?.clear()
+            val key = activeKeys.get(i)
+            cells.get(key)?.clear()
         }
         activeKeys.clear()
     }
@@ -47,10 +47,10 @@ class SpatialGrid(val cellSize: Float = 128f) {
         val cy = getCellY(y)
         val key = getCellKey(cx, cy)
 
-        var list = cells[key]
+        var list = cells.get(key)
         if (list == null) {
             list = if (listPool.isNotEmpty()) listPool.removeAt(listPool.size - 1) else ArrayList(16)
-            cells[key] = list
+            cells.put(key, list)
         }
         if (list.isEmpty()) {
             activeKeys.add(key)
@@ -90,7 +90,7 @@ class SpatialGrid(val cellSize: Float = 128f) {
         for (cx in minCx..maxCx) {
             for (cy in minCy..maxCy) {
                 val key = getCellKey(cx, cy)
-                val list = cells[key] ?: continue
+                val list = cells.get(key) ?: continue
 
                 for (i in 0 until list.size) {
                     val e = list[i]
@@ -141,8 +141,8 @@ class SpatialGrid(val cellSize: Float = 128f) {
 
         // Global search across active cells if maxDist is infinite
         for (k in 0 until activeKeys.size) {
-            val key = activeKeys[k]
-            val list = cells[key] ?: continue
+            val key = activeKeys.get(k)
+            val list = cells.get(key) ?: continue
             for (i in 0 until list.size) {
                 val e = list[i]
                 if (!e.active || e.tag != tagFilter) continue
