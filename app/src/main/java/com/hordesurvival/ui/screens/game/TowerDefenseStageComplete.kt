@@ -49,7 +49,7 @@ fun TowerDefenseStageComplete(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.75f)),
+            .background(HordeColors.OverlayDark),
         contentAlignment = Alignment.Center
     ) {
         HordeCard(
@@ -68,7 +68,7 @@ fun TowerDefenseStageComplete(
                     if (isVictory) "🏆 VICTORY!" else "⚔️ STAGE CLEAR!",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Black,
-                    color = if (isVictory) Color(0xFFFFD700) else Color(0xFF66BB6A)
+                    color = if (isVictory) HordeColors.GoldColor else HordeColors.Success
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -101,7 +101,7 @@ fun TowerDefenseStageComplete(
                         modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
                         text = "Next Stage",
                         icon = "▶",
-                        color = Color(0xFF66BB6A),
+                        color = HordeColors.Success,
                         onClick = onNextStage
                     )
                 }

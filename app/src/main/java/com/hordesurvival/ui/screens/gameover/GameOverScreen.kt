@@ -78,7 +78,7 @@ fun GameOverScreen(
                     HordeButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.8f),
                         text = "Continue",
                         icon = "💚",
-                        color = Color(0xFF66BB6A),
+                        color = HordeColors.Success,
                         onClick = {
                             continueUsed = true
                             onContinue()

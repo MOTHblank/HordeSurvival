@@ -57,10 +57,10 @@ fun HordeBackground(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF120F2D))
+            .background(HordeColors.SurfaceDark)
             .drawBehind {
                 drawRect(Brush.verticalGradient(
-                    listOf(Color(0xFF1B1545), Color(0xFF231B58), Color(0xFF140F33))
+                    listOf(HordeColors.DarkBg, HordeColors.DarkSurface, HordeColors.DarkBg)
                 ))
             }
     ) {
@@ -210,14 +210,14 @@ fun HordeButton(
                         listOf(
                             color.copy(alpha = 0.85f),
                             color.copy(alpha = 0.45f),
-                            Color(0xFF090C15)
+                            HordeColors.SurfaceDark
                         )
                     )
                 } else {
                     Brush.verticalGradient(
                         listOf(
-                            Color(0xFF333344),
-                            Color(0xFF1A1A26)
+                            HordeColors.SurfaceLight,
+                            HordeColors.SurfaceDark
                         )
                     )
                 }
@@ -319,7 +319,7 @@ fun HordeSecondaryButton(
                 Brush.verticalGradient(
                     listOf(
                         color.copy(alpha = 0.22f),
-                        Color(0xFF121226)
+                        HordeColors.DarkSurface
                     )
                 )
             )
@@ -504,8 +504,8 @@ fun HordePanel(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        Color(0xFF1D1D3A),
-                        Color(0xFF101026)
+                        HordeColors.PanelBgStart,
+                        HordeColors.PanelBgEnd
                     )
                 )
             )
@@ -562,9 +562,9 @@ fun HordeItemCard(
     )
 
     val bgColor = if (selected) {
-        Brush.verticalGradient(listOf(HordeColors.SkyBlue.copy(alpha = 0.25f), Color(0xFF15203D)))
+        Brush.verticalGradient(listOf(HordeColors.SkyBlue.copy(alpha = 0.25f), HordeColors.DarkCard))
     } else {
-        Brush.verticalGradient(listOf(Color(0xFF1B1B38), Color(0xFF121226)))
+        Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface))
     }
 
     val bColor = if (selected) HordeColors.SkyBlue else HordeColors.CardBorder.copy(alpha = 0.4f)

@@ -58,9 +58,9 @@ fun GameHud(
     val hpRatio = (playerHp / playerMaxHp).coerceIn(0f, 1f)
     val xpRatio = (currentXp / xpToNext).coerceIn(0f, 1f)
     val hpColor = when {
-        hpRatio > 0.6f -> Color(0xFFAAE6BA)
-        hpRatio > 0.3f -> Color(0xFFFFDAC1)
-        else -> Color(0xFFFFB7B2)
+        hpRatio > 0.6f -> HordeColors.MintGreen
+        hpRatio > 0.3f -> HordeColors.WarmPeach
+        else -> HordeColors.SoftPink
     }
 
     // Force LTR layout so button positions stay fixed regardless of system language
@@ -72,12 +72,12 @@ fun GameHud(
                 targetValue = 0.15f + 0.1f * sin(System.currentTimeMillis() / 200f).toFloat(),
                 label = "hp_pulse"
             )
-            Box(Modifier.fillMaxSize().background(Color(0xFFFFAB91).copy(alpha = pulseAlpha)))
+            Box(Modifier.fillMaxSize().background(HordeColors.WarmPeach.copy(alpha = pulseAlpha)))
         }
 
         // ── Top — full-width XP bar ─────────────────────────────
         Box(
-            modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().height(12.dp).align(Alignment.TopCenter).background(Color(0xFF1A1A3F))
+            modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().height(12.dp).align(Alignment.TopCenter).background(HordeColors.DarkCard)
         ) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(xpRatio).background(Brush.horizontalGradient(listOf(HordeColors.XpBarFill, HordeColors.SkyBlue.copy(alpha = 0.6f)))))
             Text("Lv.$playerLevel", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.align(Alignment.Center))
@@ -98,7 +98,7 @@ fun GameHud(
                 // Pause button
                 Box(
                     modifier = Modifier.size(44.dp)
-                        .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.4f))
+                        .clip(CornerCutShape).background(HordeColors.OverlayLight)
                         .border(1.dp, Color.White.copy(alpha = 0.15f), CornerCutShape)
                         .clickable { onPauseClick() },
                     contentAlignment = Alignment.Center
@@ -113,7 +113,7 @@ fun GameHud(
                         Box(
                             modifier = Modifier.size(28.dp)
                                 .clip(CornerCutShape)
-                                .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.3f))
+                                .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.5f) else HordeColors.OverlayLight)
                                 .clickable { onSpeedChange(speed) },
                             contentAlignment = Alignment.Center
                         ) {
@@ -134,7 +134,7 @@ fun GameHud(
                 Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("❤️", fontSize = 12.sp)
                     Spacer(Modifier.width(4.dp))
-                    Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
+                    Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(HordeColors.DarkCard).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
                         Box(Modifier.fillMaxHeight().fillMaxWidth(hpRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f)))))
                         Text("${playerHp.toInt()} / ${playerMaxHp.toInt()}", fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f), modifier = Modifier.align(Alignment.Center))
                     }
@@ -147,8 +147,8 @@ fun GameHud(
                     Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("👹", fontSize = 14.sp)
                         Spacer(Modifier.width(4.dp))
-                        Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(Color(0xFF1A1A3F)).border(1.dp, Color(0xFFFFAB91).copy(alpha = 0.4f), CornerCutShape)) {
-                            Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(Color(0xFFFF6E40), Color(0xFFFFAB91)))))
+                        Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(HordeColors.DarkCard).border(1.dp, HordeColors.WarmPeach.copy(alpha = 0.4f), CornerCutShape)) {
+                            Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(HordeColors.Warning, HordeColors.WarmPeach))))
                             Text("BOSS ${bossHp.toInt()}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
                         }
                     }
@@ -158,7 +158,7 @@ fun GameHud(
             // ── Top right — stats ────────────────────────────────────
             Column(
                 modifier = Modifier
-                    .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.3f))
+                    .clip(CornerCutShape).background(HordeColors.OverlayLight)
                     .padding(horizontal = 10.dp, vertical = 6.dp),
                 horizontalAlignment = Alignment.End
             ) {
@@ -181,10 +181,10 @@ fun GameHud(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val comboColor = when {
-                    comboCount >= 50 -> Color(0xFFFFD700)  // gold
-                    comboCount >= 25 -> Color(0xFFFF6E40)  // orange
-                    comboCount >= 10 -> Color(0xFFFFAB91)  // peach
-                    else -> Color(0xFFFFDAC1)              // light peach
+                    comboCount >= 50 -> HordeColors.GoldColor  // gold
+                    comboCount >= 25 -> HordeColors.Warning  // orange
+                    comboCount >= 10 -> HordeColors.WarmPeach  // peach
+                    else -> HordeColors.WarmPeach              // light peach
                 }
                 Text(
                     "×$comboCount",
@@ -202,7 +202,7 @@ fun GameHud(
                     Text(
                         "+${((comboMultiplier - 1f) * 100).toInt()}% XP",
                         fontSize = 9.sp,
-                        color = Color(0xFFAAE6BA),
+                        color = HordeColors.MintGreen,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -214,8 +214,8 @@ fun GameHud(
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 80.dp)
                 .size(56.dp)
                 .clip(CornerCutShape)
-                .background(if (abilityReady) Color(0xFF66BB6A).copy(alpha = 0.6f) else Color.Gray.copy(alpha = 0.3f))
-                .border(1.5.dp, if (abilityReady) Color(0xFF66BB6A) else Color.Gray.copy(alpha = 0.5f), CornerCutShape)
+                .background(if (abilityReady) HordeColors.Success.copy(alpha = 0.6f) else Color.Gray.copy(alpha = 0.3f))
+                .border(1.5.dp, if (abilityReady) HordeColors.Success else Color.Gray.copy(alpha = 0.5f), CornerCutShape)
                 .clickable(enabled = abilityReady) { onAbilityClick() },
             contentAlignment = Alignment.Center
         ) {
@@ -231,7 +231,7 @@ fun GameHud(
             if (!abilityReady) {
                 // Cooldown overlay
                 Box(
-                    Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f * abilityCooldown))
+                    Modifier.fillMaxSize().background(HordeColors.OverlayMedium.copy(alpha = 0.5f * abilityCooldown))
                 )
                 Text("${(abilityCooldown * 15).toInt()}s", fontSize = 10.sp, color = Color.White.copy(alpha = 0.7f))
             }
@@ -241,7 +241,7 @@ fun GameHud(
         if (currentWeapons.isNotEmpty()) {
             Row(
                 modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)
-                    .clip(CornerCutShape).background(Color.Black.copy(alpha = 0.4f))
+                    .clip(CornerCutShape).background(HordeColors.OverlayLight)
                     .padding(6.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
@@ -293,7 +293,7 @@ fun BossWarningBanner(visible: Boolean, onDismiss: () -> Unit) {
     val alpha by inf.animateFloat(0.6f, 1f, infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "a")
     Box(
         Modifier.widthIn(max = 600.dp).fillMaxWidth()
-            .background(Brush.horizontalGradient(listOf(Color(0xFFB19CD9).copy(alpha = alpha * 0.7f), Color(0xFF6BB6FF).copy(alpha = alpha * 0.4f), Color(0xFFB19CD9).copy(alpha = alpha * 0.7f))))
+            .background(Brush.horizontalGradient(listOf(HordeColors.Lavender.copy(alpha = alpha * 0.7f), HordeColors.SkyBlue.copy(alpha = alpha * 0.4f), HordeColors.Lavender.copy(alpha = alpha * 0.7f))))
             .clickable { onDismiss() }.padding(vertical = 20.dp),
         contentAlignment = Alignment.Center
     ) { Text("⚠️ BOSS INCOMING ⚠️", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color.White) }

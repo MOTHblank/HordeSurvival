@@ -52,8 +52,8 @@ fun ItemShopScreen(
             Box(
                 Modifier
                     .clip(SmallCutShape)
-                    .background(Color(0xFFFFD700).copy(alpha = 0.12f))
-                    .border(1.dp, Color(0xFFFFD700).copy(alpha = 0.25f), SmallCutShape)
+                    .background(HordeColors.GoldColor.copy(alpha = 0.12f))
+                    .border(1.dp, HordeColors.GoldColor.copy(alpha = 0.25f), SmallCutShape)
                     .padding(horizontal = 16.dp, vertical = 6.dp)
             ) {
                 Text(
@@ -176,7 +176,7 @@ private fun ShopItemList(items: List<ShopItem>, gold: Int, onPurchase: (String, 
                     Box(
                         Modifier
                             .clip(SmallCutShape)
-                            .background(if (canAfford) Color(0xFFFFD700).copy(alpha = 0.15f) else Color.Gray.copy(alpha = 0.1f))
+                            .background(if (canAfford) HordeColors.GoldColor.copy(alpha = 0.15f) else Color.Gray.copy(alpha = 0.1f))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
