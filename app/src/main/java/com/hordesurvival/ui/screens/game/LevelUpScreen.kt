@@ -48,7 +48,7 @@ fun LevelUpScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.75f)),
+            .background(HordeColors.OverlayDark),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -143,7 +143,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
             )
             .border(
                 width = if (isEvolution) 2.5.dp else 1.5.dp,
-                color = if (isEvolution) Color(0xFFFFD700).copy(alpha = evoGlow) else rarityColor.copy(alpha = 0.4f),
+                color = if (isEvolution) HordeColors.GoldColor.copy(alpha = evoGlow) else rarityColor.copy(alpha = 0.4f),
                 shape = CornerCutShape
             )
             .clickable {
@@ -226,7 +226,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
                 Text(
                     text = "✦ EVOLUTION",
                     fontSize = 8.sp,
-                    color = Color(0xFFFFD700),
+                    color = HordeColors.GoldColor,
                     fontWeight = FontWeight.ExtraBold
                 )
             }

@@ -57,7 +57,7 @@ fun TutorialScreen(
     val progress = (step + 1).toFloat() / steps.size
 
     Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0D0D2B), Color(0xFF0A0A1F), Color(0xFF050510)))),
+        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface, HordeColors.SurfaceDark))),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -67,7 +67,7 @@ fun TutorialScreen(
             // Progress bar
             Box(
                 Modifier.fillMaxWidth().height(4.dp).clip(SmallCutShape)
-                    .background(Color(0xFF1A1A3F))
+                    .background(HordeColors.DarkCard)
             ) {
                 Box(
                     Modifier.fillMaxHeight().fillMaxWidth(progress).clip(SmallCutShape)
@@ -129,7 +129,7 @@ fun TutorialScreen(
                     repeat(steps.size) { i ->
                         Box(
                             Modifier.size(8.dp).clip(SmallCutShape)
-                                .background(if (i == step) HordeColors.SkyBlue else Color(0xFF1A1A3F))
+                                .background(if (i == step) HordeColors.SkyBlue else HordeColors.DarkCard)
                         )
                     }
                 }
@@ -145,7 +145,7 @@ fun TutorialScreen(
                     HordeButton(
                         text = "Play!",
                         icon = "🎮",
-                        color = Color(0xFF66BB6A),
+                        color = HordeColors.Success,
                         onClick = onFinish,
                         modifier = Modifier.width(130.dp)
                     )

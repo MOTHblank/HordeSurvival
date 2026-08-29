@@ -42,3 +42,7 @@
 ## 2024-05-24 - [Replace standard Material components with custom Horde equivalents]
 **Learning:** Hardcoded standard components (`Switch`, `Slider`, `AlertDialog`) break the cohesive visual style, especially when the theme heavily relies on custom shapes (like `SmallCutShape` and `CornerCutShape`).
 **Action:** Replaced usage of standard components with custom equivalents (`HordeSwitch`, `HordeSlider`, `HordeDialog`) defined in the shared `HordeUI.kt` file. Always look out for standard components and replace them with custom ones if they don't match the design system.
+
+## 2024-05-23 - Migrate Hardcoded Colors to Theme System
+**Learning:** Found massive visual inconsistencies and a lack of a unified design system due to colors being hardcoded (e.g. `Color(...)`) extensively across UI screens and components, rather than using the existing `HordeColors` in `Theme.kt`.
+**Action:** Always verify if a theme configuration exists first and enforce its usage. Build onto the design system first when introducing new shades, overlays, or gameplay-specific semantic colors to prevent further fragmentation.

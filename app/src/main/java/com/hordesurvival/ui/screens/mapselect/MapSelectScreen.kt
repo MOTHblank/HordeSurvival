@@ -56,7 +56,7 @@ fun MapSelectScreen(
             Box(
                 Modifier
                     .clip(SmallCutShape)
-                    .background(Color(0xFFFFD700).copy(alpha = 0.12f))
+                    .background(HordeColors.GoldColor.copy(alpha = 0.12f))
                     .padding(horizontal = 14.dp, vertical = 4.dp)
             ) {
                 Text("💰 Gold: $playerGold", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = HordeColors.GoldColor)
@@ -89,7 +89,7 @@ fun MapSelectScreen(
                                 textAlign = TextAlign.Center)
                             Spacer(Modifier.height(4.dp))
                             if (!isUnlocked) {
-                                Text("🔒 ${map.unlockCost} gold", fontSize = 11.sp, color = Color(0xFFFFD700).copy(alpha = 0.7f))
+                                Text("🔒 ${map.unlockCost} gold", fontSize = 11.sp, color = HordeColors.GoldColor.copy(alpha = 0.7f))
                                 Text("Level ${map.minLevel}+", fontSize = 10.sp, color = Color.White.copy(alpha = 0.3f))
                             } else {
                                 Text(map.description, fontSize = 10.sp, color = Color.White.copy(alpha = 0.5f),
@@ -99,9 +99,9 @@ fun MapSelectScreen(
                             if (isUnlocked) {
                                 Spacer(Modifier.height(4.dp))
                                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    if (map.enemyHpMult > 1f) StatChip("HP×${map.enemyHpMult}", Color(0xFFFF5252))
-                                    if (map.goldMult > 1f) StatChip("Gold×${map.goldMult}", Color(0xFFFFD700))
-                                    if (map.xpMult > 1f) StatChip("XP×${map.xpMult}", Color(0xFF69F0AE))
+                                    if (map.enemyHpMult > 1f) StatChip("HP×${map.enemyHpMult}", HordeColors.Danger)
+                                    if (map.goldMult > 1f) StatChip("Gold×${map.goldMult}", HordeColors.GoldColor)
+                                    if (map.xpMult > 1f) StatChip("XP×${map.xpMult}", HordeColors.MintGreen)
                                 }
                             }
                         }
@@ -130,7 +130,7 @@ fun MapSelectScreen(
                 HordeButton(
                     text = "Play",
                     icon = "▶",
-                    color = Color(0xFF66BB6A),
+                    color = HordeColors.Success,
                     enabled = canPlay,
                     onClick = { if (canPlay) selectedMap?.let { onSelectMap(it) } },
                     modifier = Modifier.weight(1f)

@@ -13,6 +13,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.hordesurvival.ui.theme.HordeColors
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -251,7 +252,7 @@ fun GameScreen(
             Box(
                 modifier = Modifier.align(androidx.compose.ui.Alignment.TopCenter).padding(top = 100.dp)
                     .clip(CornerCutShape)
-                    .background(Color(0xFFFFD700).copy(alpha = 0.85f))
+                    .background(HordeColors.GoldColor.copy(alpha = 0.85f))
                     .padding(horizontal = 20.dp, vertical = 10.dp)
             ) {
                 Text(
@@ -279,7 +280,7 @@ fun GameScreen(
         if (showLevelUp) {
             Box(
                 modifier = Modifier.fillMaxSize()
-                    .background(Color(0xFF6BB6FF).copy(alpha = 0.15f))
+                    .background(HordeColors.SkyBlue.copy(alpha = 0.15f))
             )
         }
 
