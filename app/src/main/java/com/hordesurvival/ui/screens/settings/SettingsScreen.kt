@@ -17,8 +17,8 @@ import com.hordesurvival.ui.components.HordeDialog
 import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeScreen
-import com.hordesurvival.ui.components.HordeSlider
-import com.hordesurvival.ui.components.HordeSwitch
+import com.hordesurvival.ui.components.HordeSliderSetting
+import com.hordesurvival.ui.components.HordeToggleSetting
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.theme.HordeTypography
 
@@ -60,27 +60,25 @@ fun SettingsScreen(
             // Audio
             SectionHeader("🎵 Audio & Feedback")
             Spacer(Modifier.height(8.dp))
-            SliderSetting("🎵 Music Volume", musicVolume, onMusicVolumeChange)
+            HordeSliderSetting("🎵 Music Volume", musicVolume, onMusicVolumeChange)
             Spacer(Modifier.height(8.dp))
-            SliderSetting("🔊 SFX Volume", sfxVolume, onSfxVolumeChange)
+            HordeSliderSetting("🔊 SFX Volume", sfxVolume, onSfxVolumeChange)
             Spacer(Modifier.height(8.dp))
 
             // Vibration
-            HordeItemCard(onClick = onVibrationToggle) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("📳 Vibration", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
-                    HordeSwitch(checked = vibrationEnabled, onCheckedChange = { onVibrationToggle() })
-                }
-            }
+            HordeToggleSetting(
+                title = "📳 Vibration",
+                checked = vibrationEnabled,
+                onToggle = onVibrationToggle
+            )
             Spacer(Modifier.height(8.dp))
 
             // Background Music Toggle
-            HordeItemCard(onClick = onBgMusicToggle) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("🎵 Background Music", style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
-                    HordeSwitch(checked = bgMusicEnabled, onCheckedChange = { onBgMusicToggle() })
-                }
-            }
+            HordeToggleSetting(
+                title = "🎵 Background Music",
+                checked = bgMusicEnabled,
+                onToggle = onBgMusicToggle
+            )
             Spacer(Modifier.height(20.dp))
 
             // Background Style
@@ -201,13 +199,13 @@ fun SettingsScreen(
             SectionHeader("♿ Accessibility & Gameplay")
             Spacer(Modifier.height(8.dp))
 
-            ToggleSetting("💥 Damage Numbers", "Show damage popups on hits", showDamageNumbers, onDamageNumbersToggle)
+            HordeToggleSetting("💥 Damage Numbers", "Show damage popups on hits", showDamageNumbers, onDamageNumbersToggle)
             Spacer(Modifier.height(8.dp))
-            ToggleSetting("✨ Particles", "Hit effects, explosions, gems", showParticles, onParticlesToggle)
+            HordeToggleSetting("✨ Particles", "Hit effects, explosions, gems", showParticles, onParticlesToggle)
             Spacer(Modifier.height(8.dp))
-            ToggleSetting("🔥 Combo Counter", "Show combo multiplier on screen", showComboCounter, onComboCounterToggle)
+            HordeToggleSetting("🔥 Combo Counter", "Show combo multiplier on screen", showComboCounter, onComboCounterToggle)
             Spacer(Modifier.height(8.dp))
-            ToggleSetting("📳 Screen Shake", "Camera shake on hits and bosses", screenShakeEnabled, onScreenShakeToggle)
+            HordeToggleSetting("📳 Screen Shake", "Camera shake on hits and bosses", screenShakeEnabled, onScreenShakeToggle)
 
             Spacer(Modifier.height(28.dp))
             HordeBackButton(onClick = { showSaveDialog = true })
@@ -229,30 +227,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SliderSetting(label: String, value: Float, onChange: (Float) -> Unit) {
-    HordeItemCard {
-        Column(Modifier.fillMaxWidth()) {
-            Text(label, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
-            HordeSlider(value = value, onValueChange = onChange)
-        }
-    }
-}
-
-@Composable
 private fun SectionHeader(title: String) {
     Text(title, style = HordeTypography.SubHeader.copy(fontSize = 17.sp, color = HordeColors.Lavender),
         modifier = Modifier.fillMaxWidth().padding(start = 4.dp))
-}
-
-@Composable
-private fun ToggleSetting(title: String, description: String, checked: Boolean, onToggle: () -> Unit) {
-    HordeItemCard(onClick = onToggle) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
-                Text(description, style = HordeTypography.Label.copy(fontSize = 11.sp))
-            }
-            HordeSwitch(checked = checked, onCheckedChange = { onToggle() })
-        }
-    }
 }

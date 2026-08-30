@@ -49,3 +49,6 @@
 ## 2024-05-23 - Migrate Hardcoded Colors to Theme System
 **Learning:** Found massive visual inconsistencies and a lack of a unified design system due to colors being hardcoded (e.g. `Color(...)`) extensively across UI screens and components, rather than using the existing `HordeColors` in `Theme.kt`.
 **Action:** Always verify if a theme configuration exists first and enforce its usage. Build onto the design system first when introducing new shades, overlays, or gameplay-specific semantic colors to prevent further fragmentation.
+## 2024-05-18 - Standardize Settings Widgets
+**Learning:** Found fragmented and duplicated settings UI patterns (custom rows and cards with sliders/switches) across SettingsScreen and PauseScreen. Inconsistent styling leads to an unpolished feel.
+**Action:** Created shared `HordeToggleSetting`, `HordeSliderSetting`, and `HordeSelectorSetting` composite widgets in `HordeUI.kt` and migrated screens to use them. Always extract repeated UI patterns into the shared UI component library to maintain visual consistency.

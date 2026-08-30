@@ -17,10 +17,10 @@ import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.components.HordeItemCard
-import com.hordesurvival.ui.components.HordeSlider
-import com.hordesurvival.ui.components.HordeSwitch
+import com.hordesurvival.ui.components.HordeSliderSetting
+import com.hordesurvival.ui.components.HordeToggleSetting
+import com.hordesurvival.ui.components.HordeSelectorSetting
 import com.hordesurvival.ui.components.HordeSecondaryButton
-import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
 
 /**
@@ -77,56 +77,30 @@ fun PauseScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Background Music Toggle
-                    HordeItemCard(modifier = Modifier.padding(vertical = 4.dp)) {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "🎵 ${Locales.getString("background_music", languageCode)}",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            HordeSwitch(
-                                checked = bgMusicEnabled,
-                                onCheckedChange = { onBgMusicToggle() }
-                            )
-                        }
-                    }
+                    HordeToggleSetting(
+                        title = "🎵 ${Locales.getString("background_music", languageCode)}",
+                        checked = bgMusicEnabled,
+                        onToggle = onBgMusicToggle,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
 
                     // Music Volume
-                    HordeItemCard(modifier = Modifier.padding(vertical = 4.dp)) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                "🎶 ${Locales.getString("music_volume", languageCode)}: ${(musicVolume * 100).toInt()}%",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            HordeSlider(
-                                value = musicVolume,
-                                onValueChange = onMusicVolumeChange
-                            )
-                        }
-                    }
+                    HordeSliderSetting(
+                        label = "🎶 ${Locales.getString("music_volume", languageCode)}",
+                        valueText = "${(musicVolume * 100).toInt()}%",
+                        value = musicVolume,
+                        onValueChange = onMusicVolumeChange,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
 
                     // SFX Volume
-                    HordeItemCard(modifier = Modifier.padding(vertical = 4.dp)) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                "🔊 ${Locales.getString("sfx_volume", languageCode)}: ${(sfxVolume * 100).toInt()}%",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            HordeSlider(
-                                value = sfxVolume,
-                                onValueChange = onSfxVolumeChange
-                            )
-                        }
-                    }
+                    HordeSliderSetting(
+                        label = "🔊 ${Locales.getString("sfx_volume", languageCode)}",
+                        valueText = "${(sfxVolume * 100).toInt()}%",
+                        value = sfxVolume,
+                        onValueChange = onSfxVolumeChange,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
 
                     Spacer(modifier = Modifier.height(12.dp))
                     HordeBackButton(
@@ -153,39 +127,13 @@ fun PauseScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Game speed control card
-                HordeItemCard(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            "${Locales.getString("speed", languageCode)}:",
-                            color = HordeColors.TextSecondary,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            listOf(0.5f to "0.5x", 1f to "1x", 2f to "2x", 3f to "3x").forEach { (speed, label) ->
-                                val sel = gameSpeed == speed
-                                Box(
-                                    Modifier
-                                        .clip(SmallCutShape)
-                                        .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.3f) else Color.Transparent)
-                                        .clickable { onSpeedChange(speed) }
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        label,
-                                        color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                        fontSize = 13.sp,
-                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                HordeSelectorSetting(
+                    label = "${Locales.getString("speed", languageCode)}:",
+                    options = listOf(0.5f to "0.5x", 1f to "1x", 2f to "2x", 3f to "3x"),
+                    selectedOption = gameSpeed,
+                    onOptionSelected = onSpeedChange,
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f)
+                )
                 Spacer(Modifier.height(24.dp))
 
                 HordeSecondaryButton(
