@@ -114,6 +114,87 @@ fun HordeScreen(
 }
 
 @Composable
+fun HordeToggleSetting(
+    title: String,
+    description: String? = null,
+    checked: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    HordeItemCard(onClick = onToggle, modifier = modifier) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+                if (description != null) {
+                    Text(description, style = HordeTypography.Label.copy(fontSize = 11.sp))
+                }
+            }
+            HordeSwitch(checked = checked, onCheckedChange = { onToggle() })
+        }
+    }
+}
+
+@Composable
+fun HordeSliderSetting(
+    label: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    valueText: String? = null
+) {
+    HordeItemCard(modifier = modifier) {
+        Column(Modifier.fillMaxWidth()) {
+            val labelText = if (valueText != null) "$label: $valueText" else label
+            Text(labelText, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+            HordeSlider(value = value, onValueChange = onValueChange)
+        }
+    }
+}
+
+@Composable
+fun <T> HordeSelectorSetting(
+    label: String,
+    options: List<Pair<T, String>>,
+    selectedOption: T,
+    onOptionSelected: (T) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    HordeItemCard(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                label,
+                color = HordeColors.TextSecondary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                options.forEach { (optionValue, optionLabel) ->
+                    val isSelected = selectedOption == optionValue
+                    Box(
+                        Modifier
+                            .clip(SmallCutShape)
+                            .background(if (isSelected) HordeColors.SkyBlue.copy(alpha = 0.3f) else Color.Transparent)
+                            .clickable { onOptionSelected(optionValue) }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            optionLabel,
+                            color = if (isSelected) HordeColors.SkyBlue else HordeColors.TextSecondary,
+                            fontSize = 13.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun HordeHeader(
     title: String,
     modifier: Modifier = Modifier,
