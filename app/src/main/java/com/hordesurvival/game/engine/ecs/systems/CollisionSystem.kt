@@ -309,7 +309,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
 
             if (gComp.magnetized) {
-                val dist = GameMath.distance(playerTransform.x, playerTransform.y, gTransform.x, gTransform.y)
+                val dist = kotlin.math.sqrt(distSq)
                 val speed = com.hordesurvival.utils.Constants.GXP_MAGNET_SPEED + (1f - dist / playerComp.pickupRange).coerceIn(0f, 1f) * 300f
                 val len = if (dist > 0f) dist else 1f
                 gTransform.x += (dx / len) * speed * dt
@@ -347,7 +347,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             }
 
             if (gComp.magnetized) {
-                val dist = GameMath.distance(playerTransform.x, playerTransform.y, gTransform.x, gTransform.y)
+                val dist = kotlin.math.sqrt(distSq)
                 val speed = com.hordesurvival.utils.Constants.GXP_MAGNET_SPEED
                 val len = if (dist > 0f) dist else 1f
                 gTransform.x += (dx / len) * speed * dt
