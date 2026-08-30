@@ -22,6 +22,7 @@ import com.hordesurvival.ui.components.HordeSwitch
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 /**
  * Pause overlay with Resume, Settings, and Quit buttons.
@@ -58,9 +59,7 @@ fun PauseScreen(
         ) {
             Text(
                 text = "⏸ ${Locales.getString("pause", languageCode).uppercase()}",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White
+                style = HordeTypography.Title.copy(fontSize = 32.sp, fontWeight = FontWeight.Black, color = Color.White)
             )
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -69,9 +68,7 @@ fun PauseScreen(
                 HordeCard(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "⚙ ${Locales.getString("settings", languageCode)}",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = HordeColors.WarmPeach,
+                        style = HordeTypography.SubHeader.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = HordeColors.WarmPeach),
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -85,9 +82,7 @@ fun PauseScreen(
                         ) {
                             Text(
                                 "🎵 ${Locales.getString("background_music", languageCode)}",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
+                                style = HordeTypography.Body.copy(color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             )
                             HordeSwitch(
                                 checked = bgMusicEnabled,
@@ -101,9 +96,7 @@ fun PauseScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 "🎶 ${Locales.getString("music_volume", languageCode)}: ${(musicVolume * 100).toInt()}%",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
+                                style = HordeTypography.Body.copy(color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             )
                             HordeSlider(
                                 value = musicVolume,
@@ -117,9 +110,7 @@ fun PauseScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 "🔊 ${Locales.getString("sfx_volume", languageCode)}: ${(sfxVolume * 100).toInt()}%",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
+                                style = HordeTypography.Body.copy(color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             )
                             HordeSlider(
                                 value = sfxVolume,
@@ -161,9 +152,7 @@ fun PauseScreen(
                     ) {
                         Text(
                             "${Locales.getString("speed", languageCode)}:",
-                            color = HordeColors.TextSecondary,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
+                            style = HordeTypography.Label.copy(color = HordeColors.TextSecondary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             listOf(0.5f to "0.5x", 1f to "1x", 2f to "2x", 3f to "3x").forEach { (speed, label) ->
@@ -177,9 +166,7 @@ fun PauseScreen(
                                 ) {
                                     Text(
                                         label,
-                                        color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                        fontSize = 13.sp,
-                                        fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal
+                                        style = HordeTypography.Label.copy(color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary, fontSize = 13.sp, fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal)
                                     )
                                 }
                             }

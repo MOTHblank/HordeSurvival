@@ -22,6 +22,7 @@ import com.hordesurvival.game.upgrade.UpgradeOption
 import com.hordesurvival.game.upgrade.UpgradeType
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 import com.hordesurvival.ui.components.CornerCutShape
 import com.hordesurvival.ui.components.SmallCutShape
 
@@ -60,21 +61,16 @@ fun LevelUpScreen(
             // Level indicator with glow
             Text(
                 text = "⬆ ${Locales.getString("level_up", languageCode)}",
-                fontSize = 14.sp,
-                color = HordeColors.SkyBlue.copy(alpha = 0.7f),
-                fontWeight = FontWeight.Medium
+                style = HordeTypography.Label.copy(fontSize = 14.sp, color = HordeColors.SkyBlue.copy(alpha = 0.7f), fontWeight = FontWeight.Medium)
             )
             Text(
                 text = "$level",
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Black,
-                color = HordeColors.SkyBlue
+                style = HordeTypography.Title.copy(fontSize = 48.sp, fontWeight = FontWeight.Black, color = HordeColors.SkyBlue)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = Locales.getString("choose_upgrade", languageCode),
-                fontSize = 16.sp,
-                color = HordeColors.TextSecondary
+                style = HordeTypography.Label.copy(fontSize = 16.sp, color = HordeColors.TextSecondary)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -175,9 +171,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
 
             Text(
                 text = getLocalizedName(option, languageCode),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
+                style = HordeTypography.Body.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White),
                 textAlign = TextAlign.Center,
                 maxLines = 2
             )
@@ -186,8 +180,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
 
             Text(
                 text = getLocalizedDesc(option, languageCode),
-                fontSize = 10.sp,
-                color = HordeColors.TextSecondary,
+                style = HordeTypography.Label.copy(fontSize = 10.sp, color = HordeColors.TextSecondary),
                 textAlign = TextAlign.Center,
                 maxLines = 3
             )
@@ -199,9 +192,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Lv ${option.currentTier} → Lv ${option.targetTier}",
-                    fontSize = 10.sp,
-                    color = HordeColors.SkyBlue.copy(alpha = 0.8f),
-                    fontWeight = FontWeight.Medium
+                    style = HordeTypography.Label.copy(fontSize = 10.sp, color = HordeColors.SkyBlue.copy(alpha = 0.8f), fontWeight = FontWeight.Medium)
                 )
             }
 
@@ -214,9 +205,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
             ) {
                 Text(
                     text = option.rarity.name,
-                    fontSize = 9.sp,
-                    color = rarityColor,
-                    fontWeight = FontWeight.Bold
+                    style = HordeTypography.Label.copy(fontSize = 9.sp, color = rarityColor, fontWeight = FontWeight.Bold)
                 )
             }
 
@@ -225,9 +214,7 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "✦ EVOLUTION",
-                    fontSize = 8.sp,
-                    color = HordeColors.GoldColor,
-                    fontWeight = FontWeight.ExtraBold
+                    style = HordeTypography.Label.copy(fontSize = 8.sp, color = HordeColors.GoldColor, fontWeight = FontWeight.ExtraBold)
                 )
             }
         }

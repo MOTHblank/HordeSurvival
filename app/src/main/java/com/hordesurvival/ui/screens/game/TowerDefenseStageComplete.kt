@@ -18,6 +18,7 @@ import com.hordesurvival.ui.components.HordeCard
 import com.hordesurvival.ui.components.HordeItemCard
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 /**
  * Tower Defense stage completion overlay.
@@ -66,18 +67,14 @@ fun TowerDefenseStageComplete(
                 // Header
                 Text(
                     if (isVictory) "🏆 VICTORY!" else "⚔️ STAGE CLEAR!",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Black,
-                    color = if (isVictory) HordeColors.GoldColor else HordeColors.Success
+                    style = HordeTypography.Title.copy(fontSize = 32.sp, fontWeight = FontWeight.Black, color = if (isVictory) HordeColors.GoldColor else HordeColors.Success)
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 Text(
                     "Stage $stageNumber: $stageName",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    style = HordeTypography.SubHeader.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 )
 
                 Spacer(Modifier.height(24.dp))
@@ -134,8 +131,8 @@ fun TowerDefenseStageComplete(
 private fun StatRow(label: String, value: String) {
     HordeItemCard(modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(label, fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Medium)
-            Text(value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.GoldColor)
+            Text(label, style = HordeTypography.Label.copy(fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Medium))
+            Text(value, style = HordeTypography.Value.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = HordeColors.GoldColor))
         }
     }
 }

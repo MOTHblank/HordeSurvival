@@ -24,6 +24,7 @@ import com.hordesurvival.ui.components.CornerCutShape
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.components.HordeButton
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 /**
  * Interactive tutorial with step-by-step game mechanics explanation.
@@ -80,8 +81,7 @@ fun TutorialScreen(
             // Step indicator
             Text(
                 "${step + 1} / ${steps.size}",
-                fontSize = 14.sp,
-                color = HordeColors.TextSecondary
+                style = HordeTypography.Label.copy(fontSize = 14.sp, color = HordeColors.TextSecondary)
             )
 
             Spacer(Modifier.height(16.dp))
@@ -94,9 +94,7 @@ fun TutorialScreen(
             // Title
             Text(
                 currentStep.title,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                style = HordeTypography.Header.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
             )
 
             Spacer(Modifier.height(16.dp))
@@ -104,8 +102,7 @@ fun TutorialScreen(
             // Description
             Text(
                 currentStep.description,
-                fontSize = 16.sp,
-                color = HordeColors.TextSecondary,
+                style = HordeTypography.Body.copy(fontSize = 16.sp, color = HordeColors.TextSecondary),
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
             )

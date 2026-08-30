@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 import com.hordesurvival.ui.components.CornerCutShape
 import com.hordesurvival.ui.components.SmallCutShape
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -80,7 +81,7 @@ fun GameHud(
             modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().height(12.dp).align(Alignment.TopCenter).background(HordeColors.DarkCard)
         ) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(xpRatio).background(Brush.horizontalGradient(listOf(HordeColors.XpBarFill, HordeColors.SkyBlue.copy(alpha = 0.6f)))))
-            Text("Lv.$playerLevel", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.align(Alignment.Center))
+            Text("Lv.$playerLevel", style = HordeTypography.Label.copy(fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White), modifier = Modifier.align(Alignment.Center))
         }
 
         // ── Top row container (Pause, HP, Stats) ─────────────────
@@ -117,8 +118,7 @@ fun GameHud(
                                 .clickable { onSpeedChange(speed) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(label, fontSize = 10.sp, color = if (sel) Color.White else Color.White.copy(alpha = 0.5f),
-                                fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal)
+                            Text(label, style = HordeTypography.Label.copy(fontSize = 10.sp, color = if (sel) Color.White else Color.White.copy(alpha = 0.5f), fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal))
                         }
                     }
                 }
@@ -132,11 +132,11 @@ fun GameHud(
             ) {
                 // HP
                 Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("❤️", fontSize = 12.sp)
+                    Text("❤️", fontSize = 12.sp) // Keep emoji fontSize
                     Spacer(Modifier.width(4.dp))
                     Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(HordeColors.DarkCard).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
                         Box(Modifier.fillMaxHeight().fillMaxWidth(hpRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f)))))
-                        Text("${playerHp.toInt()} / ${playerMaxHp.toInt()}", fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f), modifier = Modifier.align(Alignment.Center))
+                        Text("${playerHp.toInt()} / ${playerMaxHp.toInt()}", style = HordeTypography.Label.copy(fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f)), modifier = Modifier.align(Alignment.Center))
                     }
                 }
 
@@ -145,11 +145,11 @@ fun GameHud(
                     Spacer(Modifier.height(6.dp))
                     val bossRatio = (bossHp / bossMaxHp).coerceIn(0f, 1f)
                     Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text("👹", fontSize = 14.sp)
+                        Text("👹", fontSize = 14.sp) // Keep emoji fontSize
                         Spacer(Modifier.width(4.dp))
                         Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(HordeColors.DarkCard).border(1.dp, HordeColors.WarmPeach.copy(alpha = 0.4f), CornerCutShape)) {
                             Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(HordeColors.Warning, HordeColors.WarmPeach))))
-                            Text("BOSS ${bossHp.toInt()}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+                            Text("BOSS ${bossHp.toInt()}", style = HordeTypography.Label.copy(fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold), modifier = Modifier.align(Alignment.Center))
                         }
                     }
                 }
@@ -188,15 +188,11 @@ fun GameHud(
                 }
                 Text(
                     "×$comboCount",
-                    fontSize = (24 + comboCount.coerceAtMost(50) / 5).sp,
-                    fontWeight = FontWeight.Black,
-                    color = comboColor
+                    style = HordeTypography.Title.copy(fontSize = (24 + comboCount.coerceAtMost(50) / 5).sp, fontWeight = FontWeight.Black, color = comboColor)
                 )
                 Text(
                     "COMBO",
-                    fontSize = 10.sp,
-                    color = comboColor.copy(alpha = 0.7f),
-                    fontWeight = FontWeight.Bold
+                    style = HordeTypography.Label.copy(fontSize = 10.sp, color = comboColor.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
                 )
                 if (comboMultiplier > 1f) {
                     Text(
@@ -227,13 +223,13 @@ fun GameHud(
                 "lightning_storm" -> "⚡"
                 else -> "✨"
             }
-            Text(emoji, fontSize = 24.sp)
+            Text(emoji, fontSize = 24.sp) // Keep emoji fontSize
             if (!abilityReady) {
                 // Cooldown overlay
                 Box(
                     Modifier.fillMaxSize().background(HordeColors.OverlayMedium.copy(alpha = 0.5f * abilityCooldown))
                 )
-                Text("${(abilityCooldown * 15).toInt()}s", fontSize = 10.sp, color = Color.White.copy(alpha = 0.7f))
+                Text("${(abilityCooldown * 15).toInt()}s", style = HordeTypography.Label.copy(fontSize = 10.sp, color = Color.White.copy(alpha = 0.7f)))
             }
         }
 
@@ -251,10 +247,10 @@ fun GameHud(
                             modifier = Modifier.size(32.dp).clip(SmallCutShape).background(Color.White.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(weaponEmoji(weapon), fontSize = 18.sp)
+                            Text(weaponEmoji(weapon), fontSize = 18.sp) // Keep emoji fontSize
                         }
                         Spacer(Modifier.height(2.dp))
-                        Text(weapon.displayName, fontSize = 8.sp, color = Color.White.copy(alpha = 0.8f))
+                        Text(weapon.displayName, style = HordeTypography.Label.copy(fontSize = 8.sp, color = Color.White.copy(alpha = 0.8f)))
                     }
                 }
             }
@@ -266,9 +262,9 @@ fun GameHud(
 @Composable
 private fun StatText(icon: String, value: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(icon, fontSize = 12.sp)
+        Text(icon, fontSize = 12.sp) // Keep emoji fontSize
         Spacer(Modifier.width(4.dp))
-        Text(value, fontSize = 13.sp, color = color, fontWeight = FontWeight.Medium)
+        Text(value, style = HordeTypography.Label.copy(fontSize = 13.sp, color = color, fontWeight = FontWeight.Medium))
     }
 }
 
@@ -296,7 +292,7 @@ fun BossWarningBanner(visible: Boolean, onDismiss: () -> Unit) {
             .background(Brush.horizontalGradient(listOf(HordeColors.Lavender.copy(alpha = alpha * 0.7f), HordeColors.SkyBlue.copy(alpha = alpha * 0.4f), HordeColors.Lavender.copy(alpha = alpha * 0.7f))))
             .clickable { onDismiss() }.padding(vertical = 20.dp),
         contentAlignment = Alignment.Center
-    ) { Text("⚠️ BOSS INCOMING ⚠️", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color.White) }
+    ) { Text("⚠️ BOSS INCOMING ⚠️", style = HordeTypography.Title.copy(fontSize = 26.sp, color = Color.White)) }
 }
 
 private fun formatTime(s: Float): String {

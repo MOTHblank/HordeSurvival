@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -257,9 +258,7 @@ fun GameScreen(
             ) {
                 Text(
                     text = "🏆 ${achievementPopup}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    style = HordeTypography.Value.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 )
             }
         }
