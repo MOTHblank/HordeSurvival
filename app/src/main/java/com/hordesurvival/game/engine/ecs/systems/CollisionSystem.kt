@@ -83,7 +83,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         while (cooldownIter.hasNext()) {
             val entry = cooldownIter.next()
             val newTime = entry.value - dt
-            if (newTime <= 0f) cooldownIter.remove() else entry.value = newTime
+            if (newTime <= 0f) cooldownIter.remove() else shieldHitCooldowns.put(entry.key, newTime)
         }
 
         // ── Player vs Enemy contact damage ──────────────────────────────
