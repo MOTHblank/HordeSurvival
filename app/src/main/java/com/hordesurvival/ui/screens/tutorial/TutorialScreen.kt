@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeBackButton
+import com.hordesurvival.ui.components.HordeHeader
+import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.CornerCutShape
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.components.HordeButton
@@ -56,13 +58,12 @@ fun TutorialScreen(
     val currentStep = steps[step]
     val progress = (step + 1).toFloat() / steps.size
 
-    Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HordeColors.DarkBg, HordeColors.DarkSurface, HordeColors.SurfaceDark))),
+    HordeScreen(
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.widthIn(max = 600.dp).padding(32.dp)
+            modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(32.dp)
         ) {
             // Progress bar
             Box(
@@ -92,11 +93,9 @@ fun TutorialScreen(
             Spacer(Modifier.height(20.dp))
 
             // Title
-            Text(
-                currentStep.title,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+            HordeHeader(
+                title = currentStep.title,
+                accentColor = HordeColors.SkyBlue
             )
 
             Spacer(Modifier.height(16.dp))
