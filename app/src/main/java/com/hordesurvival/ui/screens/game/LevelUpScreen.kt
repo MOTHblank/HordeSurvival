@@ -55,6 +55,7 @@ fun LevelUpScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .scale(scale)
+                .widthIn(max = 800.dp)
                 .padding(20.dp)
         ) {
             // Level indicator with glow

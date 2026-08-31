@@ -115,7 +115,7 @@ fun GameRenderer(
             }
     ) {
         // Calculate zoom every frame based on player velocity
-        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() }
+        val player = engine.playerEntity
         val vel = player?.get<VelocityComponent>()
         val playerSpeedSq = if (gameMode == GameModeType.TOWER_DEFENSE) 0f
             else if (vel != null) vel.vx * vel.vx + vel.vy * vel.vy else 0f

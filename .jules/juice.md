@@ -1,3 +1,6 @@
 ## 2024-05-24 - [Unified Settings UI Architecture]
 **Learning:** The `SettingsScreen` and `PauseScreen` historically used completely divergent, custom-built grids and rows to display toggle and slider settings, leading to visual inconsistencies (missing descriptions, mismatched padding, raw Compose logic mixed with UI).
 **Action:** Introduced `HordeToggleSetting`, `HordeSliderSetting`, and `HordeSelectorSetting` to `HordeUI.kt` to act as the single source of truth for configuration UI, and migrated both screens to use them.
+## 2024-05-24 - [UI Consistency & Responsive Layouts]
+**Learning:** `StatsScreen` and `TutorialScreen` were bypassing the `HordeHeader` and `HordeScreen` unified components, causing visual inconsistencies and code duplication. Additionally, `TutorialScreen` and `LevelUpScreen` lacked `Modifier.widthIn(max = ...)` constraints, which caused severe stretching on ultrawide aspect ratios.
+**Action:** Migrated `StatsScreen` and `TutorialScreen` to use `HordeHeader` and `HordeScreen`, removed the custom background from `TutorialScreen` to rely on the global one, and added `widthIn(max = 600.dp)` to `TutorialScreen` and `widthIn(max = 800.dp)` to `LevelUpScreen` to ensure proper responsive behavior.

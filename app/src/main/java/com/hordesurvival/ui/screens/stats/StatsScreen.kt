@@ -12,6 +12,7 @@ import com.hordesurvival.data.model.PlayerSave
 import com.hordesurvival.ui.Locales
 import com.hordesurvival.ui.components.HordeBackButton
 import com.hordesurvival.ui.components.HordeCard
+import com.hordesurvival.ui.components.HordeHeader
 import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.theme.HordeTypography
@@ -29,7 +30,11 @@ fun StatsScreen(
 
     HordeScreen {
         Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("📊 ${L("your_stats")}", style = HordeTypography.Header.copy(color = HordeColors.WarmPeach))
+            HordeHeader(
+                title = L("your_stats"),
+                icon = "📊",
+                accentColor = HordeColors.WarmPeach
+            )
             Spacer(Modifier.height(24.dp))
 
             // Stats card

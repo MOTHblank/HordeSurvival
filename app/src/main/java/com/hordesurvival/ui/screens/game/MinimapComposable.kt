@@ -48,7 +48,7 @@ fun Minimap(
         drawRect(Color.White.copy(alpha = 0.2f), topLeft = Offset.Zero, size = Size(w, h), style = Stroke(width = 1f))
 
         // Find player
-        val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() }
+        val player = engine.playerEntity
         val playerPos = player?.get<TransformComponent>()
         val px = playerPos?.x ?: 0f
         val py = playerPos?.y ?: 0f

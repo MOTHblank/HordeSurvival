@@ -110,7 +110,7 @@ class CompanionPet(private val engine: GameEngine) {
         pet.healTimer += dt
         if (pet.healTimer >= FAIRY_HEAL_INTERVAL) {
             pet.healTimer = 0f
-            val playerEntity = engine.getActiveEntities().find { it.tag == "player" && it.has<HealthComponent>() }
+            val playerEntity = engine.playerEntity
             playerEntity?.get<HealthComponent>()?.heal(5f * pet.level)
         }
     }
