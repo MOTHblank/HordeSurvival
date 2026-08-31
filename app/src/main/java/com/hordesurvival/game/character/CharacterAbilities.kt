@@ -205,7 +205,7 @@ class CharacterAbilities(private val engine: GameEngine) {
                 when (ability.type) {
                     AbilityType.BERSERKER_RAGE -> {
                         // Reset stats (approximate — doesn't track exact base)
-                        val player = engine.getActiveEntities().find { it.tag == "player" && it.has<PlayerComponent>() }
+                        val player = engine.playerEntity
                         player?.get<PlayerComponent>()?.let {
                             it.might /= 2f
                             it.moveSpeed /= 1.5f

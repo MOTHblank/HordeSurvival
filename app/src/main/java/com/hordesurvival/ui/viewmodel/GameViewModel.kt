@@ -267,7 +267,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 if (bossWarningTimer >= 3f) { _bossWarning.value = false; bossWarningTimer = 0f }
             }
 
-            val player = engine.getActiveEntities().find { it.tag == "player" && it.has<PlayerComponent>() }
+            val player = engine.playerEntity
             if (player != null) {
                 val health = player.get<HealthComponent>()
                 val comp = player.get<PlayerComponent>()
@@ -522,7 +522,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectUpgrade(option: UpgradeOption) {
         try {
-            val player = engine.getActiveEntities().find { it.tag == "player" && it.has<PlayerComponent>() }
+            val player = engine.playerEntity
             val comp = player?.get<PlayerComponent>() ?: return
 
             when (option.type) {
@@ -577,7 +577,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (tier == 6) {
             val evoPassives = mutableMapOf<String, Int>()
             // Gather passive levels from the player component
-            val player = engine.getActiveEntities().find { it.has<PlayerComponent>() }
+            val player = engine.playerEntity
             player?.get<PlayerComponent>()?.passiveLevels?.let { evoPassives.putAll(it) }
             val evolution = com.hordesurvival.game.weapon.WeaponEvolution.findEvolution(w, evoPassives)
             if (evolution != null) {
@@ -655,7 +655,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     /** Use character ability */
     fun useAbility() {
         if (!_abilityReady.value || _isPaused.value || _isGameOver.value) return
-        val player = engine.getActiveEntities().find { it.tag == "player" && it.has<PlayerComponent>() } ?: return
+        val player = engine.playerEntity ?: return
         val activated = characterAbilities?.activate(player) ?: false
         if (activated) {
             abilityCooldownTimer = characterAbilities?.getAbilityState()?.type?.cooldown ?: 15f
@@ -720,7 +720,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun continueGame() {
-        val player = engine.getActiveEntities().find { it.tag == "player" && it.has<PlayerComponent>() }
+        val player = engine.playerEntity
         val health = player?.get<HealthComponent>() ?: return
         health.isDead = false
         health.currentHp = health.maxHp * 0.5f
