@@ -29,7 +29,7 @@ fun StatsScreen(
 
     HordeScreen {
         Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("📊 ${L("your_stats")}", style = HordeTypography.Header.copy(color = HordeColors.WarmPeach))
+            Text("📊 ${L("your_stats")}", style = HordeTypography.Header)
             Spacer(Modifier.height(24.dp))
 
             // Stats card
@@ -64,8 +64,8 @@ fun StatsScreen(
 @Composable
 private fun StatRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
-        Text(value, style = HordeTypography.Value.copy(color = HordeColors.SkyBlue))
+        Text(label, style = HordeTypography.Body)
+        Text(value, style = HordeTypography.Value)
     }
 }
 

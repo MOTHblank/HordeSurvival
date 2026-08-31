@@ -71,9 +71,9 @@ private fun ModeCard(title: String, desc: String, color: Color, onClick: () -> U
         onClick = onClick
     ) {
         Column(modifier = Modifier.widthIn(max = 500.dp).fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-            Text(title, style = HordeTypography.SubHeader.copy(fontSize = 18.sp, color = color))
+            Text(title, style = HordeTypography.SubHeader)
             Spacer(Modifier.height(4.dp))
-            Text(desc, style = HordeTypography.Label.copy(fontSize = 13.sp))
+            Text(desc, style = HordeTypography.Label)
         }
     }
 }
