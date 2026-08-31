@@ -117,11 +117,11 @@ fun GameRenderer(
         // Calculate zoom every frame based on player velocity
         val player = entities.find { it.tag == "player" && it.has<PlayerComponent>() }
         val vel = player?.get<VelocityComponent>()
-        val playerSpeed = if (gameMode == GameModeType.TOWER_DEFENSE) 0f
-            else if (vel != null) kotlin.math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy) else 0f
+        val playerSpeedSq = if (gameMode == GameModeType.TOWER_DEFENSE) 0f
+            else if (vel != null) vel.vx * vel.vx + vel.vy * vel.vy else 0f
         val targetZoom = when {
-            playerSpeed < 0.1f -> 1.12f  // stationary: slight zoom in
-            playerSpeed < 0.5f -> 1.02f  // walking
+            playerSpeedSq < 0.01f -> 1.12f  // stationary: slight zoom in
+            playerSpeedSq < 0.25f -> 1.02f  // walking
             else -> 0.95f              // running: gentle zoom out
         }
         currentZoom += (targetZoom - currentZoom) * 0.05f
@@ -505,8 +505,9 @@ private fun DrawScope.drawProjectile(
     )
 
     if (vel != null && proj != null) {
-        val speed = kotlin.math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy)
-        if (speed > 10f) {
+        val speedSq = vel.vx * vel.vx + vel.vy * vel.vy
+        if (speedSq > 100f) {
+            val speed = kotlin.math.sqrt(speedSq)
             val trailLen = when (proj.weaponType) {
                 WeaponType.FIREBALL -> 5
                 WeaponType.ICE_SHARD -> 3
@@ -521,8 +522,9 @@ private fun DrawScope.drawProjectile(
                 WeaponType.DIVINE_SPEAR -> Color(0xFFFFF5E1)
                 else -> color
             }
-            val nx = -vel.vx / speed
-            val ny = -vel.vy / speed
+            val invSpeed = 1f / speed
+            val nx = -vel.vx * invSpeed
+            val ny = -vel.vy * invSpeed
             for (i in 1..trailLen) {
                 val t = i.toFloat() / trailLen
                 val tx = x + nx * i * 6f

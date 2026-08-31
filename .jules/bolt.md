@@ -57,6 +57,7 @@ When querying spatial structures for collisions:
 ## 2024-05-24 - [Avoid Boxed Collections in Hot Paths]
 **Learning:** `GameEngine.entityByIdMap` (HashMap<Int, Entity>) and `SpatialGrid` structures (HashMap<Long, MutableList<Entity>>, ArrayList<Long>) used boxed collections which caused autoboxing allocations per insert/lookup, putting pressure on GC each frame.
 **Action:** Replaced them with libGDX primitive-friendly collections (`IntMap`, `LongMap`, `LongArray`) to achieve zero-allocation logic.
+
 ## 2026-08-30 - Squared Distance Over Sqrt
-**Learning:** In hot paths like `EnemyAISystem` and `CollisionSystem`, distance threshold comparisons often use `sqrt()` which is computationally expensive. Attempting micro-optimizations by placing `sqrt()` inside early returns without refactoring the conditional logic properly is useless and can add overhead.
-**Action:** Compare squared distance against a squared threshold (e.g. `distSq < 22500f` instead of `dist < 150f`) to entirely skip the `sqrt()` operation. When normalizing vectors, compute `1f / sqrt(distSq)` and multiply to avoid division.
+**Learning:** In hot paths like `EnemyAISystem` and `CollisionSystem`, distance threshold comparisons often use `sqrt()` which is computationally expensive. Attempting micro-optimizations by placing `sqrt()` inside early returns without refactoring the conditional logic properly is useless and can add overhead. Additionally, vector normalization uses two divisions (`dx / dist`, `dy / dist`) which are slower than multiplication.
+**Action:** Compare squared distance against a squared threshold (e.g. `distSq < 22500f` instead of `dist < 150f`) to entirely skip the `sqrt()` operation. When normalizing vectors, compute `val invDist = 1f / kotlin.math.sqrt(distSq)` and multiply to avoid division and redundant root calculations.

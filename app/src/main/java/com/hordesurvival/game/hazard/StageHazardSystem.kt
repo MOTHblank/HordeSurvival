@@ -218,7 +218,8 @@ class StageHazardSystem(private val engine: GameEngine) {
         val p = engine.createEntity("particle")
         p.add(TransformComponent((x1 + x2) / 2f, (y1 + y2) / 2f))
         val dx = x2 - x1; val dy = y2 - y1
-        val len = kotlin.math.sqrt(dx * dx + dy * dy)
+        val lenSq = dx * dx + dy * dy
+        val len = kotlin.math.sqrt(lenSq)
         p.add(SpriteComponent(width = 4f, height = len, color = 0xFFFFEB3B.toInt(), alpha = 0.8f))
         p.add(ParticleComponent(lifetime = 0.15f, fadeOut = true))
     }
