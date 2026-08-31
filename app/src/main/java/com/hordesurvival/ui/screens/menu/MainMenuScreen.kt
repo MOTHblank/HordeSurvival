@@ -76,7 +76,7 @@ fun MainMenuScreen(
                         )
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("⚔️", fontSize = 36.sp)
+                    Text("⚔️", style = HordeTypography.Title)
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = "HORDE",
@@ -193,7 +193,7 @@ fun MainMenuScreen(
 
             // Footer — subtle
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("v1.2.9", style = HordeTypography.Label.copy(fontSize = 10.sp, color = Color.White.copy(alpha = 0.15f)))
+                Text("v1.2.9", style = HordeTypography.Label)
             }
             Spacer(Modifier.height(16.dp))
         }

@@ -59,9 +59,7 @@ fun PauseScreen(
         ) {
             Text(
                 text = "⏸ ${Locales.getString("pause", languageCode).uppercase()}",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White
+                style = com.hordesurvival.ui.theme.HordeTypography.Title
             )
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -70,9 +68,7 @@ fun PauseScreen(
                 HordeCard(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "⚙ ${Locales.getString("settings", languageCode)}",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = HordeColors.WarmPeach,
+                        style = com.hordesurvival.ui.theme.HordeTypography.SubHeader,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
