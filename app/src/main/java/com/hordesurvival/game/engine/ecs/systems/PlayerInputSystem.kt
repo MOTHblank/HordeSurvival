@@ -56,15 +56,17 @@ class PlayerInputSystem(private val engine: GameEngine) : System() {
             // Fixed-base joystick: base at touch start, stick follows finger
             val dx = touchCurrentX - joyBaseX
             val dy = touchCurrentY - joyBaseY
-            val dist = sqrt(dx * dx + dy * dy)
+            val distSq = dx * dx + dy * dy
 
             // Normalize to joystick radius
+            val dist = kotlin.math.sqrt(distSq)
             val clampedDist = dist.coerceAtMost(JOYSTICK_RADIUS)
             joyMagnitude = (clampedDist / JOYSTICK_RADIUS).coerceIn(0f, 1f)
 
             if (dist > 0f) {
-                joyStickX = (dx / dist) * joyMagnitude
-                joyStickY = (dy / dist) * joyMagnitude
+                val invDist = 1f / dist
+                joyStickX = (dx * invDist) * joyMagnitude
+                joyStickY = (dy * invDist) * joyMagnitude
             } else {
                 joyStickX = 0f
                 joyStickY = 0f
@@ -84,11 +86,12 @@ class PlayerInputSystem(private val engine: GameEngine) : System() {
             // Touch-follow mode
             val dx = touchCurrentX - (player.get<com.hordesurvival.game.component.TransformComponent>()?.x ?: 0f)
             val dy = touchCurrentY - (player.get<com.hordesurvival.game.component.TransformComponent>()?.y ?: 0f)
-            val dist = sqrt(dx * dx + dy * dy)
+            val distSq = dx * dx + dy * dy
 
-            if (dist > 10f) {
-                velocity.vx = dx / dist
-                velocity.vy = dy / dist
+            if (distSq > 100f) {
+                val invDist = 1f / kotlin.math.sqrt(distSq)
+                velocity.vx = dx * invDist
+                velocity.vy = dy * invDist
                 joyMagnitude = 1f
             } else {
                 velocity.vx = 0f

@@ -311,9 +311,9 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             if (gComp.magnetized) {
                 val dist = kotlin.math.sqrt(distSq)
                 val speed = com.hordesurvival.utils.Constants.GXP_MAGNET_SPEED + (1f - dist / playerComp.pickupRange).coerceIn(0f, 1f) * 300f
-                val len = if (dist > 0f) dist else 1f
-                gTransform.x += (dx / len) * speed * dt
-                gTransform.y += (dy / len) * speed * dt
+                val invLen = if (dist > 0f) 1f / dist else 1f
+                gTransform.x += (dx * invLen) * speed * dt
+                gTransform.y += (dy * invLen) * speed * dt
 
                 gSprite?.let {
                     val pulse = 1f + 0.15f * kotlin.math.sin(engine.gameTime * 10f)
@@ -349,9 +349,9 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             if (gComp.magnetized) {
                 val dist = kotlin.math.sqrt(distSq)
                 val speed = com.hordesurvival.utils.Constants.GXP_MAGNET_SPEED
-                val len = if (dist > 0f) dist else 1f
-                gTransform.x += (dx / len) * speed * dt
-                gTransform.y += (dy / len) * speed * dt
+                val invLen = if (dist > 0f) 1f / dist else 1f
+                gTransform.x += (dx * invLen) * speed * dt
+                gTransform.y += (dy * invLen) * speed * dt
             }
 
             if (distSq < 24f * 24f) {
