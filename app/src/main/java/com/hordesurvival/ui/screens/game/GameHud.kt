@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.components.CornerCutShape
+import com.hordesurvival.ui.components.HordeProgressBar
+import com.hordesurvival.ui.components.HordeSmallButton
 import com.hordesurvival.ui.components.SmallCutShape
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -76,10 +78,13 @@ fun GameHud(
         }
 
         // ── Top — full-width XP bar ─────────────────────────────
-        Box(
-            modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().height(12.dp).align(Alignment.TopCenter).background(HordeColors.DarkCard)
+        HordeProgressBar(
+            progress = xpRatio,
+            modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().height(12.dp).align(Alignment.TopCenter),
+            fillBrush = Brush.horizontalGradient(listOf(HordeColors.XpBarFill, HordeColors.SkyBlue.copy(alpha = 0.6f))),
+            backgroundColor = HordeColors.DarkCard,
+            shape = CornerCutShape
         ) {
-            Box(Modifier.fillMaxHeight().fillMaxWidth(xpRatio).background(Brush.horizontalGradient(listOf(HordeColors.XpBarFill, HordeColors.SkyBlue.copy(alpha = 0.6f)))))
             Text("Lv.$playerLevel", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.align(Alignment.Center))
         }
 
@@ -96,13 +101,12 @@ fun GameHud(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Pause button
-                Box(
-                    modifier = Modifier.size(44.dp)
-                        .clip(CornerCutShape).background(HordeColors.OverlayLight)
-                        .border(1.dp, Color.White.copy(alpha = 0.15f), CornerCutShape)
-                        .clickable { onPauseClick() },
-                    contentAlignment = Alignment.Center
-                ) { Text("⏸", fontSize = 18.sp) }
+                HordeSmallButton(
+                    text = "⏸",
+                    onClick = onPauseClick,
+                    modifier = Modifier.size(44.dp),
+                    color = HordeColors.SkyBlue.copy(alpha = 0.5f)
+                )
 
                 Spacer(Modifier.height(6.dp))
 
@@ -134,8 +138,14 @@ fun GameHud(
                 Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("❤️", fontSize = 12.sp)
                     Spacer(Modifier.width(4.dp))
-                    Box(Modifier.weight(1f).height(14.dp).clip(CornerCutShape).background(HordeColors.DarkCard).border(1.dp, Color.White.copy(alpha = 0.1f), CornerCutShape)) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(hpRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f)))))
+                    HordeProgressBar(
+                        progress = hpRatio,
+                        modifier = Modifier.weight(1f).height(14.dp),
+                        fillBrush = Brush.horizontalGradient(listOf(hpColor, hpColor.copy(alpha = 0.7f))),
+                        backgroundColor = HordeColors.DarkCard,
+                        borderColor = Color.White.copy(alpha = 0.1f),
+                        shape = CornerCutShape
+                    ) {
                         Text("${playerHp.toInt()} / ${playerMaxHp.toInt()}", fontSize = 9.sp, color = Color.White.copy(alpha = 0.8f), modifier = Modifier.align(Alignment.Center))
                     }
                 }
@@ -147,8 +157,14 @@ fun GameHud(
                     Row(Modifier.widthIn(max = 600.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("👹", fontSize = 14.sp)
                         Spacer(Modifier.width(4.dp))
-                        Box(Modifier.weight(1f).height(16.dp).clip(CornerCutShape).background(HordeColors.DarkCard).border(1.dp, HordeColors.WarmPeach.copy(alpha = 0.4f), CornerCutShape)) {
-                            Box(Modifier.fillMaxHeight().fillMaxWidth(bossRatio).clip(CornerCutShape).background(Brush.horizontalGradient(listOf(HordeColors.Warning, HordeColors.WarmPeach))))
+                        HordeProgressBar(
+                            progress = bossRatio,
+                            modifier = Modifier.weight(1f).height(16.dp),
+                            fillBrush = Brush.horizontalGradient(listOf(HordeColors.Warning, HordeColors.WarmPeach)),
+                            backgroundColor = HordeColors.DarkCard,
+                            borderColor = HordeColors.WarmPeach.copy(alpha = 0.4f),
+                            shape = CornerCutShape
+                        ) {
                             Text("BOSS ${bossHp.toInt()}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
                         }
                     }
