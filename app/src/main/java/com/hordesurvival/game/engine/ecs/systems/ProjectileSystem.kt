@@ -79,8 +79,10 @@ class ProjectileSystem(private val engine: GameEngine) : System() {
                 velocity.vy = sin(newAngle)
 
                 // Check if returned to player
-                val dist = GameMath.distance(transform.x, transform.y, playerPos.x, playerPos.y)
-                if (dist < 20f) {
+                val dx = transform.x - playerPos.x
+                val dy = transform.y - playerPos.y
+                val distSq = dx * dx + dy * dy
+                if (distSq < 400f) {
                     entity.active = false
                     continue
                 }
