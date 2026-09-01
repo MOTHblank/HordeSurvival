@@ -165,7 +165,7 @@ class StageHazardSystem(private val engine: GameEngine) {
             }
 
             // Update visual
-            val entity = engine.getActiveEntities().find { it.id == hazard.entityId }
+            val entity = engine.getEntityById(hazard.entityId)
             entity?.get<SpriteComponent>()?.let {
                 it.alpha = 0.4f + 0.2f * kotlin.math.sin(hazard.phase * 3f)
             }
