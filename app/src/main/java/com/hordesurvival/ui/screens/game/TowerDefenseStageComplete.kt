@@ -98,7 +98,7 @@ fun TowerDefenseStageComplete(
                 if (!isVictory) {
                     // Next Stage
                     HordeButton(
-                        modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
+                        modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                         text = "Next Stage",
                         icon = "▶",
                         color = HordeColors.Success,
@@ -110,7 +110,7 @@ fun TowerDefenseStageComplete(
 
                 // Replay
                 HordeSecondaryButton(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = "Replay Stage",
                     icon = "🔄",
                     onClick = onReplayStage
@@ -120,7 +120,7 @@ fun TowerDefenseStageComplete(
 
                 // Main Menu
                 HordeSecondaryButton(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = Locales.getString("main_menu", languageCode),
                     icon = "🏠",
                     onClick = onMainMenu

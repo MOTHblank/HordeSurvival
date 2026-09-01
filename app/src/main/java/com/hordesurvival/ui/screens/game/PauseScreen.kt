@@ -116,14 +116,14 @@ fun PauseScreen(
             } else {
                 // Main pause buttons
                 HordeButton(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = Locales.getString("resume", languageCode),
                     icon = "▶",
                     onClick = onResume
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 HordeSecondaryButton(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = Locales.getString("settings", languageCode),
                     icon = "⚙",
                     onClick = { showSettings = true }
@@ -133,7 +133,7 @@ fun PauseScreen(
                 // Game speed control card
                 val speeds = listOf(0.5f to "0.5x", 1f to "1x", 2f to "2x", 3f to "3x")
                 HordeSelectorSetting(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     title = Locales.getString("speed", languageCode),
                     options = speeds,
                     selectedOption = gameSpeed,
@@ -144,7 +144,7 @@ fun PauseScreen(
                 Spacer(Modifier.height(24.dp))
 
                 HordeSecondaryButton(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.9f),
+                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = Locales.getString("quit", languageCode),
                     icon = "🏠",
                     onClick = onQuit

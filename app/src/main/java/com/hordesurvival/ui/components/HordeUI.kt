@@ -398,14 +398,14 @@ fun HordeSmallButton(
         modifier = modifier
             .height(34.dp)
             .scale(s)
-            .clip(CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp))
+            .clip(SmallCutShape)
             .background(
                 if (enabled) color.copy(alpha = 0.85f) else Color.DarkGray.copy(alpha = 0.4f)
             )
             .border(
                 width = 1.dp,
                 color = if (enabled) color else Color.Gray.copy(alpha = 0.3f),
-                shape = CutCornerShape(topStart = 4.dp, bottomEnd = 4.dp)
+                shape = SmallCutShape
             )
             .then(
                 if (enabled) Modifier.clickable(
@@ -568,7 +568,7 @@ fun HordeItemCard(
     }
 
     val bColor = if (selected) HordeColors.SkyBlue else HordeColors.CardBorder.copy(alpha = 0.4f)
-    val shape = CutCornerShape(topStart = 8.dp, bottomEnd = 8.dp, topEnd = 2.dp, bottomStart = 2.dp)
+    val shape = CornerCutShape
 
     Box(
         modifier = modifier
