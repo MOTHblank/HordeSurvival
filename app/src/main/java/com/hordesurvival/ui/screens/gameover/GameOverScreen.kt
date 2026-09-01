@@ -75,7 +75,7 @@ fun GameOverScreen(
             // Continue button
             if (canContinue && !continueUsed) {
                 Column(Modifier.scale(bs), horizontalAlignment = Alignment.CenterHorizontally) {
-                    HordeButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.8f),
+                    HordeButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                         text = "Continue",
                         icon = "💚",
                         color = HordeColors.Success,
@@ -90,14 +90,14 @@ fun GameOverScreen(
 
             // Main buttons
             Column(Modifier.scale(bs), horizontalAlignment = Alignment.CenterHorizontally) {
-                HordeButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.8f),
+                HordeButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = L("play_again"),
                     icon = "🔄",
                     color = HordeColors.SkyBlue,
                     onClick = onPlayAgain
                 )
                 Spacer(Modifier.height(12.dp))
-                HordeSecondaryButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.8f),
+                HordeSecondaryButton(modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = L("main_menu"),
                     icon = "🏠",
                     onClick = onMainMenu
