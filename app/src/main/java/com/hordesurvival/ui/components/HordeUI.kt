@@ -22,6 +22,18 @@ import androidx.compose.animation.core.*
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.theme.HordeTypography
 import kotlin.math.cos
@@ -439,27 +451,60 @@ fun HordeSwitch(
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    Switch(
-        checked = checked,
-        onCheckedChange = onCheckedChange,
-        modifier = modifier,
-        colors = SwitchDefaults.colors(
-            checkedThumbColor = HordeColors.SkyBlue,
-            checkedTrackColor = HordeColors.SkyBlue.copy(alpha = 0.3f),
-            uncheckedThumbColor = HordeColors.TextSecondary,
-            uncheckedTrackColor = Color.DarkGray.copy(alpha = 0.4f),
-            uncheckedBorderColor = Color.Transparent
-        ),
-        thumbContent = if (checked) {
-            {
-                Box(modifier = Modifier.fillMaxSize().clip(SmallCutShape).background(HordeColors.SkyBlue))
-            }
-        } else {
-            {
-                Box(modifier = Modifier.fillMaxSize().clip(SmallCutShape).background(HordeColors.TextSecondary))
-            }
-        }
+    val trackWidth = 52.dp
+    val trackHeight = 28.dp
+    val thumbSize = 24.dp
+    val padding = 2.dp
+
+    val thumbMaxOffset = trackWidth - thumbSize - (padding * 2)
+
+    val thumbOffsetTarget = if (checked) thumbMaxOffset else 0.dp
+    val thumbOffset by animateFloatAsState(
+        targetValue = thumbOffsetTarget.value,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "HordeSwitchOffset"
     )
+
+    val trackColor by animateColorAsState(
+        targetValue = if (checked) HordeColors.SkyBlue.copy(alpha = 0.3f) else Color.DarkGray.copy(alpha = 0.4f),
+        label = "HordeSwitchTrackColor"
+    )
+    val thumbColor by animateColorAsState(
+        targetValue = if (checked) HordeColors.SkyBlue else HordeColors.TextSecondary,
+        label = "HordeSwitchThumbColor"
+    )
+
+    Box(
+        modifier = modifier
+            .width(trackWidth)
+            .height(trackHeight)
+            .clip(SmallCutShape)
+            .background(trackColor)
+            .then(
+                if (onCheckedChange != null) {
+                    Modifier.toggleable(
+                        value = checked,
+                        onValueChange = {
+                            SoundManager.playClick()
+                            onCheckedChange(it)
+                        },
+                        role = Role.Switch,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    )
+                } else Modifier
+            )
+            .padding(padding),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(thumbOffset.dp.roundToPx(), 0) }
+                .size(thumbSize)
+                .clip(SmallCutShape)
+                .background(thumbColor)
+        )
+    }
 }
 
 @Composable
@@ -468,16 +513,76 @@ fun HordeSlider(
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Slider(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier,
-        colors = SliderDefaults.colors(
-            thumbColor = HordeColors.SkyBlue,
-            activeTrackColor = HordeColors.SkyBlue,
-            inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f)
+    val thumbSize = 24.dp
+    var trackWidthPx by remember { mutableStateOf(0f) }
+    val thumbSizePx = with(androidx.compose.ui.platform.LocalDensity.current) { thumbSize.toPx() }
+
+    val safeTrackWidth = (trackWidthPx - thumbSizePx).coerceAtLeast(0f)
+    val thumbOffsetPx = value * safeTrackWidth
+
+    val safeTrackWidthState by rememberUpdatedState(safeTrackWidth)
+    val thumbOffsetPxState by rememberUpdatedState(thumbOffsetPx)
+    val onValueChangeState by rememberUpdatedState(onValueChange)
+
+    Box(
+        modifier = modifier
+            .height(36.dp)
+            .fillMaxWidth()
+            .onSizeChanged { size ->
+                trackWidthPx = size.width.toFloat()
+            }
+            .pointerInput(Unit) {
+                var localDragOffset = 0f
+                detectDragGestures(
+                    onDragStart = { localDragOffset = thumbOffsetPxState },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        val currentSafeTrackWidth = safeTrackWidthState
+                        if (currentSafeTrackWidth > 0) {
+                            localDragOffset += dragAmount.x
+                            val newOffset = localDragOffset.coerceIn(0f, currentSafeTrackWidth)
+                            onValueChangeState(newOffset / currentSafeTrackWidth)
+                        }
+                    }
+                )
+            }
+            .pointerInput(Unit) {
+                detectTapGestures { offset ->
+                    val currentSafeTrackWidth = safeTrackWidthState
+                    if (currentSafeTrackWidth > 0) {
+                        val newOffset = (offset.x - thumbSizePx / 2).coerceIn(0f, currentSafeTrackWidth)
+                        onValueChangeState(newOffset / currentSafeTrackWidth)
+                    }
+                }
+            },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        // Track
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(SmallCutShape)
+                .background(Color.DarkGray.copy(alpha = 0.5f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(value)
+                    .clip(SmallCutShape)
+                    .background(HordeColors.SkyBlue)
+            )
+        }
+
+        // Thumb
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(thumbOffsetPx.roundToInt(), 0) }
+                .size(thumbSize)
+                .clip(SmallCutShape)
+                .background(HordeColors.SkyBlue)
         )
-    )
+    }
 }
 
 @Composable
