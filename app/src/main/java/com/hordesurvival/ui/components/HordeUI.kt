@@ -1,13 +1,8 @@
 package com.hordesurvival.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import com.hordesurvival.game.audio.SoundManager
 import androidx.compose.foundation.shape.CutCornerShape
@@ -25,7 +20,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.animation.core.*
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.ui.theme.HordeColors
@@ -174,35 +168,10 @@ fun HordeButton(
     breathe: Float = 1f,
     icon: String? = null
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-
-    LaunchedEffect(isHovered) {
-        if (isHovered && enabled) {
-            SoundManager.playHover()
-        }
-    }
-
-    val targetScale = when {
-        isPressed && enabled -> 0.92f
-        isHovered && enabled -> 1.06f
-        else -> 1f
-    }
-
-    val s by animateFloatAsState(
-        targetValue = targetScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "HordeButtonScale"
-    )
-
     Box(
         modifier = modifier
             .height(54.dp)
-            .scale(s * breathe)
+            .hordeInteractive(enabled = enabled, breathe = breathe, onClick = onClick)
             .clip(CornerCutShape)
             .background(
                 if (enabled) {
@@ -236,15 +205,6 @@ fun HordeButton(
                     Brush.linearGradient(listOf(Color.Gray.copy(alpha = 0.3f), Color.DarkGray.copy(alpha = 0.2f)))
                 },
                 shape = CornerCutShape
-            )
-            .then(
-                if (enabled) Modifier.clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) {
-                    SoundManager.playClick()
-                    onClick()
-                } else Modifier
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -285,35 +245,10 @@ fun HordeSecondaryButton(
     color: Color = HordeColors.TextSecondary,
     icon: String? = null
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-
-    LaunchedEffect(isHovered) {
-        if (isHovered) {
-            SoundManager.playHover()
-        }
-    }
-
-    val targetScale = when {
-        isPressed -> 0.93f
-        isHovered -> 1.05f
-        else -> 1f
-    }
-
-    val s by animateFloatAsState(
-        targetValue = targetScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "HordeSecondaryButtonScale"
-    )
-
     Box(
         modifier = modifier
             .height(48.dp)
-            .scale(s)
+            .hordeInteractive(onClick = onClick)
             .clip(SmallCutShape)
             .background(
                 Brush.verticalGradient(
@@ -332,14 +267,7 @@ fun HordeSecondaryButton(
                     )
                 ),
                 shape = SmallCutShape
-            )
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) {
-                SoundManager.playClick()
-                onClick()
-            },
+            ),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -369,35 +297,10 @@ fun HordeSmallButton(
     color: Color = HordeColors.SkyBlue,
     enabled: Boolean = true
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-
-    LaunchedEffect(isHovered) {
-        if (isHovered && enabled) {
-            SoundManager.playHover()
-        }
-    }
-
-    val targetScale = when {
-        isPressed && enabled -> 0.92f
-        isHovered && enabled -> 1.06f
-        else -> 1f
-    }
-
-    val s by animateFloatAsState(
-        targetValue = targetScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "HordeSmallButtonScale"
-    )
-
     Box(
         modifier = modifier
             .height(34.dp)
-            .scale(s)
+            .hordeInteractive(enabled = enabled, onClick = onClick)
             .clip(SmallCutShape)
             .background(
                 if (enabled) color.copy(alpha = 0.85f) else Color.DarkGray.copy(alpha = 0.4f)
@@ -406,15 +309,6 @@ fun HordeSmallButton(
                 width = 1.dp,
                 color = if (enabled) color else Color.Gray.copy(alpha = 0.3f),
                 shape = SmallCutShape
-            )
-            .then(
-                if (enabled) Modifier.clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) {
-                    SoundManager.playClick()
-                    onClick()
-                } else Modifier
             )
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
@@ -435,38 +329,12 @@ fun HordeBackButton(
     modifier: Modifier = Modifier,
     color: Color = HordeColors.TextSecondary
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-
-    LaunchedEffect(isHovered) {
-        if (isHovered) {
-            SoundManager.playHover()
-        }
-    }
-
-    val targetScale = when {
-        isPressed -> 0.93f
-        isHovered -> 1.05f
-        else -> 1f
-    }
-
-    val s by animateFloatAsState(
-        targetValue = targetScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "HordeBackButtonScale"
-    )
-
-    TextButton(
-        onClick = {
-            SoundManager.playClick()
-            onClick()
-        },
-        interactionSource = interactionSource,
-        modifier = modifier.scale(s)
+    Box(
+        modifier = modifier
+            .height(48.dp)
+            .hordeInteractive(onClick = onClick)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
@@ -536,31 +404,6 @@ fun HordeItemCard(
     selected: Boolean = false,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-
-    LaunchedEffect(isHovered) {
-        if (isHovered && onClick != null) {
-            SoundManager.playHover()
-        }
-    }
-
-    val targetScale = when {
-        isPressed && onClick != null -> 0.95f
-        isHovered && onClick != null -> 1.04f
-        else -> 1f
-    }
-
-    val s by animateFloatAsState(
-        targetValue = targetScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "HordeItemCardScale"
-    )
-
     val bgColor = if (selected) {
         Brush.verticalGradient(listOf(HordeColors.SkyBlue.copy(alpha = 0.25f), HordeColors.DarkCard))
     } else {
@@ -572,22 +415,16 @@ fun HordeItemCard(
 
     Box(
         modifier = modifier
-            .scale(s)
+            .then(
+                if (onClick != null) Modifier.hordeInteractive(onClick = onClick)
+                else Modifier
+            )
             .clip(shape)
             .background(bgColor)
             .border(
                 width = if (selected) 1.5.dp else 1.dp,
                 color = bColor,
                 shape = shape
-            )
-            .then(
-                if (onClick != null) Modifier.clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) {
-                    SoundManager.playClick()
-                    onClick()
-                } else Modifier
             )
             .padding(14.dp),
         contentAlignment = Alignment.Center
