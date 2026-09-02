@@ -67,8 +67,8 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
                         val dy = playerTransform.y - transform.y
                         val distSq = dx * dx + dy * dy
                         if (distSq > 0f && distSq < 250000f) { // 500 * 500
-                            val invDist = 1f / kotlin.math.sqrt(distSq)
-                            spawnEnemyProjectile(transform.x, transform.y, dx * invDist, dy * invDist, enemy.damage * 0.5f)
+                            val dist = kotlin.math.sqrt(distSq)
+                            spawnEnemyProjectile(transform.x, transform.y, dx / dist, dy / dist, enemy.damage * 0.5f)
                         }
                     }
                 }
@@ -78,17 +78,17 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
                     val distSq = dx * dx + dy * dy
                     if (distSq > 0f) {
                         if (distSq < 22500f) { // 150 * 150
-                            val invDist = 1f / kotlin.math.sqrt(distSq)
-                            velocity.vx = -(dx * invDist)
-                            velocity.vy = -(dy * invDist)
+                            val dist = kotlin.math.sqrt(distSq)
+                            velocity.vx = -(dx / dist)
+                            velocity.vy = -(dy / dist)
                         } else if (distSq > 90000f) { // 300 * 300
-                            val invDist = 1f / kotlin.math.sqrt(distSq)
-                            velocity.vx = (dx * invDist)
-                            velocity.vy = (dy * invDist)
+                            val dist = kotlin.math.sqrt(distSq)
+                            velocity.vx = (dx / dist)
+                            velocity.vy = (dy / dist)
                         } else {
-                            val invDist = 1f / kotlin.math.sqrt(distSq)
-                            velocity.vx = -(dy * invDist) * 0.5f
-                            velocity.vy = (dx * invDist) * 0.5f
+                            val dist = kotlin.math.sqrt(distSq)
+                            velocity.vx = -(dy / dist) * 0.5f
+                            velocity.vy = (dx / dist) * 0.5f
                         }
                     }
                     // Mage uses shootTimer ONLY — never touch contactTimer
@@ -99,8 +99,8 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
                         val ndy = playerTransform.y - transform.y
                         val ndistSq = ndx * ndx + ndy * ndy
                         if (ndistSq > 0f && ndistSq < 160000f) { // 400 * 400
-                            val invNDist = 1f / kotlin.math.sqrt(ndistSq)
-                            spawnEnemyProjectile(transform.x, transform.y, ndx * invNDist, ndy * invNDist, enemy.damage * 0.6f)
+                            val ndist = kotlin.math.sqrt(ndistSq)
+                            spawnEnemyProjectile(transform.x, transform.y, ndx / ndist, ndy / ndist, enemy.damage * 0.6f)
                         }
                     }
                     // Keep contactTimer at 0 so contact damage works independently
@@ -112,16 +112,16 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
                     val dy = playerTransform.y - transform.y
                     val distSq = dx * dx + dy * dy
                     if (distSq > 0f) {
-                        val invDist = 1f / kotlin.math.sqrt(distSq)
+                        val dist = kotlin.math.sqrt(distSq)
                         val sinOffset = kotlin.math.sin(engine.gameTime * 3f + entity.id) * 0.3f
-                        velocity.vx = (dx * invDist) + sinOffset
-                        velocity.vy = (dy * invDist)
+                        velocity.vx = (dx / dist) + sinOffset
+                        velocity.vy = (dy / dist)
                         // Normalize
                         val lenSq = velocity.vx * velocity.vx + velocity.vy * velocity.vy
                         if (lenSq > 0f) {
-                            val invLen = 1f / kotlin.math.sqrt(lenSq)
-                            velocity.vx *= invLen
-                            velocity.vy *= invLen
+                            val len = kotlin.math.sqrt(lenSq)
+                            velocity.vx /= len
+                            velocity.vy /= len
                         }
                     }
                 }
@@ -131,15 +131,15 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
                     val dy = playerTransform.y - transform.y
                     val distSq = dx * dx + dy * dy
                     if (distSq > 0f) {
-                        val invDist = 1f / kotlin.math.sqrt(distSq)
+                        val dist = kotlin.math.sqrt(distSq)
                         val wobble = kotlin.math.sin(engine.gameTime * 8f + entity.id * 0.5f) * 0.4f
-                        velocity.vx = (dx * invDist) + wobble
-                        velocity.vy = (dy * invDist)
+                        velocity.vx = (dx / dist) + wobble
+                        velocity.vy = (dy / dist)
                         val lenSq = velocity.vx * velocity.vx + velocity.vy * velocity.vy
                         if (lenSq > 0f) {
-                            val invLen = 1f / kotlin.math.sqrt(lenSq)
-                            velocity.vx *= invLen
-                            velocity.vy *= invLen
+                            val len = kotlin.math.sqrt(lenSq)
+                            velocity.vx /= len
+                            velocity.vy /= len
                         }
                     }
                 }
@@ -164,9 +164,9 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
                     val dy = playerTransform.y - transform.y
                     val distSq = dx * dx + dy * dy
                     if (distSq > 0f) {
-                        val invDist = 1f / kotlin.math.sqrt(distSq)
-                        velocity.vx = (dx * invDist) * phaseSpeed
-                        velocity.vy = (dy * invDist) * phaseSpeed
+                        val dist = kotlin.math.sqrt(distSq)
+                        velocity.vx = (dx / dist) * phaseSpeed
+                        velocity.vy = (dy / dist) * phaseSpeed
                     }
                 }
                 else -> {
@@ -175,9 +175,9 @@ class EnemyAISystem(private val engine: GameEngine) : System() {
                     val dy = playerTransform.y - transform.y
                     val distSq = dx * dx + dy * dy
                     if (distSq > 0f) {
-                        val invDist = 1f / kotlin.math.sqrt(distSq)
-                        velocity.vx = dx * invDist
-                        velocity.vy = dy * invDist
+                        val dist = kotlin.math.sqrt(distSq)
+                        velocity.vx = dx / dist
+                        velocity.vy = dy / dist
                     }
                 }
             }

@@ -64,9 +64,8 @@ class PlayerInputSystem(private val engine: GameEngine) : System() {
             joyMagnitude = (clampedDist / JOYSTICK_RADIUS).coerceIn(0f, 1f)
 
             if (dist > 0f) {
-                val invDist = 1f / dist
-                joyStickX = (dx * invDist) * joyMagnitude
-                joyStickY = (dy * invDist) * joyMagnitude
+                joyStickX = (dx / dist) * joyMagnitude
+                joyStickY = (dy / dist) * joyMagnitude
             } else {
                 joyStickX = 0f
                 joyStickY = 0f
@@ -89,9 +88,9 @@ class PlayerInputSystem(private val engine: GameEngine) : System() {
             val distSq = dx * dx + dy * dy
 
             if (distSq > 100f) {
-                val invDist = 1f / kotlin.math.sqrt(distSq)
-                velocity.vx = dx * invDist
-                velocity.vy = dy * invDist
+                val dist = kotlin.math.sqrt(distSq)
+                velocity.vx = dx / dist
+                velocity.vy = dy / dist
                 joyMagnitude = 1f
             } else {
                 velocity.vx = 0f

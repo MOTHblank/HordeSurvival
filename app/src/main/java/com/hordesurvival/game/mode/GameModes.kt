@@ -598,10 +598,10 @@ class TowerDefenseMode(private val engine: GameEngine) {
             val dy = shipY - t.y
             val distSq = dx * dx + dy * dy
             if (distSq < 100f) continue
-            val invDist = 1f / kotlin.math.sqrt(distSq)
+            val dist = kotlin.math.sqrt(distSq)
 
-            val nx = dx * invDist
-            val ny = dy * invDist
+            val nx = dx / dist
+            val ny = dy / dist
             val bulletSpeed = 300f + currentStage * 20f
             val bullet = engine.createEntity("enemy_projectile")
             bullet.add(TransformComponent(t.x, t.y))
