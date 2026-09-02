@@ -47,6 +47,18 @@ class ProjectileSystem(private val engine: GameEngine) : System() {
                 continue
             }
 
+            // Early despawn: Destroy projectiles that fly too far off-screen
+            if (playerPos != null) {
+                val dx = transform.x - playerPos.x
+                val dy = transform.y - playerPos.y
+                // If farther than ~1200 units, enemies have despawned anyway,
+                // so the projectile will never hit anything. Reclaim it for the ObjectPool.
+                if (dx * dx + dy * dy > 1440000f) { // 1200^2
+                    entity.active = false
+                    continue
+                }
+            }
+
             // ── Boomerang logic ───────────────────────────────────
             if (proj.returnsToPlayer && proj.maxDistance > 0f) {
                 proj.distanceTraveled += proj.speed * dt
