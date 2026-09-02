@@ -142,10 +142,17 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         }
 
         // ── Projectile vs Enemy (Spatial Grid query including MAX_ENEMY_RADIUS) ──
+        val cullDistanceSq = 1000f * 1000f // Enemies despawn at 900 units, so queries past 1000 are guaranteed empty
         for (i in 0 until _projectiles.size) {
             val proj = _projectiles[i]
             if (!proj.active) continue
             val pTransform = proj.get<TransformComponent>() ?: continue
+
+            // Early return: Skip spatial grid query if projectile is extremely far from player
+            val pdx = pTransform.x - playerTransform.x
+            val pdy = pTransform.y - playerTransform.y
+            if (pdx * pdx + pdy * pdy > cullDistanceSq) continue
+
             val pComp = proj.get<ProjectileComponent>() ?: continue
             val projCollision = proj.get<CollisionComponent>()?.radius ?: 8f
 
@@ -218,6 +225,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             val cloud = _poisonClouds[i]
             if (!cloud.active) continue
             val cTransform = cloud.get<TransformComponent>() ?: continue
+
             val cComp = cloud.get<PoisonCloudComponent>() ?: continue
 
             cComp.timer += dt
@@ -234,6 +242,12 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             cComp.tickTimer += dt
             if (cComp.tickTimer >= cComp.tickInterval) {
                 cComp.tickTimer = 0f
+
+                // Early return: Skip spatial grid query if poison cloud is extremely far from player
+                val cdx = cTransform.x - playerTransform.x
+                val cdy = cTransform.y - playerTransform.y
+                if (cdx * cdx + cdy * cdy > cullDistanceSq) continue
+
                 _nearbyEnemiesBuffer.clear()
                 engine.spatialGrid.queryRange(cTransform.x, cTransform.y, cComp.radius + MAX_ENEMY_RADIUS, "enemy", _nearbyEnemiesBuffer)
                 for (j in 0 until _nearbyEnemiesBuffer.size) {
