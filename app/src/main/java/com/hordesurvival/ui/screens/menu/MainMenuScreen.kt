@@ -76,24 +76,19 @@ fun MainMenuScreen(
                         )
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("⚔️", fontSize = 36.sp)
+                    Text("⚔️", style = HordeTypography.Title)
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = "HORDE",
-                        style = HordeTypography.Title.copy(
-                            fontSize = 22.sp,
+                        style = HordeTypography.Title,
                             color = HordeColors.SkyBlue.copy(alpha = glow),
-                            letterSpacing = 8.sp,
-                            shadow = Shadow(color = HordeColors.SkyBlue.copy(alpha = 0.3f), offset = Offset(0f, 0f), blurRadius = 20f)
-                        )
+                            letterSpacing = 8.sp
                     )
                     Text(
                         text = "SURVIVAL",
-                        style = HordeTypography.Label.copy(
-                            fontSize = 14.sp,
+                        style = HordeTypography.Label,
                             color = HordeColors.TextSecondary.copy(alpha = 0.5f),
                             letterSpacing = 6.sp
-                        )
                     )
                 }
             }
@@ -111,11 +106,8 @@ fun MainMenuScreen(
                 ) {
                     Text(
                         text = "💰 $gold",
-                        style = HordeTypography.Body.copy(
-                            fontSize = 13.sp,
-                            color = HordeColors.GoldColor.copy(alpha = 0.9f),
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        style = HordeTypography.Body,
+                            color = HordeColors.GoldColor.copy(alpha = 0.9f)
                     )
                 }
             }
@@ -193,7 +185,7 @@ fun MainMenuScreen(
 
             // Footer — subtle
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("v1.2.9", style = HordeTypography.Label.copy(fontSize = 10.sp, color = Color.White.copy(alpha = 0.15f)))
+                Text("v1.2.9", style = HordeTypography.Label, color = Color.White.copy(alpha = 0.15f))
             }
             Spacer(Modifier.height(16.dp))
         }

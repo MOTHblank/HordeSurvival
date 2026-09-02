@@ -69,8 +69,8 @@ fun StatsScreen(
 @Composable
 private fun StatRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, style = HordeTypography.Body.copy(color = HordeColors.TextSecondary))
-        Text(value, style = HordeTypography.Value.copy(color = HordeColors.SkyBlue))
+        Text(label, style = HordeTypography.Body, color = HordeColors.TextSecondary)
+        Text(value, style = HordeTypography.Value, color = HordeColors.SkyBlue)
     }
 }
 
