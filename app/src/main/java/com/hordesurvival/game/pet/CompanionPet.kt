@@ -65,9 +65,9 @@ class CompanionPet(private val engine: GameEngine) {
             val dy = targetY - petTransform.y
             val distSq = dx * dx + dy * dy
             if (distSq > 25f) {
-                val invDist = 1f / kotlin.math.sqrt(distSq)
-                petTransform.x += (dx * invDist) * FOLLOW_SPEED * dt
-                petTransform.y += (dy * invDist) * FOLLOW_SPEED * dt
+                val dist = kotlin.math.sqrt(distSq)
+                petTransform.x += (dx / dist) * FOLLOW_SPEED * dt
+                petTransform.y += (dy / dist) * FOLLOW_SPEED * dt
             }
 
             // Rotate follow angle slowly
@@ -134,9 +134,9 @@ class CompanionPet(private val engine: GameEngine) {
                     val dy = tPos.y - pos.y
                     val distSq = dx * dx + dy * dy
                     if (distSq > 100f) {
-                        val invDist = 1f / kotlin.math.sqrt(distSq)
-                        pos.x += (dx * invDist) * WOLF_CHARGE_SPEED * dt
-                        pos.y += (dy * invDist) * WOLF_CHARGE_SPEED * dt
+                        val dist = kotlin.math.sqrt(distSq)
+                        pos.x += (dx / dist) * WOLF_CHARGE_SPEED * dt
+                        pos.y += (dy / dist) * WOLF_CHARGE_SPEED * dt
                     } else {
                         // Hit!
                         target.get<HealthComponent>()?.takeDamage(WOLF_CHARGE_DAMAGE * player.might * pet.level)
