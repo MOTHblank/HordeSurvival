@@ -161,7 +161,8 @@ class CharacterAbilities(private val engine: GameEngine) {
             AbilityType.FROST_NOVA -> {
                 val damage = comp.might * 40f
                 val nearby = engine.findInRange(pos.x, pos.y, 300f, "enemy")
-                for (e in nearby) {
+                for (i in 0 until nearby.size) {
+                    val e = nearby[i]
                     e.get<HealthComponent>()?.takeDamage(damage)
                     e.get<EnemyComponent>()?.let {
                         it.slowTimer = 4f

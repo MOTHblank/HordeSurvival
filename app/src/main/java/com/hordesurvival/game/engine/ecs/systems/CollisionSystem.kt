@@ -35,7 +35,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
     private val _orbitShields = mutableListOf<Entity>()
 
     // Scratch buffer for spatial queries
-    private val _nearbyEnemiesBuffer = mutableListOf<Entity>()
+    private val _nearbyEnemiesBuffer = com.badlogic.gdx.utils.Array<Entity>(false, 128)
 
     // Maximum possible enemy collision radius (bosses can be up to 40f)
     private val MAX_ENEMY_RADIUS = 40f

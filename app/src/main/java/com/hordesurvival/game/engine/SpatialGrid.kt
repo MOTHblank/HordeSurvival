@@ -19,7 +19,7 @@ class SpatialGrid(val cellSize: Float = 128f) {
     private val listPool = ArrayList<MutableList<Entity>>(256)
 
     // Reusable list for queries when caller doesn't provide one
-    private val queryResultScratch = ArrayList<Entity>(256)
+    private val queryResultScratch = com.badlogic.gdx.utils.Array<Entity>(false, 256)
 
     /**
      * Clears all entities from all cells without releasing bucket list memory.
@@ -76,8 +76,8 @@ class SpatialGrid(val cellSize: Float = 128f) {
         y: Float,
         radius: Float,
         tagFilter: String? = null,
-        out: MutableList<Entity> = queryResultScratch
-    ): MutableList<Entity> {
+        out: com.badlogic.gdx.utils.Array<Entity> = queryResultScratch
+    ): com.badlogic.gdx.utils.Array<Entity> {
         out.clear()
 
         val minCx = getCellX(x - radius)
