@@ -26,16 +26,16 @@ class CollisionSystem(private val engine: GameEngine) : System() {
     private val tempVec2 = Vector2()
 
     // Reusable collections — no allocation per frame
-    private val _enemies = mutableListOf<Entity>()
-    private val _projectiles = mutableListOf<Entity>()
-    private val _enemyProjectiles = mutableListOf<Entity>()
-    private val _xpGems = mutableListOf<Entity>()
-    private val _healthGems = mutableListOf<Entity>()
-    private val _poisonClouds = mutableListOf<Entity>()
-    private val _orbitShields = mutableListOf<Entity>()
+    private val _enemies = com.badlogic.gdx.utils.Array<Entity>(false, 256)
+    private val _projectiles = com.badlogic.gdx.utils.Array<Entity>(false, 256)
+    private val _enemyProjectiles = com.badlogic.gdx.utils.Array<Entity>(false, 128)
+    private val _xpGems = com.badlogic.gdx.utils.Array<Entity>(false, 128)
+    private val _healthGems = com.badlogic.gdx.utils.Array<Entity>(false, 16)
+    private val _poisonClouds = com.badlogic.gdx.utils.Array<Entity>(false, 16)
+    private val _orbitShields = com.badlogic.gdx.utils.Array<Entity>(false, 16)
 
     // Scratch buffer for spatial queries
-    private val _nearbyEnemiesBuffer = mutableListOf<Entity>()
+    private val _nearbyEnemiesBuffer = com.badlogic.gdx.utils.Array<Entity>(false, 64)
 
     // Maximum possible enemy collision radius (bosses can be up to 40f)
     private val MAX_ENEMY_RADIUS = 40f

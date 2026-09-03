@@ -18,7 +18,7 @@ import com.hordesurvival.game.component.SpriteShape
  */
 class EnemyAISystem(private val engine: GameEngine) : System() {
 
-    private val _healCandidatesBuffer = mutableListOf<Entity>()
+    private val _healCandidatesBuffer = com.badlogic.gdx.utils.Array<Entity>(false, 16)
 
     override fun update(dt: Float, entities: List<Entity>) {
         val player = engine.playerEntity ?: return
