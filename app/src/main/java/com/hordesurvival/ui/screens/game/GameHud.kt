@@ -3,7 +3,6 @@ package com.hordesurvival.ui.screens.game
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 
 import androidx.compose.material3.*
@@ -23,6 +22,7 @@ import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.theme.HordeTypography
 import com.hordesurvival.ui.components.CornerCutShape
 import com.hordesurvival.ui.components.HordeProgressBar
+import com.hordesurvival.ui.components.hordeInteractive
 import com.hordesurvival.ui.components.HordeSmallButton
 import com.hordesurvival.ui.components.SmallCutShape
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -119,7 +119,7 @@ fun GameHud(
                             modifier = Modifier.size(28.dp)
                                 .clip(CornerCutShape)
                                 .background(if (sel) HordeColors.SkyBlue.copy(alpha = 0.5f) else HordeColors.OverlayLight)
-                                .clickable { onSpeedChange(speed) },
+                                .hordeInteractive(onClick = { onSpeedChange(speed) }),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(label, style = HordeTypography.Label, color = if (sel) Color.White else Color.White.copy(alpha = 0.5f))
@@ -230,7 +230,7 @@ fun GameHud(
                 .clip(CornerCutShape)
                 .background(if (abilityReady) HordeColors.Success.copy(alpha = 0.6f) else Color.Gray.copy(alpha = 0.3f))
                 .border(1.5.dp, if (abilityReady) HordeColors.Success else Color.Gray.copy(alpha = 0.5f), CornerCutShape)
-                .clickable(enabled = abilityReady) { onAbilityClick() },
+                .hordeInteractive(enabled = abilityReady, onClick = onAbilityClick),
             contentAlignment = Alignment.Center
         ) {
             val emoji = when (abilityType) {
@@ -308,7 +308,7 @@ fun BossWarningBanner(visible: Boolean, onDismiss: () -> Unit) {
     Box(
         Modifier.widthIn(max = 600.dp).fillMaxWidth()
             .background(Brush.horizontalGradient(listOf(HordeColors.Lavender.copy(alpha = alpha * 0.7f), HordeColors.SkyBlue.copy(alpha = alpha * 0.4f), HordeColors.Lavender.copy(alpha = alpha * 0.7f))))
-            .clickable { onDismiss() }.padding(vertical = 20.dp),
+            .hordeInteractive(onClick = onDismiss).padding(vertical = 20.dp),
         contentAlignment = Alignment.Center
     ) { Text("⚠️ BOSS INCOMING ⚠️", style = HordeTypography.Header, color = Color.White) }
 }

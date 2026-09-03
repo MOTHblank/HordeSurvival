@@ -3,7 +3,6 @@ package com.hordesurvival.ui.screens.game
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +24,7 @@ import com.hordesurvival.ui.theme.HordeColors
 import com.hordesurvival.ui.theme.HordeTypography
 import com.hordesurvival.ui.components.CornerCutShape
 import com.hordesurvival.ui.components.SmallCutShape
+import com.hordesurvival.ui.components.hordeInteractive
 
 /**
  * Level-up screen with animated cards, rarity glow, and satisfying selection.
@@ -121,17 +121,12 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
 
     // Evolution glow animation
     val isEvolution = option.targetTier == 6
-    var isPressed by remember { mutableStateOf(false) }
-    val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        label = "press"
-    )
     val inf = rememberInfiniteTransition(label = "evo")
     val evoGlow by inf.animateFloat(0.3f, 0.7f, infiniteRepeatable(tween(1000), RepeatMode.Reverse), label = "glow")
 
     Box(
         modifier = modifier
-            .scale(pressScale)
+            .hordeInteractive(onClick = onClick)
             .clip(CornerCutShape)
             .background(
                 Brush.verticalGradient(
@@ -146,10 +141,6 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
                 color = if (isEvolution) HordeColors.GoldColor.copy(alpha = evoGlow) else rarityColor.copy(alpha = 0.4f),
                 shape = CornerCutShape
             )
-            .clickable {
-                isPressed = true
-                onClick()
-            }
             .padding(14.dp),
         contentAlignment = Alignment.Center
     ) {
