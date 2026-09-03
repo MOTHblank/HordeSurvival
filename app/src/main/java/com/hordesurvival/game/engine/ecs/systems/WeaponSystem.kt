@@ -28,7 +28,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
     private val lightningHitCooldowns = IntFloatMap()
 
     // Scratch buffers for spatial queries
-    private val _enemyQueryResult = mutableListOf<Entity>()
+    private val _enemyQueryResult = com.badlogic.gdx.utils.Array<Entity>(false, 64)
 
     override fun update(dt: Float, entities: List<Entity>) {
         val player = engine.playerEntity ?: return
@@ -381,7 +381,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
      * Uses an in-place partial selection sort to avoid O(N log N) GC churn.
      * Modifies and returns the reusable `_enemyQueryResult` list.
      */
-    private fun findNearestEnemies(x: Float, y: Float, count: Int, maxDist: Float): MutableList<Entity> {
+    private fun findNearestEnemies(x: Float, y: Float, count: Int, maxDist: Float): com.badlogic.gdx.utils.Array<Entity> {
         _enemyQueryResult.clear()
         engine.spatialGrid.queryRange(x, y, maxDist, "enemy", _enemyQueryResult)
         val size = _enemyQueryResult.size
@@ -426,7 +426,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
 
         // Trim list to target count to prevent caller from iterating beyond K
         while (_enemyQueryResult.size > targetCount) {
-            _enemyQueryResult.removeAt(_enemyQueryResult.size - 1)
+            _enemyQueryResult.removeIndex(_enemyQueryResult.size - 1)
         }
 
         return _enemyQueryResult
