@@ -109,7 +109,8 @@ class EliteAbilities(private val engine: GameEngine) {
                         state.timer = 0f
                         // Heal nearby enemies
                         val nearby = engine.findInRange(transform.x, transform.y, 120f, "enemy")
-                        for (e in nearby) {
+                        for (i in 0 until nearby.size) {
+                    val e = nearby[i]
                             if (e.id == entity.id) continue
                             e.get<HealthComponent>()?.heal(5f)
                         }
@@ -171,7 +172,8 @@ class EliteAbilities(private val engine: GameEngine) {
                     }
                     // Damage nearby enemies too
                     val nearby = engine.findInRange(pos.x, pos.y, 100f, "enemy")
-                    for (e in nearby) {
+                    for (i in 0 until nearby.size) {
+                    val e = nearby[i]
                         e.get<HealthComponent>()?.takeDamage(20f)
                     }
                 }

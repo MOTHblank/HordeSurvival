@@ -169,12 +169,12 @@ class GameEngine {
     }
 
     // Reusable list for findInRange to avoid allocation
-    private val _findRangeResult = mutableListOf<Entity>()
+    private val _findRangeResult = com.badlogic.gdx.utils.Array<Entity>(false, 128)
 
     /**
      * Finds all entities within [radius] matching [tag] using SpatialGrid query.
      */
-    fun findInRange(x: Float, y: Float, radius: Float, tag: String): List<Entity> {
+    fun findInRange(x: Float, y: Float, radius: Float, tag: String): com.badlogic.gdx.utils.Array<Entity> {
         _findRangeResult.clear()
         spatialGrid.queryRange(x, y, radius, tag, _findRangeResult)
         return _findRangeResult

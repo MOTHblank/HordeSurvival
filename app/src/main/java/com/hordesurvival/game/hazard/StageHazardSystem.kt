@@ -94,7 +94,8 @@ class StageHazardSystem(private val engine: GameEngine) {
                     }
                     // Also slow enemies in range
                     val nearby = engine.findInRange(hazard.x, hazard.y, hazard.type.size, "enemy")
-                    for (e in nearby) {
+                    for (i in 0 until nearby.size) {
+                    val e = nearby[i]
                         e.get<EnemyComponent>()?.let {
                             it.slowTimer = 0.5f
                             it.slowFactor = 0.3f
@@ -118,7 +119,8 @@ class StageHazardSystem(private val engine: GameEngine) {
                     // Damage enemies too
                     if (hazard.timer >= hazard.type.interval) {
                         val nearby = engine.findInRange(hazard.x, hazard.y, hazard.type.size, "enemy")
-                        for (e in nearby) {
+                        for (i in 0 until nearby.size) {
+                    val e = nearby[i]
                             e.get<HealthComponent>()?.takeDamage(hazard.type.damage * 0.5f)
                         }
                     }
@@ -158,7 +160,8 @@ class StageHazardSystem(private val engine: GameEngine) {
                 HazardType.FIRE_WALL -> {
                     // Burns enemies that pass through
                     val nearby = engine.findInRange(hazard.x, hazard.y, hazard.type.size / 2f, "enemy")
-                    for (e in nearby) {
+                    for (i in 0 until nearby.size) {
+                    val e = nearby[i]
                         e.get<HealthComponent>()?.takeDamage(hazard.type.damage * dt)
                     }
                 }
