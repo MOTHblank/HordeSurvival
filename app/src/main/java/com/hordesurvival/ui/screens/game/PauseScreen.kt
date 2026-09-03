@@ -23,6 +23,7 @@ import com.hordesurvival.ui.components.HordeSelectorSetting
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 /**
  * Pause overlay with Resume, Settings, and Quit buttons.
@@ -59,9 +60,7 @@ fun PauseScreen(
         ) {
             Text(
                 text = "⏸ ${Locales.getString("pause", languageCode).uppercase()}",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White
+                style = HordeTypography.Title
             )
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -70,9 +69,7 @@ fun PauseScreen(
                 HordeCard(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "⚙ ${Locales.getString("settings", languageCode)}",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = HordeColors.WarmPeach,
+                        style = HordeTypography.SubHeader,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                     Spacer(modifier = Modifier.height(16.dp))

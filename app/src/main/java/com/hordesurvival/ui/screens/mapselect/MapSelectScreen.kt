@@ -24,6 +24,7 @@ import com.hordesurvival.ui.components.HordeScreen
 import com.hordesurvival.ui.components.HordeSecondaryButton
 import com.hordesurvival.ui.components.SmallCutShape
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 
 /**
  * Map selection screen — shown when player picks Survival mode.
@@ -59,7 +60,7 @@ fun MapSelectScreen(
                     .background(HordeColors.GoldColor.copy(alpha = 0.12f))
                     .padding(horizontal = 14.dp, vertical = 4.dp)
             ) {
-                Text("💰 Gold: $playerGold", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = HordeColors.GoldColor)
+                Text("💰 Gold: $playerGold", style = HordeTypography.Body, color = HordeColors.GoldColor)
             }
 
             Spacer(Modifier.height(20.dp))
@@ -82,17 +83,17 @@ fun MapSelectScreen(
                         onClick = if (isUnlocked) { { selectedMap = map } } else null
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(map.icon, fontSize = 36.sp)
+                            Text(map.icon, style = HordeTypography.Title)
                             Spacer(Modifier.height(6.dp))
-                            Text(map.name, fontSize = 14.sp, fontWeight = FontWeight.Black,
+                            Text(map.name, style = HordeTypography.Body,
                                 color = if (isUnlocked) Color.White else Color.White.copy(alpha = 0.4f),
                                 textAlign = TextAlign.Center)
                             Spacer(Modifier.height(4.dp))
                             if (!isUnlocked) {
-                                Text("🔒 ${map.unlockCost} gold", fontSize = 11.sp, color = HordeColors.GoldColor.copy(alpha = 0.7f))
-                                Text("Level ${map.minLevel}+", fontSize = 10.sp, color = Color.White.copy(alpha = 0.3f))
+                                Text("🔒 ${map.unlockCost} gold", style = HordeTypography.Label, color = HordeColors.GoldColor.copy(alpha = 0.7f))
+                                Text("Level ${map.minLevel}+", style = HordeTypography.Label, color = Color.White.copy(alpha = 0.3f))
                             } else {
-                                Text(map.description, fontSize = 10.sp, color = Color.White.copy(alpha = 0.5f),
+                                Text(map.description, style = HordeTypography.Label, color = Color.White.copy(alpha = 0.5f),
                                     textAlign = TextAlign.Center, maxLines = 3)
                             }
                             // Modifiers
@@ -143,7 +144,7 @@ fun MapSelectScreen(
 @Composable
 private fun StatChip(text: String, color: Color) {
     Text(
-        text, fontSize = 9.sp, fontWeight = FontWeight.Bold,
+        text, style = HordeTypography.Label,
         color = color,
         modifier = Modifier
             .clip(SmallCutShape)

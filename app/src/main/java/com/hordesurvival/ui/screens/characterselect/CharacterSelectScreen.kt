@@ -125,7 +125,7 @@ private fun CharacterCard(
             ) {
                 Text(
                     text = getCharacterEmoji(character.characterId),
-                    fontSize = 28.sp
+                    style = HordeTypography.Header
                 )
             }
 
@@ -133,18 +133,14 @@ private fun CharacterCard(
 
             Text(
                 text = character.name,
-                style = HordeTypography.Value.copy(
-                    fontWeight = FontWeight.Black,
+                style = HordeTypography.Value,
                     color = if (character.isUnlocked) Color.White else HordeColors.TextSecondary
-                )
             )
 
             Text(
                 text = character.description,
-                style = HordeTypography.Label.copy(
-                    fontSize = 11.sp,
-                    textAlign = TextAlign.Center
-                ),
+                style = HordeTypography.Label,
+                    textAlign = TextAlign.Center,
                 maxLines = 2
             )
 
@@ -156,11 +152,8 @@ private fun CharacterCard(
                 ) {
                     Text(
                         "🔒 Unlock (500💰)",
-                        style = HordeTypography.Label.copy(
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
+                        style = HordeTypography.Label,
                             color = if (gold >= 500) HordeColors.GoldColor else HordeColors.TextSecondary
-                        )
                     )
                 }
             }

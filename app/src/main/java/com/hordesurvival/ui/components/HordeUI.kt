@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -33,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
@@ -140,31 +142,22 @@ fun HordeHeader(
             if (icon != null) {
                 Text(
                     text = icon,
-                    fontSize = 32.sp,
+                    style = HordeTypography.Title,
                     modifier = Modifier.padding(end = 8.dp)
                 )
             }
             Text(
                 text = title,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
+                style = HordeTypography.Header,
                 color = accentColor,
-                letterSpacing = 3.sp,
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = accentColor.copy(alpha = 0.5f),
-                        offset = Offset(0f, 0f),
-                        blurRadius = 16f
-                    )
-                )
+                letterSpacing = 3.sp
             )
         }
         if (subtitle != null) {
             Spacer(Modifier.height(4.dp))
             Text(
                 text = subtitle,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
+                style = HordeTypography.Label,
                 color = HordeColors.TextSecondary,
                 letterSpacing = 1.sp
             )
@@ -230,22 +223,16 @@ fun HordeButton(
             if (icon != null) {
                 Text(
                     text = icon,
-                    fontSize = 20.sp,
+                    style = HordeTypography.SubHeader,
                     color = if (enabled) Color.White else Color.White.copy(alpha = 0.4f)
                 )
                 Spacer(Modifier.width(8.dp))
             }
             Text(
                 text = text,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Black,
+                style = HordeTypography.Button,
                 color = if (enabled) Color.White else Color.White.copy(alpha = 0.4f),
-                letterSpacing = 2.sp,
-                style = if (enabled) {
-                    TextStyle(shadow = Shadow(color = color.copy(alpha = 0.6f), offset = Offset(0f, 0f), blurRadius = 14f))
-                } else {
-                    TextStyle.Default
-                }
+                letterSpacing = 2.sp
             )
         }
     }
@@ -290,13 +277,12 @@ fun HordeSecondaryButton(
             modifier = Modifier.padding(horizontal = 12.dp)
         ) {
             if (icon != null) {
-                Text(text = icon, fontSize = 16.sp, color = color)
+                Text(text = icon, style = HordeTypography.Value, color = color)
                 Spacer(Modifier.width(8.dp))
             }
             Text(
                 text = text,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
+                style = HordeTypography.Button,
                 color = color
             )
         }
@@ -329,8 +315,7 @@ fun HordeSmallButton(
     ) {
         Text(
             text = text,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
+            style = HordeTypography.Label,
             color = if (enabled) Color.White else Color.Gray
         )
     }
@@ -352,9 +337,8 @@ fun HordeBackButton(
     ) {
         Text(
             text = text,
+            style = HordeTypography.Button,
             color = color,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp
         )
     }
@@ -670,12 +654,12 @@ fun HordeToggleSetting(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 if (icon != null) {
-                    Text(icon, fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                    Text(icon, style = HordeTypography.SubHeader, modifier = Modifier.padding(end = 12.dp))
                 }
                 Column {
-                    Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+                    Text(title, style = HordeTypography.Body)
                     if (description != null) {
-                        Text(description, style = HordeTypography.Label.copy(fontSize = 11.sp))
+                        Text(description, style = HordeTypography.Label)
                     }
                 }
             }
@@ -698,12 +682,12 @@ fun HordeSliderSetting(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (icon != null) {
-                        Text(icon, fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                        Text(icon, style = HordeTypography.SubHeader, modifier = Modifier.padding(end = 12.dp))
                     }
-                    Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+                    Text(title, style = HordeTypography.Body)
                 }
                 if (valueText != null) {
-                    Text(valueText, style = HordeTypography.Label.copy(fontWeight = FontWeight.Bold, color = HordeColors.SkyBlue))
+                    Text(valueText, style = HordeTypography.Label, color = HordeColors.SkyBlue)
                 }
             }
             Spacer(Modifier.height(4.dp))
@@ -727,12 +711,12 @@ fun <T> HordeSelectorSetting(
         Column(Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (icon != null) {
-                    Text(icon, fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                    Text(icon, style = HordeTypography.SubHeader, modifier = Modifier.padding(end = 12.dp))
                 }
-                Text(title, style = HordeTypography.Body.copy(fontWeight = FontWeight.Bold))
+                Text(title, style = HordeTypography.Body)
             }
             if (description != null) {
-                Text(description, style = HordeTypography.Label.copy(fontSize = 11.sp))
+                Text(description, style = HordeTypography.Label)
             }
             Spacer(Modifier.height(12.dp))
 
@@ -746,11 +730,9 @@ fun <T> HordeSelectorSetting(
                             onClick = { onOptionSelected(value) },
                             selected = sel
                         ) {
-                            Text(label, style = HordeTypography.Label.copy(
-                                color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary,
-                                fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 13.sp
-                            ))
+                            Text(label, style = HordeTypography.Label,
+                                color = if (sel) HordeColors.SkyBlue else HordeColors.TextSecondary
+                            )
                         }
                     }
                     if (row.size < columns) {

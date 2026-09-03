@@ -205,6 +205,6 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionHeader(title: String) {
-    Text(title, style = HordeTypography.SubHeader.copy(fontSize = 17.sp, color = HordeColors.Lavender),
+    Text(title, style = HordeTypography.SubHeader, color = HordeColors.Lavender,
         modifier = Modifier.fillMaxWidth().padding(start = 4.dp))
 }
