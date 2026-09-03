@@ -11,3 +11,6 @@
 ## 2024-05-19 - Standardized Typography Usage
 **Learning:** `HordeTypography` was available in `Theme.kt`, but many UI components and screens still manually hardcoded `fontSize`, `fontWeight`, and `color` directly onto `Text` composables, or overrode them using `.copy(...)`. This fragmented the design system and made it difficult to adjust font sizes universally across the app.
 **Action:** Removed manual `fontSize` and `.copy(...)` styling throughout the UI (menus, HUD, settings, game-over screens). Applied explicit `HordeTypography` styles (e.g. `Title`, `Header`, `SubHeader`, `Body`, `Label`, `Value`, `Button`). Kept manual `color` attributes strictly as top-level overrides when dynamic (like coloring stats or buttons based on status).
+## 2024-09-02 - Modifier consistency
+**Learning:** Found several scattered instances of raw `Modifier.clickable` that manually managed `isPressed` states and handled their own scale animations, leading to inconsistent visual behavior and missed state resets (e.g. `LevelUpScreen.kt`).
+**Action:** Always leverage the unified `Modifier.hordeInteractive()` which handles safe state tracking, bounce animations, and standard sound effects out of the box.
