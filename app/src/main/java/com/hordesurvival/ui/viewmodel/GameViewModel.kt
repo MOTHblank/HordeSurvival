@@ -334,7 +334,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             var enemyCountTemp = 0
             val activeEntities = engine.cachedActiveEntities
             for (i in 0 until activeEntities.size) {
-                if (activeEntities[i].tag == "enemy") {
+                if (activeEntities.get(i).tag == "enemy") {
                     enemyCountTemp++
                 }
             }

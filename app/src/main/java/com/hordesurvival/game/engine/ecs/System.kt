@@ -12,7 +12,7 @@ abstract class System {
     open fun initialize() {}
 
     /** Called every frame with delta time */
-    abstract fun update(dt: Float, entities: List<Entity>)
+    abstract fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>)
 
     /** Called when the system is removed */
     open fun dispose() {}

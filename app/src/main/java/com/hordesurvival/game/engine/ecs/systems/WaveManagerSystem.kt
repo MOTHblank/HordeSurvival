@@ -37,7 +37,7 @@ class WaveManagerSystem(private val engine: GameEngine) : System() {
     /** Reference to player level — set from GameViewModel */
     var playerLevel = 1
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity
         val playerPos = player?.get<TransformComponent>() ?: return
 
