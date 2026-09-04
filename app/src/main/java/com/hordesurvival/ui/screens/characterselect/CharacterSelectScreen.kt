@@ -146,16 +146,12 @@ private fun CharacterCard(
 
             if (!character.isUnlocked) {
                 Spacer(modifier = Modifier.height(8.dp))
-                TextButton(
+                com.hordesurvival.ui.components.HordeSmallButton(
+                    text = "🔒 Unlock (500💰)",
                     onClick = { onUnlock(character.characterId, 500) },
-                    enabled = gold >= 500
-                ) {
-                    Text(
-                        "🔒 Unlock (500💰)",
-                        style = HordeTypography.Label,
-                            color = if (gold >= 500) HordeColors.GoldColor else HordeColors.TextSecondary
-                    )
-                }
+                    enabled = gold >= 500,
+                    color = if (gold >= 500) HordeColors.GoldColor else HordeColors.TextSecondary
+                )
             }
         }
     }
