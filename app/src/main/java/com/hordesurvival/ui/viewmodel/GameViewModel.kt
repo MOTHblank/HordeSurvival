@@ -174,6 +174,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             engine.addSystem(OrbitSystem(engine))
             engine.addSystem(CollisionSystem(engine))
             engine.addSystem(XpDropSystem(engine))
+            engine.addSystem(com.hordesurvival.game.engine.ecs.systems.HitFlashSystem(engine))
             engine.addSystem(DamageNumberSystem(engine))
             engine.addSystem(ComboSystem(engine))
             engine.addSystem(ParticleSystem(engine))

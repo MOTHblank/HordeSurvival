@@ -51,7 +51,7 @@ fun GameHud(
     bossActive: Boolean = false,
     abilityReady: Boolean = true,
     abilityCooldown: Float = 0f,
-    abilityType: String = "",
+    abilityIcon: String = "✨",
     showComboCounter: Boolean = true,
     gameSpeed: Float = 1f,
     onPauseClick: () -> Unit = {},
@@ -233,14 +233,7 @@ fun GameHud(
                 .hordeInteractive(enabled = abilityReady, onClick = onAbilityClick),
             contentAlignment = Alignment.Center
         ) {
-            val emoji = when (abilityType) {
-                "dash" -> "💨"
-                "shield" -> "🛡️"
-                "aoe_blast" -> "💥"
-                "heal" -> "💚"
-                "lightning_storm" -> "⚡"
-                else -> "✨"
-            }
+            val emoji = if (abilityIcon.isNotEmpty()) abilityIcon else "✨"
             Text(emoji, style = HordeTypography.SubHeader)
             if (!abilityReady) {
                 // Cooldown overlay
