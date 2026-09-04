@@ -81,9 +81,9 @@ fun GameScreen(
     val bossHp by gameViewModel.bossHp.collectAsState()
     val bossMaxHp by gameViewModel.bossMaxHp.collectAsState()
     val bossActive by gameViewModel.bossActive.collectAsState()
-    val abilityReady by gameViewModel.abilityReady.collectAsState()
-    val abilityCooldown by gameViewModel.abilityCooldown.collectAsState()
-    val abilityType = gameViewModel.abilityType
+    val abilityReady by gameViewModel.charAbilityReady.collectAsState()
+    val abilityCooldown by gameViewModel.charAbilityCooldown.collectAsState()
+    val abilityIcon by gameViewModel.charAbilityIcon.collectAsState()
     val gameSpeed by gameViewModel.gameSpeed.collectAsState()
     val achievementPopup by gameViewModel.achievementPopup.collectAsState()
     val tdStageComplete by gameViewModel.tdStageComplete.collectAsState()
@@ -153,7 +153,7 @@ fun GameScreen(
 
     // Initialize game — fresh start or continue from death
     LaunchedEffect(Unit) {
-        if (isContinuing && gameViewModel.engine.getActiveEntities().isNotEmpty()) {
+        if (isContinuing && !gameViewModel.engine.getActiveEntities().isEmpty) {
             // Continue was already handled in MainActivity — just resume the existing game
             gameViewModel.runSaved = false
         } else if (!isContinuing) {
@@ -239,7 +239,7 @@ fun GameScreen(
                 bossActive = bossActive,
                 abilityReady = abilityReady,
                 abilityCooldown = abilityCooldown,
-                abilityType = abilityType,
+                abilityIcon = abilityIcon,
                 showComboCounter = showComboCounter,
                 gameSpeed = gameSpeed,
                 onPauseClick = { gameViewModel.pauseGame() },

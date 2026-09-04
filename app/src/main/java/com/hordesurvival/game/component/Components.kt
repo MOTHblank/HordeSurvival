@@ -27,13 +27,15 @@ data class HealthComponent(
     var maxHp: Float = 100f,
     var armor: Float = 0f,
     var invincibleTimer: Float = 0f,
-    var isDead: Boolean = false
+    var isDead: Boolean = false,
+    var hitFlashTimer: Float = 0f
 ) : Component {
     fun takeDamage(amount: Float) {
         if (invincibleTimer > 0f || isDead) return
         // Minimum 1 damage even with high armor — prevents invincibility
         val reduced = (amount - armor).coerceAtLeast(1f)
         currentHp -= reduced
+        hitFlashTimer = 0.15f
         if (currentHp <= 0f) {
             currentHp = 0f
             isDead = true

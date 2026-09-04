@@ -40,7 +40,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
     // Maximum possible enemy collision radius (bosses can be up to 40f)
     private val MAX_ENEMY_RADIUS = 40f
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         // Rebuild SpatialGrid with updated entity positions after MovementSystem/EnemyAISystem ran
         engine.spatialGrid.clear()
         for (i in 0 until entities.size) {
@@ -214,7 +214,10 @@ class CollisionSystem(private val engine: GameEngine) : System() {
                     spawnHitParticles(eTransform.x, eTransform.y, getWeaponHitColor(pComp.weaponType))
                     SoundManager.playHit()
                     spawnDamageNumber(eTransform.x, eTransform.y - 15f, actualDmg, actualDmg > pComp.damage * 1.5f)
-                    if (actualDmg > pComp.damage * 1.5f) SoundManager.playHitCrit()
+                    if (actualDmg > pComp.damage * 1.5f) {
+                        SoundManager.playHitCrit()
+                        engine.shake(intensity = 3f, duration = 0.05f)
+                    }
                     break
                 }
             }

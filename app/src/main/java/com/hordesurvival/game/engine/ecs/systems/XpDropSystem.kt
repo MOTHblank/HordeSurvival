@@ -21,7 +21,7 @@ class XpDropSystem(private val engine: GameEngine) : System() {
     // Direct reference to TD mode for gold/score tracking
     var towerDefense: com.hordesurvival.game.mode.TowerDefenseMode? = null
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity
         val playerComp = player?.get<PlayerComponent>()
 
@@ -77,6 +77,10 @@ class XpDropSystem(private val engine: GameEngine) : System() {
             val enemySize = enemySprite?.width ?: 12f
             spawnDeathEffect(transform.x, transform.y, spriteColor, enemyComp.isBoss, enemySize)
             SoundManager.playDeath()
+
+            if (enemyComp.isBoss) {
+                engine.shake(intensity = 15f, duration = 0.5f)
+            }
 
             // Mark inactive
             entity.active = false
