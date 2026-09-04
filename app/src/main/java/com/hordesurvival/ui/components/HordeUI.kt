@@ -4,7 +4,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import com.hordesurvival.game.audio.SoundManager
 import androidx.compose.foundation.shape.CutCornerShape
@@ -167,7 +166,7 @@ fun HordeHeader(
 fun HordeButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
     color: Color = HordeColors.SkyBlue,
     enabled: Boolean = true,
     breathe: Float = 1f,
@@ -240,7 +239,7 @@ fun HordeButton(
 fun HordeSecondaryButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
     color: Color = HordeColors.TextSecondary,
     icon: String? = null
 ) {
