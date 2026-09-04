@@ -112,14 +112,12 @@ fun PauseScreen(
             } else {
                 // Main pause buttons
                 HordeButton(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = Locales.getString("resume", languageCode),
                     icon = "▶",
                     onClick = onResume
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 HordeSecondaryButton(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = Locales.getString("settings", languageCode),
                     icon = "⚙",
                     onClick = { showSettings = true }
@@ -140,7 +138,6 @@ fun PauseScreen(
                 Spacer(Modifier.height(24.dp))
 
                 HordeSecondaryButton(
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     text = Locales.getString("quit", languageCode),
                     icon = "🏠",
                     onClick = onQuit

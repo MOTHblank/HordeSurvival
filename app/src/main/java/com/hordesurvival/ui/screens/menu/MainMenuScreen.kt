@@ -126,7 +126,6 @@ fun MainMenuScreen(
                     icon = "▶",
                     onClick = onPlayClick,
                     color = HordeColors.SkyBlue,
-                    modifier = Modifier.widthIn(max = 350.dp).fillMaxWidth(0.85f),
                     breathe = breathe
                 )
 
