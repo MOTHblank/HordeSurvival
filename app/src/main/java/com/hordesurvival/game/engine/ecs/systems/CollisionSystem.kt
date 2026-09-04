@@ -214,7 +214,10 @@ class CollisionSystem(private val engine: GameEngine) : System() {
                     spawnHitParticles(eTransform.x, eTransform.y, getWeaponHitColor(pComp.weaponType))
                     SoundManager.playHit()
                     spawnDamageNumber(eTransform.x, eTransform.y - 15f, actualDmg, actualDmg > pComp.damage * 1.5f)
-                    if (actualDmg > pComp.damage * 1.5f) SoundManager.playHitCrit()
+                    if (actualDmg > pComp.damage * 1.5f) {
+                        SoundManager.playHitCrit()
+                        engine.shake(intensity = 3f, duration = 0.05f)
+                    }
                     break
                 }
             }

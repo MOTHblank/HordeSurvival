@@ -410,6 +410,12 @@ private fun DrawScope.drawPlayer(
         textLayoutResult = textResult,
         topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
     )
+
+    val health = entity.get<HealthComponent>()
+    val flashAlpha = (health?.hitFlashTimer ?: 0f) / 0.15f
+    if (flashAlpha > 0f) {
+        drawCircle(Color.White.copy(alpha = flashAlpha * 0.7f), radius = size * 0.6f, center = Offset(x, y))
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -470,6 +476,12 @@ private fun DrawScope.drawEnemy(
         textLayoutResult = textResult,
         topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
     )
+
+    val health = entity.get<HealthComponent>()
+    val flashAlpha = (health?.hitFlashTimer ?: 0f) / 0.15f
+    if (flashAlpha > 0f) {
+        drawCircle(Color.White.copy(alpha = flashAlpha * 0.7f), radius = w * 0.6f, center = Offset(x, y))
+    }
 
     enemy?.let { e ->
         if (e.burnTimer > 0f) drawCircle(Color(0xFFFFCC80).copy(alpha = 0.35f), radius = w / 2f + 4f, center = Offset(x, y))

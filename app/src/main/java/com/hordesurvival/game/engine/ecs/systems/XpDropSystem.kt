@@ -78,6 +78,10 @@ class XpDropSystem(private val engine: GameEngine) : System() {
             spawnDeathEffect(transform.x, transform.y, spriteColor, enemyComp.isBoss, enemySize)
             SoundManager.playDeath()
 
+            if (enemyComp.isBoss) {
+                engine.shake(intensity = 15f, duration = 0.5f)
+            }
+
             // Mark inactive
             entity.active = false
         }
