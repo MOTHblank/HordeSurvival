@@ -12,7 +12,7 @@ import kotlin.math.sqrt
  */
 class EliteAbilitySystem(private val engine: GameEngine) : System() {
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity ?: return
         val playerPos = player.get<TransformComponent>() ?: return
 

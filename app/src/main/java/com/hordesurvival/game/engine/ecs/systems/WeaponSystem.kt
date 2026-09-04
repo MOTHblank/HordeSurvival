@@ -30,7 +30,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
     // Scratch buffers for spatial queries
     private val _enemyQueryResult = com.badlogic.gdx.utils.Array<Entity>(false, 64)
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity ?: return
         val playerTransform = player.get<TransformComponent>() ?: return
         val playerComp = player.get<PlayerComponent>() ?: return
@@ -53,7 +53,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         weapon: WeaponStateComponent,
         playerPos: TransformComponent,
         player: PlayerComponent,
-        entities: List<Entity>,
+        entities: com.badlogic.gdx.utils.Array<Entity>,
         dt: Float = 1f / 60f
     ) {
         // Play weapon-specific sound

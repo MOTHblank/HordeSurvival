@@ -39,7 +39,7 @@ class PlayerInputSystem(private val engine: GameEngine) : System() {
         const val VISUAL_STICK_RADIUS = 28f
     }
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity ?: return
         val velocity = player.get<VelocityComponent>() ?: return
 

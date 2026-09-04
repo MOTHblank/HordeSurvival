@@ -15,7 +15,7 @@ class ParticleSystem(private val engine: GameEngine) : System() {
         const val MAX_PARTICLES = 150  // Cap particles for low-end device performance
     }
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         var particleCount = 0
 
         for (i in 0 until entities.size) {

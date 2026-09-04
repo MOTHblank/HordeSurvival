@@ -19,7 +19,7 @@ class ComboSystem(private val engine: GameEngine) : System() {
     // Integer objects on every kill, reducing GC pressure during gameplay.
     private val countedKills = IntSet()
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity ?: return
         val combo = player.get<ComboComponent>() ?: return
 

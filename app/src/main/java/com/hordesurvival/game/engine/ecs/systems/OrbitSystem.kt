@@ -13,7 +13,7 @@ import kotlin.math.sin
  */
 class OrbitSystem(private val engine: GameEngine) : System() {
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         // Find player position for orbit center
         val player = engine.playerEntity
         val playerPos = player?.get<TransformComponent>()

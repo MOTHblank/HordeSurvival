@@ -153,7 +153,7 @@ fun GameScreen(
 
     // Initialize game — fresh start or continue from death
     LaunchedEffect(Unit) {
-        if (isContinuing && gameViewModel.engine.getActiveEntities().isNotEmpty()) {
+        if (isContinuing && !gameViewModel.engine.getActiveEntities().isEmpty) {
             // Continue was already handled in MainActivity — just resume the existing game
             gameViewModel.runSaved = false
         } else if (!isContinuing) {
