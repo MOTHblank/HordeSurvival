@@ -74,8 +74,9 @@ class EliteAbilities(private val engine: GameEngine) {
         return ability
     }
 
-    fun update(dt: Float, entities: List<Entity>, playerPos: TransformComponent?, playerHealth: HealthComponent?) {
-        for (entity in entities) {
+    fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>, playerPos: TransformComponent?, playerHealth: HealthComponent?) {
+        for (i in 0 until entities.size) {
+            val entity = entities[i]
             if (entity.tag != "enemy" || !entity.active) continue
             val state = eliteStates[entity.id] ?: continue
             val transform = entity.get<TransformComponent>() ?: continue

@@ -21,7 +21,7 @@ class XpDropSystem(private val engine: GameEngine) : System() {
     // Direct reference to TD mode for gold/score tracking
     var towerDefense: com.hordesurvival.game.mode.TowerDefenseMode? = null
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity
         val playerComp = player?.get<PlayerComponent>()
 

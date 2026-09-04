@@ -33,7 +33,7 @@ class AchievementSystem(private val engine: GameEngine) : System() {
 
     var onAchievementUnlocked: ((AchievementState) -> Unit)? = null
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity ?: return
         val comp = player.get<PlayerComponent>() ?: return
 

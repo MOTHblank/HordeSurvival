@@ -39,12 +39,12 @@ class GameEngine {
     )
 
     // Cached active entities list — reused every frame to avoid allocation
-    private val _activeEntitiesCache = mutableListOf<Entity>()
-    val cachedActiveEntities: List<Entity> get() = _activeEntitiesCache
+    private val _activeEntitiesCache = com.badlogic.gdx.utils.Array<Entity>(false, 512)
+    val cachedActiveEntities: com.badlogic.gdx.utils.Array<Entity> get() = _activeEntitiesCache
 
     // Public accessor for inline functions
     @PublishedApi
-    internal val activeEntitiesCache: MutableList<Entity> get() = _activeEntitiesCache
+    internal val activeEntitiesCache: com.badlogic.gdx.utils.Array<Entity> get() = _activeEntitiesCache
 
     var playerEntity: Entity? = null
     var gameTime = 0f
@@ -180,7 +180,7 @@ class GameEngine {
         return _findRangeResult
     }
 
-    fun getActiveEntities(): List<Entity> = _activeEntitiesCache
+    fun getActiveEntities(): com.badlogic.gdx.utils.Array<Entity> = _activeEntitiesCache
 
     fun getEntityCount(): Int {
         return _activeEntitiesCache.size

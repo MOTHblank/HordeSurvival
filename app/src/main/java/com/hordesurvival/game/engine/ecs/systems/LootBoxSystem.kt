@@ -18,7 +18,7 @@ class LootBoxSystem(private val engine: GameEngine) : System() {
     private var spawnTimer = 0f
     private var baseInterval = 15f  // seconds between spawns
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity
         val playerPos = player?.get<TransformComponent>() ?: return
         // FIX: player is non-null here (after ?: return), remove unnecessary safe calls

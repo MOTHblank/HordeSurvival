@@ -17,7 +17,7 @@ class RelicSystem(private val engine: GameEngine) : System() {
     private val spawnInterval = 45f  // every 45 seconds
     private val maxRelics = 5  // max on map at once
 
-    override fun update(dt: Float, entities: List<Entity>) {
+    override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity ?: return
         val playerPos = player.get<TransformComponent>() ?: return
         val playerComp = player.get<PlayerComponent>() ?: return
