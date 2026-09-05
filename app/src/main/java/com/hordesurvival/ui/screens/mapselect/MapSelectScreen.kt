@@ -123,7 +123,7 @@ fun MapSelectScreen(
                     text = "Back",
                     icon = "←",
                     onClick = onBack,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f, fill = false)
                 )
 
                 // Play
@@ -134,7 +134,7 @@ fun MapSelectScreen(
                     color = HordeColors.Success,
                     enabled = canPlay,
                     onClick = { if (canPlay) selectedMap?.let { onSelectMap(it) } },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f, fill = false)
                 )
             }
         }
