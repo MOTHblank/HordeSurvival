@@ -130,50 +130,50 @@ fun MainMenuScreen(
                 )
 
                 // Secondary buttons — compact grid
-                Row(Modifier.widthIn(max = 400.dp).fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HordeSecondaryButton(
                         text = L("characters"),
                         onClick = onCharactersClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.Lavender,
                         icon = "👤"
                     )
                     HordeSecondaryButton(
                         text = L("upgrades"),
                         onClick = onUpgradesClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.MintGreen,
                         icon = "⬆"
                     )
                 }
-                Row(Modifier.widthIn(max = 400.dp).fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HordeSecondaryButton(
                         text = L("shop"),
                         onClick = onShopClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.GoldColor,
                         icon = "🛒"
                     )
                     HordeSecondaryButton(
                         text = L("stats"),
                         onClick = onStatsClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.SoftPink,
                         icon = "📊"
                     )
                 }
-                Row(Modifier.widthIn(max = 400.dp).fillMaxWidth(0.85f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HordeSecondaryButton(
                         text = L("settings"),
                         onClick = onSettingsClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.WarmPeach,
                         icon = "⚙"
                     )
                     HordeSecondaryButton(
                         text = L("tutorial"),
                         onClick = onTutorialClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.Cream,
                         icon = "📖"
                     )
