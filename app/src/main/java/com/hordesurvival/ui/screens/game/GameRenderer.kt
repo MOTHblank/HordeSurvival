@@ -91,10 +91,10 @@ fun GameRenderer(
     val entities = remember(frameTick) { engine.getActiveEntities() }
 
     // Reusable scratch lists across recompositions to eliminate GC allocations
-    val enemiesScratch = remember { mutableListOf<Entity>() }
-    val renderListScratch = remember { mutableListOf<Entity>() }
-    val layersScratch = remember { mutableListOf<Int>() }
-    val damageNumbersScratch = remember { mutableListOf<Entity>() }
+    val enemiesScratch = remember { com.badlogic.gdx.utils.Array<Entity>(false, 256) }
+    val renderListScratch = remember { com.badlogic.gdx.utils.Array<Entity>(false, 1024) }
+    val layersScratch = remember { com.badlogic.gdx.utils.IntArray(false, 1024) }
+    val damageNumbersScratch = remember { com.badlogic.gdx.utils.Array<Entity>(false, 128) }
 
     // Camera zoom: closer when stationary, farther when moving
     var currentZoom by remember { mutableFloatStateOf(1.1f) }
@@ -228,7 +228,7 @@ fun GameRenderer(
                 var minIdx = i
                 var minDistSq = Float.MAX_VALUE
                 for (j in i until enemiesScratch.size) {
-                    val e = enemiesScratch[j]
+                    val e = enemiesScratch.get(j)
                     val t = e.get<TransformComponent>()
                     val distSq = if (t != null) {
                         val dx = t.x - px; val dy = t.y - py
@@ -240,36 +240,36 @@ fun GameRenderer(
                     }
                 }
                 if (minIdx != i) {
-                    val tmp = enemiesScratch[i]
-                    enemiesScratch[i] = enemiesScratch[minIdx]
-                    enemiesScratch[minIdx] = tmp
+                    val tmp = enemiesScratch.get(i)
+                    enemiesScratch.set(i, enemiesScratch.get(minIdx))
+                    enemiesScratch.set(minIdx, tmp)
                 }
-                renderListScratch.add(enemiesScratch[i])
+                renderListScratch.add(enemiesScratch.get(i))
             }
         } else {
-            renderListScratch.addAll(enemiesScratch)
+            renderListScratch.addAll(enemiesScratch, 0, enemiesScratch.size)
         }
 
         // Insertion sort renderListScratch by sprite layer in-place using cached primitive layers
         layersScratch.clear()
         for (i in 0 until renderListScratch.size) {
-            layersScratch.add(renderListScratch[i].get<SpriteComponent>()?.layer ?: 0)
+            layersScratch.add(renderListScratch.get(i).get<SpriteComponent>()?.layer ?: 0)
         }
         for (i in 1 until renderListScratch.size) {
-            val key = renderListScratch[i]
-            val keyLayer = layersScratch[i]
+            val key = renderListScratch.get(i)
+            val keyLayer = layersScratch.get(i)
             var j = i - 1
-            while (j >= 0 && layersScratch[j] > keyLayer) {
-                renderListScratch[j + 1] = renderListScratch[j]
-                layersScratch[j + 1] = layersScratch[j]
+            while (j >= 0 && layersScratch.get(j) > keyLayer) {
+                renderListScratch.set(j + 1, renderListScratch.get(j))
+                layersScratch.set(j + 1, layersScratch.get(j))
                 j--
             }
-            renderListScratch[j + 1] = key
-            layersScratch[j + 1] = keyLayer
+            renderListScratch.set(j + 1, key)
+            layersScratch.set(j + 1, keyLayer)
         }
 
         for (i in 0 until renderListScratch.size) {
-            val e = renderListScratch[i]
+            val e = renderListScratch.get(i)
             val t = e.get<TransformComponent>() ?: continue
             val s = e.get<SpriteComponent>() ?: continue
             val sx = t.x + offX; val sy = t.y + offY
@@ -306,7 +306,7 @@ fun GameRenderer(
             if (damageTextCache.size > 128) damageTextCache.clear()
 
             for (i in 0 until damageNumbersScratch.size) {
-                val e = damageNumbersScratch[i]
+                val e = damageNumbersScratch.get(i)
                 val t = e.get<TransformComponent>() ?: continue
                 val dn = e.get<DamageNumberComponent>() ?: continue
                 val sx = t.x + offX; val sy = t.y + offY

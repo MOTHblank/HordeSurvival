@@ -92,8 +92,8 @@ class TowerDefenseMode(private val engine: GameEngine) {
     )
 
     // ── Reusable Scratch Buffers (Zero Allocation) ─────────────────
-    private val _shieldScratch = mutableListOf<com.hordesurvival.game.engine.ecs.Entity>()
-    private val _enemyScratch = mutableListOf<com.hordesurvival.game.engine.ecs.Entity>()
+    private val _shieldScratch = com.badlogic.gdx.utils.Array<com.hordesurvival.game.engine.ecs.Entity>(false, 16)
+    private val _enemyScratch = com.badlogic.gdx.utils.Array<com.hordesurvival.game.engine.ecs.Entity>(false, 16)
 
     // ── State ─────────────────────────────────────────────────────
     var currentStage = 1
