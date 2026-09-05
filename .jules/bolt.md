@@ -1,3 +1,6 @@
 ## 2024-05-15 - Eliminate ECS Scratch Buffer GC Pressure
 **Learning:** In a Kotlin/LibGDX ECS architecture, spatial queries and collision checks executed every frame using `mutableListOf<Entity>` as scratch buffers allocate memory under the hood (e.g. iterators or backing array resizing if not careful), causing GC micro-stutters.
 **Action:** Always use libGDX's primitive-friendly, allocation-free `com.badlogic.gdx.utils.Array<T>` instead of Kotlin's standard boxed collections for any list that is cleared and re-populated every frame in an `update()` loop.
+## 2024-05-16 - Eliminate Autoboxing in Compose render loops
+**Learning:** In Jetpack Compose `Canvas` loops, using `mutableListOf<Int>` to store primitives causes massive GC allocation overhead because `MutableList<Int>` maps to `java.util.List<Integer>`, enforcing autoboxing of every `Int` on `.add()` and `.get()`. This is particularly detrimental in Jetpack Compose's `onDraw` block which should execute with zero allocation.
+**Action:** Replace `mutableListOf<Int>` inside Compose rendering logic with primitive-friendly collections like `com.badlogic.gdx.utils.IntArray`, ensuring to use `.get(i)` and `.set(i, val)` to guarantee compatibility across KTX and standard Kotlin environments.
