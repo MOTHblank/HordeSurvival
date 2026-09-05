@@ -134,14 +134,14 @@ fun MainMenuScreen(
                     HordeSecondaryButton(
                         text = L("characters"),
                         onClick = onCharactersClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.Lavender,
                         icon = "👤"
                     )
                     HordeSecondaryButton(
                         text = L("upgrades"),
                         onClick = onUpgradesClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.MintGreen,
                         icon = "⬆"
                     )
@@ -150,14 +150,14 @@ fun MainMenuScreen(
                     HordeSecondaryButton(
                         text = L("shop"),
                         onClick = onShopClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.GoldColor,
                         icon = "🛒"
                     )
                     HordeSecondaryButton(
                         text = L("stats"),
                         onClick = onStatsClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.SoftPink,
                         icon = "📊"
                     )
@@ -166,14 +166,14 @@ fun MainMenuScreen(
                     HordeSecondaryButton(
                         text = L("settings"),
                         onClick = onSettingsClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.WarmPeach,
                         icon = "⚙"
                     )
                     HordeSecondaryButton(
                         text = L("tutorial"),
                         onClick = onTutorialClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         color = HordeColors.Cream,
                         icon = "📖"
                     )

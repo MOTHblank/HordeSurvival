@@ -88,7 +88,7 @@ fun CharacterSelectScreen(
                 HordeButton(
                     text = "CONFIRM",
                     onClick = onConfirm,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f, fill = false)
                 )
             }
         }
