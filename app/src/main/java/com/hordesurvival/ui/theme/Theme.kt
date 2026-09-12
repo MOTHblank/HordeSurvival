@@ -31,8 +31,16 @@ object HordeColors {
     val TextSecondary = Color(0xFFB0BEC5)
     val XpBarFill = Color(0xFFAAE6BA)
     val XpBarBg = Color(0xFF2D2A5A)
-    val HpBarFill = Color(0xFFFFB7B2)
+    val HpBarFill = Color(0xFFFFB7B2)   // legacy single color — migrate HUD to the ramp below
     val GoldColor = Color(0xFFFFD700)
+
+    // ── Health Bar Semantics ───────────────────────────────────────
+    // Single source of truth for the 3-step HP color ramp, shared by the
+    // world-space enemy HP bars (GameRenderer.drawEnemy) and HUD bars.
+    // NOTE: do NOT put white text on GoldColor — use DarkBg (contrast).
+    val HpBarHigh = MintGreen       // >50%  — healthy
+    val HpBarMedium = WarmPeach     // 25–50% — hurting
+    val HpBarLow = SoftPink         // <25%  — critical
 
     // ── Additional Semantic Colors ─────────────────────────────────
     val Success = Color(0xFF66BB6A)
@@ -49,7 +57,7 @@ object HordeColors {
     // ── Gameplay Specific ──────────────────────────────────────────
     val BossHpStart = Color(0xFFFF6E40)
     val BossHpEnd = Color(0xFFFFAB91)
-    val HealthGem = Color(0xFF66BB6A)
+    val HealthGem = Color(0xFF66BB6A) // MISMATCH: renderer draws health hearts in Danger red. Grep usage; delete or repoint.
     val XpGem = Color(0xFFAAE6BA)
     val EnemyDot = Color(0xFFEF5350)
     val BossDot = Color(0xFFFF6E40)

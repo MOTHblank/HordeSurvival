@@ -1,7 +1,6 @@
 package com.hordesurvival.ui.screens.game
 
 import androidx.compose.foundation.Canvas
-import com.hordesurvival.ui.theme.HordeColors
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
@@ -31,6 +30,7 @@ import com.hordesurvival.game.enemy.EnemyType
 import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.mode.TowerDefenseMode
 import com.hordesurvival.game.weapon.WeaponType
+import com.hordesurvival.ui.theme.HordeColors
 import kotlin.math.*
 
 /**
@@ -49,23 +49,31 @@ private val strokeWidth3_0 = Stroke(width = 3.0f)
 
 /**
  * Game renderer with configurable background styles.
- * backgroundStyle: 0=terrain(grass), 1=stars, 2=nebula, 3=terrain(lava), 4=terrain(ice), 5=Persian, 6=Roman, 7=Egyptian
+ * backgroundStyle: 0=terrain(grass), 1=stars, 2=nebula, 3=terrain(lava),
+ *                  4=terrain(ice), 5=Persian arabesque, 6=Roman, 7=Egyptian.
+ *
+ * Map atmosphere (driven by GameMap via GameScreen):
+ *  - ambientTint           : tint applied over the BACKGROUND layer only —
+ *                            entities/pickups are drawn after it and stay readable.
+ *                            Alpha is baked in at the call site (0.30 in GameScreen).
+ *  - ambientParticleColor  : color of ambient atmosphere particles; Transparent = off.
+ *  - ambientParticleStyle  : 0=drift (fireflies/stardust/ash), 1=rising embers, 2=falling snow.
+ *
  * Overhauled: zero-allocation render loop. Replaced per-frame Path/Brush/List/Color
  * allocations with pre-allocated scratch paths, primitive layer sorting, and bounded text layout caches.
  */
-@Composable
 @Composable
 fun GameRenderer(
     engine: GameEngine,
     inputSystem: PlayerInputSystem,
     backgroundStyle: Int = 0,
-    graphicsQuality: Int = 1,
+    graphicsQuality: Int = 1,      // 0=Low, 1=Medium, 2=High
     showParticles: Boolean = true,
     showDamageNumbers: Boolean = true,
     gameMode: GameModeType = GameModeType.SURVIVAL,
-    ambientColor: Long = 0xFF0D0D2B,     // pass map.ambientColor
-    particleColor: Long = 0xFFFFFFFF,    // pass map.particleColor
-    particleStyle: Int = 0,              // 0=drift, 1=rising embers, 2=falling snow
+    ambientTint: Color = Color.Transparent,
+    ambientParticleColor: Color = Color.Transparent,
+    ambientParticleStyle: Int = 0,
     modifier: Modifier = Modifier
 ) {
     var frameTick by remember { mutableStateOf(0L) }
@@ -86,7 +94,7 @@ fun GameRenderer(
     // Loaded terrain spritesheet drawables
     val terrainBasicBitmap = ImageBitmap.imageResource(R.drawable.terrain_basic)
     val terrainLavaBitmap = ImageBitmap.imageResource(R.drawable.terrain_lava)
-    val terrainIceBitmap = ImageBitmap.imageResource(R.drawable.terrain_ice)
+    val terrainIceBitmap = ImageBitmap.imageResource(R.drawable.terrain_terrain_ice_placeholder)
 
     // Pre-allocated composable scratch paths for zero-allocation shape rendering
     val scratchPath = remember { Path() }
@@ -161,22 +169,34 @@ fun GameRenderer(
                 terrainBasicBitmap, terrainLavaBitmap, terrainIceBitmap
             )
         }
-        // ── MAP AMBIENT TINT — tints only the background; entities drawn after stay readable.
-        // Oversized rect so zoom-out never exposes an untinted border. Tune alpha 0.25–0.45.
-        drawRect(
-            Color(ambientColor).copy(alpha = 0.35f),
-            topLeft = Offset(-size.width, -size.height),
-            size = Size(size.width * 3f, size.height * 3f)
-        )
 
-        // ── MAP AMBIENT PARTICLES (fireflies / embers / snow / stardust per map) ──
-        if (showParticles && graphicsQuality > 0) {
-            drawAmbientParticles(
-                size.width * 1.2f, size.height * 1.2f,
-                Offset(-size.width * 0.1f, -size.height * 0.1f),
-                camX, camY, engine.gameTime, Color(particleColor), particleStyle
+        // ── MAP AMBIENT TINT ─────────────────────────────────────────
+        // Tints only the background: entities/pickups are drawn after this and
+        // stay fully readable. Rect is oversized so zoom-out never exposes an
+        // untinted border. Alpha is baked into ambientTint at the call site.
+        if (ambientTint != Color.Transparent) {
+            drawRect(
+                color = ambientTint,
+                topLeft = Offset(-size.width, -size.height),
+                size = Size(size.width * 3f, size.height * 3f)
             )
         }
+
+        // ── MAP AMBIENT PARTICLES (fireflies / embers / snow / stardust) ──
+        // Skipped on Low quality. Field is larger than the screen so camera
+        // zoom-out never exposes an empty border.
+        if (showParticles && graphicsQuality > 0 && ambientParticleColor != Color.Transparent) {
+            drawAmbientParticles(
+                w = size.width * 1.2f,
+                h = size.height * 1.2f,
+                origin = Offset(-size.width * 0.1f, -size.height * 0.1f),
+                camX = camX, camY = camY,
+                time = engine.gameTime,
+                color = ambientParticleColor,
+                style = ambientParticleStyle
+            )
+        }
+
         // ── TOWER DEFENSE BOUNDARY WALLS ─────────────────────────────
         if (gameMode == GameModeType.TOWER_DEFENSE) {
             val wallW = TowerDefenseMode.WALL_THICKNESS
@@ -204,6 +224,9 @@ fun GameRenderer(
         }
 
         // ── POISON CLOUDS & CATEGORIZATION (Zero allocation) ─────────────────────────
+        // Bound the emoji cache: many distinct emoji sizes (spawn scale animations,
+        // varied enemy widths) would otherwise grow it without limit.
+        if (emojiCache.size > 64) emojiCache.clear()
         enemiesScratch.clear()
         renderListScratch.clear()
         damageNumbersScratch.clear()
@@ -358,15 +381,22 @@ fun GameRenderer(
             }
         }
 
-        // ── JOYSTICK ──────────────────────────────────────────────
         } // end scale — world-space rendering done here
 
-        // ── JOYSTICK (screen space — must match raw touch coordinates 1:1) ──
+        // ═══ SCREEN-SPACE OVERLAYS ═════════════════════════════════════
+        // These were previously INSIDE the camera scale block, which caused:
+        //  - Joystick drifting away from the finger (touch coords are raw screen
+        //    space, but were drawn under up to 1.12x zoom — up to ~60px off at
+        //    screen edges). Now they match 1:1.
+        //  - Low-HP vignette and boss flash leaving an uncovered dark border
+        //    at zoom 0.95. Now they cover the full screen exactly.
+
+        // ── JOYSTICK ──────────────────────────────────────────────
         if (inputSystem.isTouching) {
             drawJoystick(inputSystem.joyBaseX, inputSystem.joyBaseY, inputSystem.joyStickX, inputSystem.joyStickY, inputSystem.joyMagnitude)
         }
 
-        // ── LOW HP WARNING OVERLAY (screen space — covers full screen exactly) ──
+        // ── LOW HP WARNING OVERLAY ────────────────────────────────
         val hp = player?.get<HealthComponent>()
         if (hp != null) {
             val hpRatio = (hp.currentHp / hp.maxHp).coerceIn(0f, 1f)
@@ -385,7 +415,7 @@ fun GameRenderer(
             }
         }
 
-        // ── BOSS INTRO FLASH (screen space — no uncovered border when zoomed out) ──
+        // ── BOSS INTRO FLASH ──────────────────────────────────────
         if (engine.bossIntroTimer > 0f) {
             val flashAlpha = (engine.bossIntroTimer / 0.3f).coerceIn(0f, 1f) * 0.4f
             drawRect(HordeColors.Warning.copy(alpha = flashAlpha), topLeft = Offset.Zero, size = size)
@@ -404,8 +434,10 @@ private fun DrawScope.drawPlayer(
     emojiCache: MutableMap<Long, TextLayoutResult>
 ) {
     val pulse = 1f + 0.06f * sin(time * 5f)
-    // Ground shadow — matches enemies so the player sits in the same world
+
+    // Ground shadow — same proportions as enemies so the player sits in the same world
     drawOval(Color.Black.copy(alpha = 0.15f), topLeft = Offset(x - size * 0.35f, y + size * 0.3f), size = Size(size * 0.7f, size * 0.2f))
+
     // Aura
     drawCircle(
         brush = Brush.radialGradient(
@@ -413,23 +445,30 @@ private fun DrawScope.drawPlayer(
             center = Offset(x, y), radius = size * 2.5f * pulse
         ), radius = size * 2.5f * pulse, center = Offset(x, y)
     )
-    // Hit flash UNDER the emoji — glows behind the character instead of washing it out
+
+    // Hit flash UNDER the emoji — glows behind the character instead of
+    // washing it out. Clamped in case hitFlashTimer overshoots 0.15f.
     val health = entity.get<HealthComponent>()
     val flashAlpha = ((health?.hitFlashTimer ?: 0f) / 0.15f).coerceIn(0f, 1f)
     if (flashAlpha > 0f) {
         drawCircle(Color.White.copy(alpha = flashAlpha * 0.55f), radius = size * 0.7f, center = Offset(x, y))
     }
-    // Emoji (unchanged)
+
     val emoji = "🧙"
     val fontSizeSp = (size * 1.5f).sp
     val fontSizePx = size * 1.5f
     val cacheKey = (emoji.hashCode().toLong() shl 32) or (fontSizePx.toInt().toLong() and 0xFFFFFFFFL)
+
     val textResult = emojiCache.getOrPut(cacheKey) {
         textMeasurer.measure(
             text = AnnotatedString(emoji),
-            style = TextStyle(fontFamily = notoEmojiFamily, fontSize = fontSizeSp)
+            style = TextStyle(
+                fontFamily = notoEmojiFamily,
+                fontSize = fontSizeSp
+            )
         )
     }
+
     drawText(
         textLayoutResult = textResult,
         topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
@@ -464,8 +503,10 @@ private fun DrawScope.drawEnemy(
     val enemy = entity.get<EnemyComponent>()
     val type = enemy?.type
 
+    // Ground shadow
     drawOval(Color.Black.copy(alpha = 0.15f), topLeft = Offset(x - w * 0.35f, y + h * 0.3f), size = Size(w * 0.7f, h * 0.2f))
 
+    // Boss aura
     if (enemy?.isBoss == true) {
         drawCircle(
             brush = Brush.radialGradient(
@@ -475,6 +516,15 @@ private fun DrawScope.drawEnemy(
         )
     }
 
+    // Hit flash UNDER the emoji — reads as a burst behind the enemy instead of
+    // a white blob covering its face. Clamped in case hitFlashTimer overshoots.
+    val health = entity.get<HealthComponent>()
+    val flashAlpha = ((health?.hitFlashTimer ?: 0f) / 0.15f).coerceIn(0f, 1f)
+    if (flashAlpha > 0f) {
+        drawCircle(Color.White.copy(alpha = flashAlpha * 0.55f), radius = w * 0.7f, center = Offset(x, y))
+    }
+
+    // Emoji body
     val emoji = getEnemyEmoji(type)
     val fontSizeSp = (w * 1.2f).sp
     val fontSizePx = w * 1.2f
@@ -495,23 +545,18 @@ private fun DrawScope.drawEnemy(
         topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
     )
 
-    val health = entity.get<HealthComponent>()
-    val flashAlpha = (health?.hitFlashTimer ?: 0f) / 0.15f
-    if (flashAlpha > 0f) {
-        drawCircle(Color.White.copy(alpha = flashAlpha * 0.7f), radius = w * 0.6f, center = Offset(x, y))
-    }
-
+    // Status rings (burn / slow) — overlap the emoji edge on purpose
     enemy?.let { e ->
         if (e.burnTimer > 0f) drawCircle(Color(0xFFFFCC80).copy(alpha = 0.35f), radius = w / 2f + 4f, center = Offset(x, y))
         if (e.slowTimer > 0f) drawCircle(Color(0xFF80CBC4).copy(alpha = 0.25f), radius = w / 2f + 3f, center = Offset(x, y))
     }
 
-    val hp = entity.get<HealthComponent>()
-    if (hp != null && hp.currentHp < hp.maxHp && hp.maxHp > 15f) {
+    // HP bar — reuses `health` instead of a second component lookup
+    if (health != null && health.currentHp < health.maxHp && health.maxHp > 15f) {
         val barW = w * 0.8f; val barH = 3f; val barY = y - h / 2f - 8f
         drawRoundRect(Color.Black.copy(alpha = 0.5f), topLeft = Offset(x - barW / 2f, barY), size = Size(barW, barH), cornerRadius = CornerRadius(2f))
-        val fill = barW * (hp.currentHp / hp.maxHp).coerceIn(0f, 1f)
-        val hpCol = if (hp.currentHp / hp.maxHp > 0.5f) HordeColors.MintGreen else if (hp.currentHp / hp.maxHp > 0.25f) HordeColors.WarmPeach else HordeColors.SoftPink
+        val fill = barW * (health.currentHp / health.maxHp).coerceIn(0f, 1f)
+        val hpCol = if (health.currentHp / health.maxHp > 0.5f) HordeColors.MintGreen else if (health.currentHp / health.maxHp > 0.25f) HordeColors.WarmPeach else HordeColors.SoftPink
         drawRoundRect(hpCol, topLeft = Offset(x - barW / 2f, barY), size = Size(fill, barH), cornerRadius = CornerRadius(2f))
     }
 }
@@ -807,6 +852,55 @@ private fun DrawScope.drawJoystick(baseX: Float, baseY: Float, stickX: Float, st
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// AMBIENT PARTICLES — map atmosphere (NEW)
+// ═══════════════════════════════════════════════════════════════════
+/**
+ * Ambient atmospheric particles tinted per map (GameMap.particleColor via GameScreen).
+ * style: 0 = gentle drift/twinkle (fireflies, stardust, ash, ghost wisps),
+ *        1 = rising embers (lava maps),
+ *        2 = falling snow (ice maps).
+ * Zero allocation; deterministic per-index hashes; gentle camera parallax.
+ * Field is larger than the screen (origin offset) so camera zoom-out never
+ * exposes an empty border. Kotlin's Float.mod() is used instead of `%`
+ * because the camera can go to negative world coordinates.
+ */
+private fun DrawScope.drawAmbientParticles(
+    w: Float, h: Float, origin: Offset, camX: Float, camY: Float, time: Float,
+    color: Color, style: Int
+) {
+    val count = 26
+    val parallax = 0.04f
+    for (i in 0 until count) {
+        val hash = (i * 7919 + 101) % 10000
+        val seed = hash.toFloat()
+        val sz = 1.1f + (hash % 17) / 14f
+        val baseX = (hash % 1000) / 1000f * w + camX * parallax
+        val baseY = (((hash / 1000) * 3571) % 10000) / 10000f * h + camY * parallax * 0.6f
+
+        when (style) {
+            1 -> { // embers — rise with a sway
+                val py = (baseY - time * (7f + (hash % 10))).mod(h)
+                val sway = sin(time * 1.6f + seed) * 14f
+                val a = 0.22f + 0.18f * (0.5f + 0.5f * sin(time * 2.2f + seed))
+                drawCircle(color.copy(alpha = a), radius = sz, center = Offset(baseX.mod(w) + sway + origin.x, py + origin.y))
+            }
+            2 -> { // snow — fall with a wider drift
+                val py = (baseY + time * (10f + (hash % 8))).mod(h)
+                val sway = sin(time * 0.7f + seed) * 20f
+                val a = 0.18f + 0.14f * (0.5f + 0.5f * sin(time * 1.1f + seed))
+                drawCircle(color.copy(alpha = a), radius = sz * 1.5f, center = Offset(baseX.mod(w) + sway + origin.x, py + origin.y))
+            }
+            else -> { // fireflies / stardust / ash / wisps — hover and twinkle
+                val px = baseX.mod(w) + sin(time * 0.4f + seed) * 16f
+                val py = baseY.mod(h) + sin(time * 0.5f + seed * 1.3f) * 12f
+                val a = 0.16f + 0.22f * (0.5f + 0.5f * sin(time * (1f + (hash % 5) / 5f) + seed))
+                drawCircle(color.copy(alpha = a), radius = sz, center = Offset(px + origin.x, py + origin.y))
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // BACKGROUND — multiple styles, smooth movement
 // ═══════════════════════════════════════════════════════════════════
 private fun DrawScope.drawBackground(
@@ -873,32 +967,22 @@ private fun DrawScope.drawTerrainBg(
     }
 }
 
-/** 0: Smooth grid lines — no intersection dots for performance */
-private fun DrawScope.drawGridBg(w: Float, h: Float, camX: Float, camY: Float) {
-    val g = 100f
-    val p = 0.3f
-    val ox = (camX * p) % g
-    val oy = (camY * p) % g
-    val col = Color(0xFF141430).copy(alpha = 0.35f)
-    var x = -ox
-    while (x < w) { drawLine(col, Offset(x, 0f), Offset(x, h), strokeWidth = 0.8f); x += g }
-    var y = -oy
-    while (y < h) { drawLine(col, Offset(0f, y), Offset(w, y), strokeWidth = 0.8f); y += g }
-}
-
-/** 1: Stars only — calm, no geometry */
+/** 1: Stars only — calm, no geometry.
+ *  Fixed: Float.mod() instead of `%` — plain `%` returns negative values when
+ *  the camera is at negative world coordinates, making stars vanish off the
+ *  top/left edges. mod() always wraps into [0, w). */
 private fun DrawScope.drawStarsBg(w: Float, h: Float, camX: Float, camY: Float, time: Float) {
     for (i in 0 until 80) {
         val hash = (i * 7919 + 42) % 10000
-        val sx = ((hash % 1000) / 1000f * w + camX * 0.02f) % w
-        val sy = (((hash / 1000) * 3571) % 10000 / 10000f * h + camY * 0.02f) % h
+        val sx = ((hash % 1000) / 1000f * w + camX * 0.02f).mod(w)
+        val sy = ((((hash / 1000) * 3571) % 10000) / 10000f * h + camY * 0.02f).mod(h)
         val tw = 0.6f + 0.4f * sin(time * (1.2f + (hash % 5) / 3f) + hash.toFloat())
         drawCircle(Color.White.copy(alpha = 0.25f * tw), radius = 0.8f + (hash % 30) / 100f, center = Offset(sx, sy))
     }
     for (i in 0 until 20) {
         val hash = (i * 3571 + 99) % 10000
-        val sx = ((hash % 1000) / 1000f * w + camX * 0.04f) % w
-        val sy = (((hash / 1000) * 7919) % 10000 / 10000f * h + camY * 0.04f) % h
+        val sx = ((hash % 1000) / 1000f * w + camX * 0.04f).mod(w)
+        val sy = ((((hash / 1000) * 7919) % 10000) / 10000f * h + camY * 0.04f).mod(h)
         val tw = 0.5f + 0.5f * sin(time * 1.5f + hash.toFloat())
         drawCircle(Color.White.copy(alpha = 0.4f * tw), radius = 1.2f, center = Offset(sx, sy))
         drawCircle(Color.White.copy(alpha = 0.06f * tw), radius = 4f, center = Offset(sx, sy))
@@ -919,78 +1003,6 @@ private fun DrawScope.drawNebulaBg(w: Float, h: Float, camX: Float, camY: Float,
     drawCircle(brush = Brush.radialGradient(listOf(Color(0xFF2A4A1A).copy(alpha = 0.04f), Color.Transparent), center = Offset(nx3, ny3), radius = 200f), radius = 200f, center = Offset(nx3, ny3))
 }
 
-/** 3: Checkerboard — seamless tiling with proper modular offset */
-private fun DrawScope.drawCheckerBg(w: Float, h: Float, camX: Float, camY: Float) {
-    val tileSize = 80f
-    val p = 0.3f
-    val cx = camX * p
-    val cy = camY * p
-    val offX = ((cx % tileSize) + tileSize) % tileSize
-    val offY = ((cy % tileSize) + tileSize) % tileSize
-    val startCol = kotlin.math.floor((cx / tileSize).toDouble()).toInt()
-    val startRow = kotlin.math.floor((cy / tileSize).toDouble()).toInt()
-    val dark = Color(0xFF0A0A1C)
-    val light = Color(0xFF111130)
-    val tilesX = (w / tileSize).toInt() + 3
-    val tilesY = (h / tileSize).toInt() + 3
-    for (iy in -1 until tilesY) {
-        for (ix in -1 until tilesX) {
-            val isLight = ((startCol + ix) xor (startRow + iy)) and 1 == 0
-            drawRect(if (isLight) light else dark, topLeft = Offset(ix * tileSize - offX, iy * tileSize - offY), size = Size(tileSize, tileSize))
-        }
-    }
-    val lineCol = Color(0xFF1A1A40).copy(alpha = 0.2f)
-    for (iy in -1..tilesY) {
-        val y = iy * tileSize - offY
-        drawLine(lineCol, Offset(0f, y), Offset(w, y), strokeWidth = 0.5f)
-    }
-    for (ix in -1..tilesX) {
-        val x = ix * tileSize - offX
-        drawLine(lineCol, Offset(x, 0f), Offset(x, h), strokeWidth = 0.5f)
-    }
-}
-/**
- * Ambient atmospheric particles tinted per map (from GameMap.particleColor).
- * style: 0 = gentle drift/twinkle (fireflies, ash, wisps),
- *        1 = rising embers, 2 = falling snow.
- * Field is larger than the screen (via origin offset) so camera zoom-out
- * never exposes an empty border.
- */
-private fun DrawScope.drawAmbientParticles(
-    w: Float, h: Float, origin: Offset, camX: Float, camY: Float, time: Float,
-    color: Color, style: Int
-) {
-    val count = 26
-    val parallax = 0.04f
-    for (i in 0 until count) {
-        val hash = (i * 7919 + 101) % 10000
-        val seed = hash.toFloat()
-        val sz = 1.1f + (hash % 17) / 14f
-        val baseX = (hash % 1000) / 1000f * w + camX * parallax
-        val baseY = ((hash / 1000) % 10000) / 10000f * h + camY * parallax * 0.6f
-
-        when (style) {
-            1 -> { // embers — rise and sway
-                val py = (baseY - time * (7f + (hash % 10))).mod(h)
-                val sway = sin(time * 1.6f + seed) * 14f
-                val a = 0.22f + 0.18f * (0.5f + 0.5f * sin(time * 2.2f + seed))
-                drawCircle(color.copy(alpha = a), radius = sz, center = Offset(baseX.mod(w) + sway + origin.x, py + origin.y))
-            }
-            2 -> { // snow — fall and drift
-                val py = (baseY + time * (10f + (hash % 8))).mod(h)
-                val sway = sin(time * 0.7f + seed) * 20f
-                val a = 0.18f + 0.14f * (0.5f + 0.5f * sin(time * 1.1f + seed))
-                drawCircle(color.copy(alpha = a), radius = sz * 1.5f, center = Offset(baseX.mod(w) + sway + origin.x, py + origin.y))
-            }
-            else -> { // fireflies / stardust / ash — hover and twinkle
-                val px = baseX.mod(w) + sin(time * 0.4f + seed) * 16f
-                val py = baseY.mod(h) + sin(time * 0.5f + seed * 1.3f) * 12f
-                val a = 0.16f + 0.22f * (0.5f + 0.5f * sin(time * (1f + (hash % 5) / 5f) + seed))
-                drawCircle(color.copy(alpha = a), radius = sz, center = Offset(px + origin.x, py + origin.y))
-            }
-        }
-    }
-}
 /** 5: Persian/Iranian — geometric arabesque tile patterns (zero allocation) */
 private fun DrawScope.drawPersianBg(
     w: Float, h: Float, camX: Float, camY: Float, time: Float,
@@ -1050,7 +1062,8 @@ private fun DrawScope.drawPersianBg(
     }
 }
 
-/** 6: Roman — columns, arches, laurel motifs (zero allocation) */
+/** 6: Roman — columns, arches, laurel motifs (zero allocation).
+ *  Fixed: Float.mod() for vein/laurel positions (negative camera coords). */
 private fun DrawScope.drawRomanBg(
     w: Float, h: Float, camX: Float, camY: Float, time: Float,
     scratchPath: Path
@@ -1062,8 +1075,8 @@ private fun DrawScope.drawRomanBg(
     val veinCol = Color(0xFF1A1A30).copy(alpha = 0.3f)
     for (i in 0 until 12) {
         val hash = (i * 7919 + 13) % 10000
-        val x1 = ((hash % 1000) / 1000f * w * 1.5f - cx * 0.1f) % (w * 1.2f)
-        val y1 = (((hash / 1000) * 3571) % 10000 / 10000f * h * 1.5f - cy * 0.1f) % (h * 1.2f)
+        val x1 = ((hash % 1000) / 1000f * w * 1.5f - cx * 0.1f).mod(w * 1.2f)
+        val y1 = (((hash / 1000) * 3571) % 10000 / 10000f * h * 1.5f - cy * 0.1f).mod(h * 1.2f)
         val x2 = x1 + (hash % 200) - 100f
         val y2 = y1 + ((hash / 3) % 200) - 100f
         drawLine(veinCol, Offset(x1, y1), Offset(x2, y2), strokeWidth = 0.8f)
@@ -1089,8 +1102,8 @@ private fun DrawScope.drawRomanBg(
     val laurelCol = Color(0xFF4A7A4A).copy(alpha = 0.06f)
     for (i in 0 until 30) {
         val hash = (i * 3571 + 77) % 10000
-        val lx = ((hash % 1000) / 1000f * w + cx * 0.05f) % w
-        val ly = (((hash / 1000) * 7919) % 10000 / 10000f * h + cy * 0.05f) % h
+        val lx = ((hash % 1000) / 1000f * w + cx * 0.05f).mod(w)
+        val ly = (((hash / 1000) * 7919) % 10000 / 10000f * h + cy * 0.05f).mod(h)
         val s = 6f + (hash % 8)
 
         scratchPath.reset()
@@ -1103,7 +1116,9 @@ private fun DrawScope.drawRomanBg(
     }
 }
 
-/** 7: Egyptian — hieroglyph-style symbols, gold accents, pyramids (zero allocation) */
+/** 7: Egyptian — hieroglyph-style symbols, gold accents, pyramids (zero allocation).
+ *  Fixed: Float.mod() for pyramid/hieroglyph positions (negative camera coords).
+ *  RECONSTRUCTED from symbol type 4 onward — your paste was truncated there. */
 private fun DrawScope.drawEgyptianBg(
     w: Float, h: Float, camX: Float, camY: Float, time: Float,
     scratchPath: Path
@@ -1123,7 +1138,7 @@ private fun DrawScope.drawEgyptianBg(
     val baseY = h * 0.85f
     for (i in 0 until 3) {
         val hash = (i * 2311 + 55) % 10000
-        val px = ((hash % 1000) / 1000f * w * 1.2f - cx * 0.08f) % (w * 1.3f) - w * 0.15f
+        val px = ((hash % 1000) / 1000f * w * 1.2f - cx * 0.08f).mod(w * 1.3f) - w * 0.15f
         val pSize = 120f + (hash % 100)
 
         scratchPath.reset()
@@ -1137,22 +1152,22 @@ private fun DrawScope.drawEgyptianBg(
     val hierCol = Color(0xFFC8A24E).copy(alpha = 0.07f)
     for (i in 0 until 40) {
         val hash = (i * 4519 + 33) % 10000
-        val hx = ((hash % 1000) / 1000f * w + cx * 0.04f) % w
-        val hy = (((hash / 1000) * 6271) % 10000 / 10000f * h + cy * 0.04f) % h
+        val hx = ((hash % 1000) / 1000f * w + cx * 0.04f).mod(w)
+        val hy = ((((hash / 1000) * 6271) % 10000) / 10000f * h + cy * 0.04f).mod(h)
         val symbolType = hash % 6
         val s = 8f + (hash % 6)
         when (symbolType) {
-            0 -> {
+            0 -> { // sun disc with rays
                 drawCircle(hierCol, radius = s, center = Offset(hx, hy), style = strokeWidth0_8)
                 drawCircle(hierCol, radius = s * 0.3f, center = Offset(hx, hy))
                 drawLine(hierCol, Offset(hx + s, hy), Offset(hx + s * 1.5f, hy + s * 0.5f), strokeWidth = 0.6f)
             }
-            1 -> {
+            1 -> { // was-scepter style staff
                 drawLine(hierCol, Offset(hx, hy - s), Offset(hx, hy + s), strokeWidth = 0.8f)
                 drawLine(hierCol, Offset(hx - s * 0.6f, hy - s * 0.2f), Offset(hx + s * 0.6f, hy - s * 0.2f), strokeWidth = 0.8f)
                 drawCircle(hierCol, radius = s * 0.4f, center = Offset(hx, hy - s * 0.8f), style = strokeWidth0_8)
             }
-            2 -> {
+            2 -> { // scarab-ish blob
                 scratchPath.reset()
                 scratchPath.moveTo(hx, hy - s)
                 scratchPath.lineTo(hx + s * 0.5f, hy)
@@ -1163,7 +1178,7 @@ private fun DrawScope.drawEgyptianBg(
                 scratchPath.close()
                 drawPath(scratchPath, hierCol, style = Fill)
             }
-            3 -> {
+            3 -> { // star
                 drawCircle(hierCol, radius = s * 0.6f, center = Offset(hx, hy), style = strokeWidth0_8)
                 for (ray in 0 until 8) {
                     val a = Math.toRadians((ray * 45.0)).toFloat()
@@ -1171,88 +1186,51 @@ private fun DrawScope.drawEgyptianBg(
                         Offset(hx + kotlin.math.cos(a) * s * 1.1f, hy + kotlin.math.sin(a) * s * 1.1f), strokeWidth = 0.6f)
                 }
             }
-            4 -> {
+            4 -> { // eye of Horus motif (RECONSTRUCTED — verify against original)
                 drawOval(hierCol, topLeft = Offset(hx - s * 0.4f, hy - s * 0.6f), size = Size(s * 0.8f, s * 1.2f), style = strokeWidth0_8)
-                drawLine(hierCol, Offset(hx - s * 0.5f, hy - s * 0.2f), Offset(hx - s, hy - s * 0.5f), strokeWidth = 0.5f)
-                drawLine(hierCol, Offset(hx + s * 0.5f, hy - s * 0.2f), Offset(hx + s, hy - s * 0.5f), strokeWidth = 0.5f)
+                drawLine(hierCol, Offset(hx - s * 0.5f, hy - s * 0.2f), Offset(hx - s * 1.1f, hy - s * 0.6f), strokeWidth = 0.6f)
+                drawLine(hierCol, Offset(hx - s * 0.4f, hy + s * 0.3f), Offset(hx - s * 0.8f, hy + s * 0.6f), strokeWidth = 0.6f)
             }
-            5 -> {
-                scratchPath.reset()
-                scratchPath.moveTo(hx - s, hy)
-                scratchPath.cubicTo(hx - s * 0.5f, hy - s * 0.4f, hx, hy + s * 0.4f, hx + s, hy)
-                drawPath(scratchPath, hierCol, style = strokeWidth0_8)
+            5 -> { // ankh motif (RECONSTRUCTED — verify against original)
+                drawCircle(hierCol, radius = s * 0.45f, center = Offset(hx, hy - s * 0.5f), style = strokeWidth0_8)
+                drawLine(hierCol, Offset(hx, hy - s * 0.1f), Offset(hx, hy + s), strokeWidth = 0.8f)
+                drawLine(hierCol, Offset(hx - s * 0.5f, hy + s * 0.15f), Offset(hx + s * 0.5f, hy + s * 0.15f), strokeWidth = 0.8f)
             }
         }
     }
-    val goldLine = Color(0xFFC8A24E).copy(alpha = 0.03f)
-    val bandSpacing = 200f
-    val bandOffY = ((cy * 0.15f) % bandSpacing + bandSpacing) % bandSpacing
-    var by = -bandOffY
-    while (by < h + bandSpacing) {
-        drawLine(goldLine, Offset(0f, by), Offset(w, by), strokeWidth = 1.5f)
-        by += bandSpacing
-    }
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// SHAPE HELPERS — zero allocation using scratchPath
+// BASIC SHAPES — RECONSTRUCTED (your paste was truncated before these).
+// If your originals differ, keep yours — none of the fixes above depend
+// on these specific implementations, only on their signatures.
 // ═══════════════════════════════════════════════════════════════════
-private fun DrawScope.drawTriangle(
-    color: Color, cx: Float, cy: Float, w: Float, h: Float,
-    scratchPath: Path
-) {
+
+/** Upward-pointing triangle centered on (x, y). */
+private fun DrawScope.drawTriangle(color: Color, x: Float, y: Float, w: Float, h: Float, scratchPath: Path) {
     scratchPath.reset()
-    scratchPath.moveTo(cx, cy - h / 2f)
-    scratchPath.lineTo(cx - w / 2f, cy + h / 2f)
-    scratchPath.lineTo(cx + w / 2f, cy + h / 2f)
+    scratchPath.moveTo(x, y - h / 2f)
+    scratchPath.lineTo(x + w / 2f, y + h / 2f)
+    scratchPath.lineTo(x - w / 2f, y + h / 2f)
     scratchPath.close()
-    drawPath(scratchPath, color, style = Fill)
+    drawPath(scratchPath, color)
 }
 
-private fun DrawScope.drawDiamond(
-    color: Color, cx: Float, cy: Float, w: Float, h: Float,
-    scratchPath: Path
-) {
+/** Diamond (rotated square) centered on (x, y). */
+private fun DrawScope.drawDiamond(color: Color, x: Float, y: Float, w: Float, h: Float, scratchPath: Path) {
     scratchPath.reset()
-    scratchPath.moveTo(cx, cy - h / 2f)
-    scratchPath.lineTo(cx + w / 2f, cy)
-    scratchPath.lineTo(cx, cy + h / 2f)
-    scratchPath.lineTo(cx - w / 2f, cy)
+    scratchPath.moveTo(x, y - h / 2f)
+    scratchPath.lineTo(x + w / 2f, y)
+    scratchPath.lineTo(x, y + h / 2f)
+    scratchPath.lineTo(x - w / 2f, y)
     scratchPath.close()
-    drawPath(scratchPath, color, style = Fill)
+    drawPath(scratchPath, color)
 }
 
-private fun DrawScope.drawStar(
-    color: Color, cx: Float, cy: Float, w: Float, h: Float,
-    scratchPath: Path
-) {
-    scratchPath.reset()
-    for (i in 0 until 10) {
-        val a = Math.toRadians((i * 36.0) - 90.0).toFloat()
-        val r = if (i % 2 == 0) w / 2f else w / 4f
-        if (i == 0) scratchPath.moveTo(cx + cos(a) * r, cy + sin(a) * r) else scratchPath.lineTo(cx + cos(a) * r, cy + sin(a) * r)
-    }
-    scratchPath.close()
-    drawPath(scratchPath, color, style = Fill)
-}
-
-private fun DrawScope.drawPolygon(
-    color: Color, cx: Float, cy: Float, radius: Float, sides: Int,
-    scratchPath: Path
-) {
-    scratchPath.reset()
-    for (i in 0 until sides) {
-        val a = Math.toRadians((i * 360.0 / sides) - 90.0).toFloat()
-        val px = cx + cos(a) * radius; val py = cy + sin(a) * radius
-        if (i == 0) scratchPath.moveTo(px, py) else scratchPath.lineTo(px, py)
-    }
-    scratchPath.close()
-    drawPath(scratchPath, color, style = Fill)
-}
 
 private fun DrawScope.drawGeneric(
-    x: Float, y: Float, w: Float, h: Float, color: Color, shape: SpriteShape,
-    scratchPath: Path
+    x: Float, y: Float, w: Float, h: Float, color: Color,
+    shape: SpriteShape, scratchPath: Path
 ) {
     when (shape) {
         SpriteShape.CIRCLE -> drawCircle(color, radius = w / 2f, center = Offset(x, y))
@@ -1261,4 +1239,20 @@ private fun DrawScope.drawGeneric(
         SpriteShape.DIAMOND -> drawDiamond(color, x, y, w, h, scratchPath)
         SpriteShape.STAR -> drawStar(color, x, y, w, h, scratchPath)
     }
+}
+
+/** Five-point star centered on (x, y). Zero allocation via scratchPath. */
+private fun DrawScope.drawStar(color: Color, x: Float, y: Float, w: Float, h: Float, scratchPath: Path) {
+    val outerR = min(w, h) / 2f
+    val innerR = outerR * 0.4f
+    scratchPath.reset()
+    for (i in 0 until 10) {
+        val a = Math.toRadians((i * 36.0) - 90.0).toFloat()
+        val r = if (i % 2 == 0) outerR else innerR
+        val px = x + cos(a) * r
+        val py = y + sin(a) * r
+        if (i == 0) scratchPath.moveTo(px, py) else scratchPath.lineTo(px, py)
+    }
+    scratchPath.close()
+    drawPath(scratchPath, color)
 }

@@ -135,7 +135,7 @@ fun HordeSurvivalGameNav() {
                 metaHpLevel = save.metaHpLevel, metaGoldLevel = save.metaGoldLevel,
                 metaMightLevel = save.metaMightLevel, metaCooldownLevel = save.metaCooldownLevel,
                 metaSpeedLevel = save.metaSpeedLevel, metaLuckLevel = save.metaLuckLevel,
-                backgroundStyle = save.backgroundStyle,
+                mapId = map.id,
                 languageCode = lang,
                 bgMusicEnabled = save.bgMusicEnabled,
                 graphicsQuality = save.graphicsQuality,
