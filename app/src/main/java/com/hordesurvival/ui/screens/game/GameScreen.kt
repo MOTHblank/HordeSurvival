@@ -1,37 +1,43 @@
 package com.hordesurvival.ui.screens.game
 
-import android.app.Activity
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import com.hordesurvival.ui.theme.HordeColors
-import com.hordesurvival.ui.theme.HordeTypography
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hordesurvival.game.audio.SoundManager
+import com.hordesurvival.game.map.GameMap
 import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.ui.components.CornerCutShape
+import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.theme.HordeTypography
 import com.hordesurvival.ui.viewmodel.GameViewModel
 import com.hordesurvival.ui.viewmodel.RunSummary
+import kotlinx.coroutines.delay
 
 /**
  * Main game screen.
  * Fixed: proper frame-synced game loop, lifecycle handling.
+ * Visual pass: map-driven ambient tint & particles wired into GameRenderer,
+ * animated achievement popup, animated level-up flash.
  */
 @Composable
 fun GameScreen(
@@ -46,7 +52,11 @@ fun GameScreen(
     metaCooldownLevel: Int = 0,
     metaSpeedLevel: Int = 0,
     metaLuckLevel: Int = 0,
-    backgroundStyle: Int = 0,
+    // Preferred way to select map visuals: resolves background style, ambient
+    // tint and ambient particles from GameMap. Migrate call sites from
+    // `backgroundStyle = map.backgroundStyle` to `mapId = map.id`.
+    mapId: String? = null,
+    backgroundStyle: Int = 0,      // legacy fallback, used only when mapId == null
     languageCode: String = "en",
     bgMusicEnabled: Boolean = true,
     graphicsQuality: Int = 1,
@@ -58,15 +68,19 @@ fun GameScreen(
     gameViewModel: GameViewModel = viewModel(),
     onGameOver: (RunSummary) -> Unit,
     onQuit: (RunSummary) -> Unit,
-    onSaveRun: ((RunSummary) -> Unit)? = null,
-    ambientColor = map.ambientColor,
-    particleColor = map.particleColor,
-    particleStyle = when (map.hazardType) {
-    GameMap.MapHazardType.LAVA_STREAMS -> 1
-    GameMap.MapHazardType.ICE_PATCHES -> 2
-    else -> 0
-}
+    onSaveRun: ((RunSummary) -> Unit)? = null
 ) {
+    // ── MAP-DRIVEN VISUALS ──────────────────────────────────────────
+    val activeMap = remember(mapId) { if (mapId != null) GameMap.getMap(mapId) else null }
+    val resolvedBackgroundStyle = activeMap?.backgroundStyle ?: backgroundStyle
+    val ambientTint = activeMap?.let { Color(it.ambientColor).copy(alpha = 0.30f) } ?: Color.Transparent
+    val ambientParticleColor = activeMap?.let { Color(it.particleColor) } ?: Color.Transparent
+    val ambientParticleStyle = when (activeMap?.hazardType) {
+        GameMap.MapHazardType.LAVA_STREAMS -> 1   // rising embers
+        GameMap.MapHazardType.ICE_PATCHES -> 2    // falling snow
+        else -> 0                                 // gentle drift (fireflies, stardust, ash, wisps)
+    }
+
     val isPaused by gameViewModel.isPaused.collectAsState()
     val isGameOver by gameViewModel.isGameOver.collectAsState()
     val showLevelUp by gameViewModel.showLevelUp.collectAsState()
@@ -104,7 +118,7 @@ fun GameScreen(
     // Auto-clear achievement popup after 3 seconds
     LaunchedEffect(achievementPopup) {
         if (achievementPopup != null) {
-            kotlinx.coroutines.delay(3000L)
+            delay(3000L)
             gameViewModel.clearAchievementPopup()
         }
     }
@@ -125,7 +139,7 @@ fun GameScreen(
     BackHandler {
         if (!gameViewModel.runSaved) {
             gameViewModel.runSaved = true
-            com.hordesurvival.game.audio.SoundManager.stopBgMusic()
+            SoundManager.stopBgMusic()
             onQuit(gameViewModel.getRunSummary())
         }
     }
@@ -139,7 +153,7 @@ fun GameScreen(
                     // App going to background — save run data without navigating
                     if (!gameViewModel.runSaved && !gameViewModel.isGameOver.value) {
                         gameViewModel.runSaved = true
-                        com.hordesurvival.game.audio.SoundManager.stopBgMusic()
+                        SoundManager.stopBgMusic()
                         val summary = gameViewModel.getRunSummary()
                         if (onSaveRun != null) onSaveRun(summary)
                         else onQuit(summary)
@@ -163,34 +177,30 @@ fun GameScreen(
         if (isContinuing && !gameViewModel.engine.getActiveEntities().isEmpty) {
             // Continue was already handled in MainActivity — just resume the existing game
             gameViewModel.runSaved = false
-        } else if (!isContinuing) {
-            // Fresh start
-            gameViewModel.runSaved = false
-            gameViewModel.startGame(mode, startingWeapon, characterHp, characterSpeed, characterMight, metaHpLevel, metaGoldLevel, metaMightLevel, metaCooldownLevel, metaSpeedLevel, metaLuckLevel)
         } else {
-            // isContinuing but engine was reset — treat as fresh start
+            // Fresh start (also covers isContinuing with a reset engine)
             gameViewModel.runSaved = false
             gameViewModel.startGame(mode, startingWeapon, characterHp, characterSpeed, characterMight, metaHpLevel, metaGoldLevel, metaMightLevel, metaCooldownLevel, metaSpeedLevel, metaLuckLevel)
         }
         // Sync sound volumes from settings
-        com.hordesurvival.game.audio.SoundManager.syncVolumes(musicVol, sfxVol)
+        SoundManager.syncVolumes(musicVol, sfxVol)
         // Start background music if enabled
         if (bgMusicEnabled) {
-            com.hordesurvival.game.audio.SoundManager.startBgMusic(context)
+            SoundManager.startBgMusic(context)
         }
     }
 
-    // Reset continuing flag after first frame
-    LaunchedEffect(Unit) { gameViewModel.runSaved = false }
-
-    // Frame-synced game loop with crash protection
+    // Frame-synced game loop with crash protection.
+    // NOTE: update(0f) — the frame delta appears to be computed inside GameViewModel.
+    // If update() actually expects a delta parameter, compute it from frame times
+    // instead of passing 0f.
     LaunchedEffect(Unit) {
         while (true) {
             withFrameMillis { _ ->
                 try {
                     gameViewModel.update(0f)
                 } catch (e: Exception) {
-                    android.util.Log.e("GameScreen", "Game loop error", e)
+                    Log.e("GameScreen", "Game loop error", e)
                 }
             }
         }
@@ -205,17 +215,20 @@ fun GameScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Game renderer with touch input
+        // Game renderer with touch input + map-driven ambient visuals
         val inputSystem = gameViewModel.inputSystem
         if (inputSystem != null) {
             GameRenderer(
                 engine = gameViewModel.engine,
                 inputSystem = inputSystem,
-                backgroundStyle = backgroundStyle,
+                backgroundStyle = resolvedBackgroundStyle,
                 graphicsQuality = graphicsQuality,
                 showParticles = showParticles,
                 showDamageNumbers = showDamageNumbers,
-                gameMode = mode
+                gameMode = mode,
+                ambientTint = ambientTint,
+                ambientParticleColor = ambientParticleColor,
+                ambientParticleStyle = ambientParticleStyle
             )
         }
 
@@ -223,7 +236,7 @@ fun GameScreen(
         if (!showLevelUp && !isPaused) {
             Minimap(
                 engine = gameViewModel.engine,
-                modifier = Modifier.align(androidx.compose.ui.Alignment.TopEnd).padding(top = 70.dp, end = 8.dp)
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 70.dp, end = 8.dp)
             )
         }
 
@@ -255,16 +268,25 @@ fun GameScreen(
             )
         }
 
-        // Achievement popup
-        if (achievementPopup != null) {
+        // Achievement popup — slides in from the top, fades out.
+        // `lastPopup` keeps the text stable during the exit animation after the
+        // state has already been cleared (otherwise it would flash "null").
+        var lastPopup by remember { mutableStateOf("") }
+        achievementPopup?.let { lastPopup = it }
+        AnimatedVisibility(
+            visible = achievementPopup != null,
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 100.dp),
+            enter = fadeIn(tween(250)) + slideInVertically(tween(250)) { -it / 2 },
+            exit = fadeOut(tween(350)) + slideOutVertically(tween(350)) { -it / 2 }
+        ) {
             Box(
-                modifier = Modifier.align(androidx.compose.ui.Alignment.TopCenter).padding(top = 100.dp)
+                modifier = Modifier
                     .clip(CornerCutShape)
                     .background(HordeColors.GoldColor.copy(alpha = 0.85f))
                     .padding(horizontal = 20.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = "🏆 ${achievementPopup}",
+                    text = "🏆 $lastPopup",
                     style = HordeTypography.Value,
                     color = Color.White
                 )
@@ -277,14 +299,23 @@ fun GameScreen(
             onDismiss = { gameViewModel.dismissBossWarning() }
         )
 
-        // Disable screen shake if setting is off
-        if (!screenShakeEnabled) {
-            gameViewModel.engine.shakeOffsetX = 0f
-            gameViewModel.engine.shakeOffsetY = 0f
+        // Suppress screen shake when the setting is off. SideEffect runs after
+        // composition instead of mutating engine state mid-composition.
+        // (Deeper fix: pass screenShakeEnabled into the engine so shake offsets
+        // are never generated in the first place.)
+        SideEffect {
+            if (!screenShakeEnabled) {
+                gameViewModel.engine.shakeOffsetX = 0f
+                gameViewModel.engine.shakeOffsetY = 0f
+            }
         }
 
-        // Level-up screen flash effect
-        if (showLevelUp) {
+        // Level-up flash — quick fade in, slower fade out (was a hard on/off box)
+        AnimatedVisibility(
+            visible = showLevelUp,
+            enter = fadeIn(tween(180)),
+            exit = fadeOut(tween(450))
+        ) {
             Box(
                 modifier = Modifier.fillMaxSize()
                     .background(HordeColors.SkyBlue.copy(alpha = 0.15f))
@@ -324,7 +355,7 @@ fun GameScreen(
                     gameViewModel.resumeGame()
                 },
                 onMainMenu = {
-                    com.hordesurvival.game.audio.SoundManager.stopBgMusic()
+                    SoundManager.stopBgMusic()
                     onQuit(gameViewModel.getRunSummary())
                 }
             )
@@ -339,7 +370,7 @@ fun GameScreen(
             PauseScreen(
                 onResume = { gameViewModel.resumeGame() },
                 onQuit = {
-                    com.hordesurvival.game.audio.SoundManager.stopBgMusic()
+                    SoundManager.stopBgMusic()
                     gameViewModel.pauseGame()
                     onQuit(gameViewModel.getRunSummary())
                 },
@@ -347,9 +378,9 @@ fun GameScreen(
                 sfxVolume = sfxVol,
                 bgMusicEnabled = bgMusicOn,
                 languageCode = languageCode,
-                onMusicVolumeChange = { musicVol = it; com.hordesurvival.game.audio.SoundManager.setMusicVolume(it); com.hordesurvival.game.audio.SoundManager.setSfxVolume(sfxVol) },
-                onSfxVolumeChange = { sfxVol = it; com.hordesurvival.game.audio.SoundManager.setSfxVolume(it) },
-                onBgMusicToggle = { bgMusicOn = !bgMusicOn; com.hordesurvival.game.audio.SoundManager.toggleBgMusic() },
+                onMusicVolumeChange = { musicVol = it; SoundManager.setMusicVolume(it); SoundManager.setSfxVolume(sfxVol) },
+                onSfxVolumeChange = { sfxVol = it; SoundManager.setSfxVolume(it) },
+                onBgMusicToggle = { bgMusicOn = !bgMusicOn; SoundManager.toggleBgMusic() },
                 gameSpeed = gameSpeed,
                 onSpeedChange = { gameViewModel.setGameSpeed(it) }
             )
