@@ -49,19 +49,23 @@ private val strokeWidth3_0 = Stroke(width = 3.0f)
 
 /**
  * Game renderer with configurable background styles.
- * backgroundStyle: 0=grid, 1=stars, 2=nebula, 3=checkerboard, 4=solid
+ * backgroundStyle: 0=terrain(grass), 1=stars, 2=nebula, 3=terrain(lava), 4=terrain(ice), 5=Persian, 6=Roman, 7=Egyptian
  * Overhauled: zero-allocation render loop. Replaced per-frame Path/Brush/List/Color
  * allocations with pre-allocated scratch paths, primitive layer sorting, and bounded text layout caches.
  */
+@Composable
 @Composable
 fun GameRenderer(
     engine: GameEngine,
     inputSystem: PlayerInputSystem,
     backgroundStyle: Int = 0,
-    graphicsQuality: Int = 1,      // 0=Low, 1=Medium, 2=High
+    graphicsQuality: Int = 1,
     showParticles: Boolean = true,
     showDamageNumbers: Boolean = true,
     gameMode: GameModeType = GameModeType.SURVIVAL,
+    ambientColor: Long = 0xFF0D0D2B,     // pass map.ambientColor
+    particleColor: Long = 0xFFFFFFFF,    // pass map.particleColor
+    particleStyle: Int = 0,              // 0=drift, 1=rising embers, 2=falling snow
     modifier: Modifier = Modifier
 ) {
     var frameTick by remember { mutableStateOf(0L) }
@@ -157,7 +161,22 @@ fun GameRenderer(
                 terrainBasicBitmap, terrainLavaBitmap, terrainIceBitmap
             )
         }
+        // ── MAP AMBIENT TINT — tints only the background; entities drawn after stay readable.
+        // Oversized rect so zoom-out never exposes an untinted border. Tune alpha 0.25–0.45.
+        drawRect(
+            Color(ambientColor).copy(alpha = 0.35f),
+            topLeft = Offset(-size.width, -size.height),
+            size = Size(size.width * 3f, size.height * 3f)
+        )
 
+        // ── MAP AMBIENT PARTICLES (fireflies / embers / snow / stardust per map) ──
+        if (showParticles && graphicsQuality > 0) {
+            drawAmbientParticles(
+                size.width * 1.2f, size.height * 1.2f,
+                Offset(-size.width * 0.1f, -size.height * 0.1f),
+                camX, camY, engine.gameTime, Color(particleColor), particleStyle
+            )
+        }
         // ── TOWER DEFENSE BOUNDARY WALLS ─────────────────────────────
         if (gameMode == GameModeType.TOWER_DEFENSE) {
             val wallW = TowerDefenseMode.WALL_THICKNESS
@@ -340,11 +359,14 @@ fun GameRenderer(
         }
 
         // ── JOYSTICK ──────────────────────────────────────────────
+        } // end scale — world-space rendering done here
+
+        // ── JOYSTICK (screen space — must match raw touch coordinates 1:1) ──
         if (inputSystem.isTouching) {
             drawJoystick(inputSystem.joyBaseX, inputSystem.joyBaseY, inputSystem.joyStickX, inputSystem.joyStickY, inputSystem.joyMagnitude)
         }
 
-        // ── LOW HP WARNING OVERLAY ────────────────────────────────
+        // ── LOW HP WARNING OVERLAY (screen space — covers full screen exactly) ──
         val hp = player?.get<HealthComponent>()
         if (hp != null) {
             val hpRatio = (hp.currentHp / hp.maxHp).coerceIn(0f, 1f)
@@ -363,13 +385,11 @@ fun GameRenderer(
             }
         }
 
-        // ── BOSS INTRO FLASH ──────────────────────────────────────
+        // ── BOSS INTRO FLASH (screen space — no uncovered border when zoomed out) ──
         if (engine.bossIntroTimer > 0f) {
             val flashAlpha = (engine.bossIntroTimer / 0.3f).coerceIn(0f, 1f) * 0.4f
             drawRect(HordeColors.Warning.copy(alpha = flashAlpha), topLeft = Offset.Zero, size = size)
         }
-
-        } // end scale
     }
 }
 
@@ -384,38 +404,36 @@ private fun DrawScope.drawPlayer(
     emojiCache: MutableMap<Long, TextLayoutResult>
 ) {
     val pulse = 1f + 0.06f * sin(time * 5f)
+    // Ground shadow — matches enemies so the player sits in the same world
+    drawOval(Color.Black.copy(alpha = 0.15f), topLeft = Offset(x - size * 0.35f, y + size * 0.3f), size = Size(size * 0.7f, size * 0.2f))
+    // Aura
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(HordeColors.SkyBlue.copy(alpha = 0.4f), Color(0xFF4A90D9).copy(alpha = 0.15f), Color.Transparent),
             center = Offset(x, y), radius = size * 2.5f * pulse
         ), radius = size * 2.5f * pulse, center = Offset(x, y)
     )
-
+    // Hit flash UNDER the emoji — glows behind the character instead of washing it out
+    val health = entity.get<HealthComponent>()
+    val flashAlpha = ((health?.hitFlashTimer ?: 0f) / 0.15f).coerceIn(0f, 1f)
+    if (flashAlpha > 0f) {
+        drawCircle(Color.White.copy(alpha = flashAlpha * 0.55f), radius = size * 0.7f, center = Offset(x, y))
+    }
+    // Emoji (unchanged)
     val emoji = "🧙"
     val fontSizeSp = (size * 1.5f).sp
     val fontSizePx = size * 1.5f
     val cacheKey = (emoji.hashCode().toLong() shl 32) or (fontSizePx.toInt().toLong() and 0xFFFFFFFFL)
-
     val textResult = emojiCache.getOrPut(cacheKey) {
         textMeasurer.measure(
             text = AnnotatedString(emoji),
-            style = TextStyle(
-                fontFamily = notoEmojiFamily,
-                fontSize = fontSizeSp
-            )
+            style = TextStyle(fontFamily = notoEmojiFamily, fontSize = fontSizeSp)
         )
     }
-
     drawText(
         textLayoutResult = textResult,
         topLeft = Offset(x - textResult.size.width / 2f, y - textResult.size.height / 2f)
     )
-
-    val health = entity.get<HealthComponent>()
-    val flashAlpha = (health?.hitFlashTimer ?: 0f) / 0.15f
-    if (flashAlpha > 0f) {
-        drawCircle(Color.White.copy(alpha = flashAlpha * 0.7f), radius = size * 0.6f, center = Offset(x, y))
-    }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -931,7 +949,48 @@ private fun DrawScope.drawCheckerBg(w: Float, h: Float, camX: Float, camY: Float
         drawLine(lineCol, Offset(x, 0f), Offset(x, h), strokeWidth = 0.5f)
     }
 }
+/**
+ * Ambient atmospheric particles tinted per map (from GameMap.particleColor).
+ * style: 0 = gentle drift/twinkle (fireflies, ash, wisps),
+ *        1 = rising embers, 2 = falling snow.
+ * Field is larger than the screen (via origin offset) so camera zoom-out
+ * never exposes an empty border.
+ */
+private fun DrawScope.drawAmbientParticles(
+    w: Float, h: Float, origin: Offset, camX: Float, camY: Float, time: Float,
+    color: Color, style: Int
+) {
+    val count = 26
+    val parallax = 0.04f
+    for (i in 0 until count) {
+        val hash = (i * 7919 + 101) % 10000
+        val seed = hash.toFloat()
+        val sz = 1.1f + (hash % 17) / 14f
+        val baseX = (hash % 1000) / 1000f * w + camX * parallax
+        val baseY = ((hash / 1000) % 10000) / 10000f * h + camY * parallax * 0.6f
 
+        when (style) {
+            1 -> { // embers — rise and sway
+                val py = (baseY - time * (7f + (hash % 10))).mod(h)
+                val sway = sin(time * 1.6f + seed) * 14f
+                val a = 0.22f + 0.18f * (0.5f + 0.5f * sin(time * 2.2f + seed))
+                drawCircle(color.copy(alpha = a), radius = sz, center = Offset(baseX.mod(w) + sway + origin.x, py + origin.y))
+            }
+            2 -> { // snow — fall and drift
+                val py = (baseY + time * (10f + (hash % 8))).mod(h)
+                val sway = sin(time * 0.7f + seed) * 20f
+                val a = 0.18f + 0.14f * (0.5f + 0.5f * sin(time * 1.1f + seed))
+                drawCircle(color.copy(alpha = a), radius = sz * 1.5f, center = Offset(baseX.mod(w) + sway + origin.x, py + origin.y))
+            }
+            else -> { // fireflies / stardust / ash — hover and twinkle
+                val px = baseX.mod(w) + sin(time * 0.4f + seed) * 16f
+                val py = baseY.mod(h) + sin(time * 0.5f + seed * 1.3f) * 12f
+                val a = 0.16f + 0.22f * (0.5f + 0.5f * sin(time * (1f + (hash % 5) / 5f) + seed))
+                drawCircle(color.copy(alpha = a), radius = sz, center = Offset(px + origin.x, py + origin.y))
+            }
+        }
+    }
+}
 /** 5: Persian/Iranian — geometric arabesque tile patterns (zero allocation) */
 private fun DrawScope.drawPersianBg(
     w: Float, h: Float, camX: Float, camY: Float, time: Float,

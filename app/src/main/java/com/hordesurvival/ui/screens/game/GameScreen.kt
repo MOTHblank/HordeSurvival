@@ -59,6 +59,13 @@ fun GameScreen(
     onGameOver: (RunSummary) -> Unit,
     onQuit: (RunSummary) -> Unit,
     onSaveRun: ((RunSummary) -> Unit)? = null,
+    ambientColor = map.ambientColor,
+    particleColor = map.particleColor,
+    particleStyle = when (map.hazardType) {
+    GameMap.MapHazardType.LAVA_STREAMS -> 1
+    GameMap.MapHazardType.ICE_PATCHES -> 2
+    else -> 0
+}
 ) {
     val isPaused by gameViewModel.isPaused.collectAsState()
     val isGameOver by gameViewModel.isGameOver.collectAsState()
