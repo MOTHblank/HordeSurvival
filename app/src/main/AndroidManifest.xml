@@ -29,7 +29,6 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:screenOrientation="unspecified"
             android:windowSoftInputMode="adjustResize" />
     </application>
 </manifest>

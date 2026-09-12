@@ -239,6 +239,7 @@ data class DamageNumberComponent(
     var lifetime: Float = 0.8f,
     var timer: Float = 0f,
     var isCrit: Boolean = false,
+    var isPlayerDamage: Boolean = false,
     var vy: Float = -120f,  // float upward
     // Cached display string — avoids String.format every frame
     var cachedText: String = "",

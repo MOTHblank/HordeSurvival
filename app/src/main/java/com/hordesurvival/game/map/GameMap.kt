@@ -59,7 +59,7 @@ data class GameMap(
             GameMap(
                 id = "darkness", name = "Dark Realm", icon = "🌑",
                 description = "Eternal darkness. Reduced visibility. Enemies deal +25% damage. 2x XP.",
-                backgroundStyle = 4, unlockCost = 2500, minLevel = 20,
+                backgroundStyle = 8, unlockCost = 2500, minLevel = 20,
                 enemyDmgMult = 1.25f, xpMult = 2f,
                 ambientColor = 0xFF050508,
                 particleColor = 0xFF555560,  // drifting ash (brighter so it's actually visible)
@@ -87,7 +87,7 @@ data class GameMap(
             GameMap(
                 id = "graveyard", name = "Cursed Graveyard", icon = "⚰️",
                 description = "Undead rise. Enemies split on death. Double boss HP. Triple gold.",
-                backgroundStyle = 4, unlockCost = 8000, minLevel = 40,
+                backgroundStyle = 9, unlockCost = 8000, minLevel = 40,
                 enemyHpMult = 1.5f, goldMult = 3f,
                 hazardType = MapHazardType.GRAVEYARD_FOG,
                 ambientColor = 0xFF0A0A15,
@@ -97,7 +97,7 @@ data class GameMap(
             GameMap(
                 id = "void", name = "The Void", icon = "🕳️",
                 description = "Reality breaks. Random enemy modifiers each wave. 5x XP. Extreme danger.",
-                backgroundStyle = 4, unlockCost = 15000, minLevel = 50,
+                backgroundStyle = 10, unlockCost = 15000, minLevel = 50,
                 enemyHpMult = 2f, enemySpdMult = 1.3f, enemyDmgMult = 1.5f,
                 xpMult = 5f, goldMult = 2f,
                 hazardType = MapHazardType.VOID_RIFT,

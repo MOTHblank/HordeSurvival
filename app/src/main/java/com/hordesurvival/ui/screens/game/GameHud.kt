@@ -254,14 +254,9 @@ fun GameHud(
             val emoji = if (abilityIcon.isNotEmpty()) abilityIcon else "✨"
             Text(emoji, style = HordeTypography.SubHeader)
             if (!abilityReady) {
-                // CHANGED: bottom-up cooldown wipe instead of uniform darkening —
-                // the button visibly "refills" as it recharges. Assumes
-                // abilityCooldown is a 0..1 fraction (the *15 seconds display and
-                // the old alpha math both assumed this). If it's raw seconds in
-                // GameViewModel, tell me the max duration and I'll adjust both.
                 Box(
                     Modifier
-                        .align(Alignment.Bottom)
+                        .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .fillMaxHeight(abilityCooldown.coerceIn(0f, 1f))
                         .background(HordeColors.OverlayMedium)

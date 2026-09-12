@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -30,7 +29,9 @@ import com.hordesurvival.game.enemy.EnemyType
 import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.mode.TowerDefenseMode
 import com.hordesurvival.game.weapon.WeaponType
+import com.hordesurvival.game.weapon.WeaponColors
 import com.hordesurvival.ui.theme.HordeColors
+import com.hordesurvival.ui.screens.game.TerrainFactory
 import kotlin.math.*
 
 /**
@@ -91,10 +92,16 @@ fun GameRenderer(
     val emojiCache = remember { mutableMapOf<Long, TextLayoutResult>() }
     val damageTextCache = remember { mutableMapOf<String, TextLayoutResult>() }
 
-    // Loaded terrain spritesheet drawables
-    val terrainBasicBitmap = ImageBitmap.imageResource(R.drawable.terrain_basic)
-    val terrainLavaBitmap = ImageBitmap.imageResource(R.drawable.terrain_lava)
-    val terrainIceBitmap = ImageBitmap.imageResource(R.drawable.terrain_terrain_ice_placeholder)
+    val terrainSheets = remember {
+        mapOf(
+            TerrainFactory.STYLE_GRASS to TerrainFactory.createTerrainSheet(TerrainFactory.STYLE_GRASS),
+            TerrainFactory.STYLE_LAVA to TerrainFactory.createTerrainSheet(TerrainFactory.STYLE_LAVA),
+            TerrainFactory.STYLE_ICE to TerrainFactory.createTerrainSheet(TerrainFactory.STYLE_ICE),
+            TerrainFactory.STYLE_DARK to TerrainFactory.createTerrainSheet(TerrainFactory.STYLE_DARK),
+            TerrainFactory.STYLE_GRAVEYARD to TerrainFactory.createTerrainSheet(TerrainFactory.STYLE_GRAVEYARD),
+            TerrainFactory.STYLE_VOID to TerrainFactory.createTerrainSheet(TerrainFactory.STYLE_VOID)
+        )
+    }
 
     // Pre-allocated composable scratch paths for zero-allocation shape rendering
     val scratchPath = remember { Path() }
@@ -166,7 +173,7 @@ fun GameRenderer(
         translate(bgOffsetX, bgOffsetY) {
             drawBackground(
                 bgW, bgH, camX, camY, engine.gameTime, backgroundStyle, scratchPath, scratchPath2,
-                terrainBasicBitmap, terrainLavaBitmap, terrainIceBitmap
+                terrainSheets
             )
         }
 
@@ -913,22 +920,17 @@ private fun DrawScope.drawAmbientParticles(
 private fun DrawScope.drawBackground(
     w: Float, h: Float, camX: Float, camY: Float, time: Float, style: Int,
     scratchPath: Path, scratchPath2: Path,
-    terrainBasic: ImageBitmap,
-    terrainLava: ImageBitmap,
-    terrainIce: ImageBitmap
+    terrainSheets: Map<Int, ImageBitmap>
 ) {
     drawRect(Color(0xFF080814), topLeft = Offset.Zero, size = Size(w, h))
 
     when (style) {
-        0 -> drawTerrainBg(w, h, camX, camY, terrainBasic)
         1 -> drawStarsBg(w, h, camX, camY, time)
         2 -> drawNebulaBg(w, h, camX, camY, time)
-        3 -> drawTerrainBg(w, h, camX, camY, terrainLava)
-        4 -> drawTerrainBg(w, h, camX, camY, terrainIce)
         5 -> drawPersianBg(w, h, camX, camY, time, scratchPath, scratchPath2)
         6 -> drawRomanBg(w, h, camX, camY, time, scratchPath)
         7 -> drawEgyptianBg(w, h, camX, camY, time, scratchPath)
-        else -> drawTerrainBg(w, h, camX, camY, terrainBasic)
+        else -> drawTerrainBg(w, h, camX, camY, terrainSheets[style] ?: terrainSheets.getValue(TerrainFactory.STYLE_GRASS))
     }
 }
 
