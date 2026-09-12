@@ -5,8 +5,10 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import com.hordesurvival.game.audio.SoundManager
 import com.hordesurvival.game.engine.GameEngine
+import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.systems.*
 import com.hordesurvival.game.component.*
+import com.hordesurvival.game.map.GameMap
 import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.mode.TowerDefenseMode
 import com.hordesurvival.game.mode.DailyChallenge
@@ -20,6 +22,7 @@ import com.hordesurvival.game.upgrade.UpgradeManager
 import com.hordesurvival.game.upgrade.UpgradeOption
 import com.hordesurvival.game.upgrade.PassiveType
 import com.hordesurvival.game.weapon.WeaponType
+import com.hordesurvival.game.weapon.WeaponColors
 import com.hordesurvival.game.synergy.WeaponSynergy
 import com.hordesurvival.game.blessing.BlessingSystem
 import com.hordesurvival.game.pet.CompanionPet
@@ -29,6 +32,13 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+/**
+ * Visual/state pass: map gameplay modifiers now applied via startGame(mapId)
+ * (they were dead data before — nothing referenced GameMap, and the wave
+ * manager is private so no external code could set them either); stale
+ * synergy/combo/TD/speed state no longer leaks into the next run; per-frame
+ * allocations feeding StateFlows guarded with change detection.
+ */
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     val engine = GameEngine()
@@ -86,6 +96,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // Track synergy state to avoid re-applying every frame
     private var lastSynergyWeapons: Set<WeaponType> = emptySet()
     private var lastSynergyBonuses: WeaponSynergy.SynergyBonuses? = null
+    // CHANGED: change-detection guards — stop per-frame allocations/StateFlow churn
+    private var lastWeaponsSize = 0
+    private var lastAchKills = -1
+    private var lastAchLevel = -1
+    private var lastAchTimeSec = -1
+    private var lastAchCombo = -1
+    private var lastComboDisplayCount = -1
+    private var lastComboDisplayMult = -1f
     // Daily Challenge
     var dailyChallengeModifiers: DailyChallenge.ChallengeModifiers? = null
         private set
@@ -113,12 +131,21 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         metaMightLevel: Int = 0, metaCooldownLevel: Int = 0,
         metaSpeedLevel: Int = 0, metaLuckLevel: Int = 0,
         prestigeLevel: Int = 0,
-        blessingLevelsMap: Map<String, Int> = emptyMap()
+        blessingLevelsMap: Map<String, Int> = emptyMap(),
+        mapId: String? = null  // NEW — pass the selected GameMap's id to apply its gameplay modifiers
     ) {
         currentMetaGoldLevel = metaGoldLevel
         currentPrestigeLevel = prestigeLevel
         blessingLevels = blessingLevelsMap
         try {
+            // CHANGED (NEW): resolve the selected map for its gameplay modifiers.
+            // Nothing in this file referenced GameMap before and _waveManager is
+            // private, so no external code could have set the wave-manager fields
+            // either — the map difficulty data in GameMap.kt was dead. Visuals
+            // (ambient tint, particles) flow separately via GameScreen's mapId.
+            // CAUTION: if some other path already sets wm.enemyHpMult etc. for
+            // maps, remove one side — stacking would double the modifiers.
+            val map = mapId?.let { GameMap.getMap(it) }
             engine.reset()
             pendingLevelUp = false; lastUpdateTimeNs = 0L; bossWarningTimer = 0f
             SoundManager.initialize(getApplication())
@@ -129,6 +156,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val prestigeBonuses = PrestigeSystem.getCurrentBonuses(prestigeLevel)
 
             // Apply blessing bonuses
+            // NOTE: the !! lookups crash (and get swallowed by this catch →
+            // half-initialized game) if a BlessingType is ever missing from
+            // allBlessings. Worth hardening someday.
             val blessingMight = BlessingSystem.getEffect(BlessingSystem.allBlessings.find { it.type == BlessingSystem.BlessingType.MIGHT }!!, blessingLevels["MIGHT"] ?: 0)
             val blessingVitality = BlessingSystem.getEffect(BlessingSystem.allBlessings.find { it.type == BlessingSystem.BlessingType.VITALITY }!!, blessingLevels["VITALITY"] ?: 0)
             val blessingSwiftness = BlessingSystem.getEffect(BlessingSystem.allBlessings.find { it.type == BlessingSystem.BlessingType.SWIFTNESS }!!, blessingLevels["SWIFTNESS"] ?: 0)
@@ -147,13 +177,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             player.add(TransformComponent(0f, 0f))
             player.add(VelocityComponent(speed = finalSpeed))
             player.add(HealthComponent(currentHp = finalHp, maxHp = finalHp, armor = blessingResilience))
+            // CHANGED: map xpMult applied here (addXp multiplies by xpGain).
+            // NOTE: map.goldMult and map.hazardType are still unwired — gold drops
+            // are computed in XpDropSystem and hazards in StageHazardSystem
+            // (constructed bare below); both need their source files to wire.
             player.add(PlayerComponent(
                 might = finalMight,
                 cooldownReduction = 0.03f * metaCooldownLevel,
                 luck = 0.03f * metaLuckLevel + blessingLuck,
                 weapons = mutableListOf(startingWeapon),
                 regenRate = 0.2f + blessingRegen,  // base regen + blessing
-                xpGain = 1f + blessingWisdom,
+                xpGain = (1f + blessingWisdom) * (map?.xpMult ?: 1f),
                 pickupRange = 50f,
                 projectileBonus = blessingArcane.toInt(),
                 goldGainBonus = blessingFortune
@@ -196,8 +230,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _bossWarning.value = true
                 engine.bossIntroTimer = 0.3f  // Boss intro flash
                 engine.shake(intensity = 12f, duration = 0.4f)  // Stronger shake for boss
+                // (with the GameEngine shake fix, weaker hits can no longer stomp this)
             }
             wm.gameMode = mode
+
+            // CHANGED (NEW): apply map gameplay modifiers. Daily Challenge below
+            // overrides them for its own mode.
+            if (map != null) {
+                wm.enemyHpMult = map.enemyHpMult
+                wm.enemySpdMult = map.enemySpdMult
+                wm.enemyDmgMult = map.enemyDmgMult
+                wm.spawnRateMult = map.spawnRateMult
+            }
 
             // Daily Challenge modifiers
             if (mode == GameModeType.DAILY_CHALLENGE) {
@@ -210,6 +254,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             // Initialize Tower Defense mode if selected
             if (mode == GameModeType.TOWER_DEFENSE) {
                 val td = TowerDefenseMode(engine)
+                // NOTE: hard-coded 1080x1920 — wrong aspect ratios shift the TD
+                // play zone and the renderer's right wall. Needs the real canvas
+                // size (send TowerDefenseMode.kt to fix properly).
                 td.screenW = 1080f; td.screenH = 1920f
                 td.shipX = td.screenW / 2f; td.shipY = td.screenH - 120f
                 wm.towerDefense = td
@@ -221,6 +268,30 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _inputSystem = input; _waveManager = wm
             _playerWeapons.value = listOf(startingWeapon)
             _isGameOver.value = false; _isPaused.value = false; _showLevelUp.value = false
+
+            // CHANGED: flows that previously survived into the next run:
+            //  - _tdStageComplete/_tdIsVictory: quitting from the TD stage-complete
+            //    overlay and starting a new run re-showed the overlay instantly
+            //  - _gameSpeed: HUD kept showing the previous run's speed while
+            //    engine.reset() had already restored 1x (display/sim desync)
+            //  - boss/combo/enemy/popup flows: one-frame stale flashes on fresh runs
+            _tdStageComplete.value = false; _tdIsVictory.value = false
+            _gameSpeed.value = 1f
+            _bossWarning.value = false; _bossHp.value = 0f; _bossMaxHp.value = 0f; _bossActive.value = false
+            _comboCount.value = 0; _comboMultiplier.value = 1f; _maxCombo.value = 0
+            _enemyCount.value = 0
+            _achievementPopup.value = null
+            _relicsCollected.value = emptyList()
+            _upgradeOptions.value = emptyList()
+            bossKillCount = 0; bossWasDeadLastFrame = false
+            // CHANGED: stale synergy state from the previous run used to be
+            // subtracted from the fresh player's stats on the first update
+            // (bonuses never applied to this player — e.g. permanent -0.1 speed)
+            lastSynergyWeapons = emptySet(); lastSynergyBonuses = null
+            // CHANGED: change-detection guards reset
+            lastWeaponsSize = 0
+            lastAchKills = -1; lastAchLevel = -1; lastAchTimeSec = -1; lastAchCombo = -1
+            lastComboDisplayCount = -1; lastComboDisplayMult = -1f
 
             // Ability system — use CharacterAbilities
             abilityType = characterAbilities?.getAbilityName() ?: ""
@@ -289,34 +360,40 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     _xpToNext.value = comp.xpToNext
                     _gold.value = comp.gold
                     _killCount.value = comp.totalKills
-                    _playerWeapons.value = comp.weapons.toList()
                     _waveManager?.playerLevel = comp.level
 
-                    // Apply synergy bonuses ONLY when weapon set changes
-                    val currentWeaponSet = comp.weapons.toSet()
-                    if (currentWeaponSet != lastSynergyWeapons) {
-                        // Remove old synergy bonuses first
-                        val oldBonuses = lastSynergyBonuses
-                        if (oldBonuses != null) {
-                            comp.might -= oldBonuses.bonusMight
-                            comp.moveSpeed -= oldBonuses.bonusSpeed
-                            comp.cooldownReduction -= oldBonuses.bonusCooldownReduction
-                            comp.area -= oldBonuses.bonusArea
-                            comp.projectileBonus -= oldBonuses.bonusProjectile
-                            comp.regenRate -= oldBonuses.bonusRegen
-                            comp.luck -= oldBonuses.bonusLuck
+                    // CHANGED: guarded on weapon-list size (the only mutation path is
+                    // add() in selectUpgrade) — was toList()+toSet() every frame
+                    if (comp.weapons.size != lastWeaponsSize) {
+                        lastWeaponsSize = comp.weapons.size
+                        _playerWeapons.value = comp.weapons.toList()
+
+                        // Apply synergy bonuses ONLY when weapon set changes
+                        val currentWeaponSet = comp.weapons.toSet()
+                        if (currentWeaponSet != lastSynergyWeapons) {
+                            // Remove old synergy bonuses first
+                            val oldBonuses = lastSynergyBonuses
+                            if (oldBonuses != null) {
+                                comp.might -= oldBonuses.bonusMight
+                                comp.moveSpeed -= oldBonuses.bonusSpeed
+                                comp.cooldownReduction -= oldBonuses.bonusCooldownReduction
+                                comp.area -= oldBonuses.bonusArea
+                                comp.projectileBonus -= oldBonuses.bonusProjectile
+                                comp.regenRate -= oldBonuses.bonusRegen
+                                comp.luck -= oldBonuses.bonusLuck
+                            }
+                            // Apply new synergy bonuses
+                            val newBonuses = WeaponSynergy.calculateBonuses(comp.weapons)
+                            comp.might += newBonuses.bonusMight
+                            comp.moveSpeed += newBonuses.bonusSpeed
+                            comp.cooldownReduction = (comp.cooldownReduction + newBonuses.bonusCooldownReduction).coerceAtMost(0.5f)
+                            comp.area += newBonuses.bonusArea
+                            comp.projectileBonus += newBonuses.bonusProjectile
+                            comp.regenRate += newBonuses.bonusRegen
+                            comp.luck += newBonuses.bonusLuck
+                            lastSynergyWeapons = currentWeaponSet
+                            lastSynergyBonuses = newBonuses
                         }
-                        // Apply new synergy bonuses
-                        val newBonuses = WeaponSynergy.calculateBonuses(comp.weapons)
-                        comp.might += newBonuses.bonusMight
-                        comp.moveSpeed += newBonuses.bonusSpeed
-                        comp.cooldownReduction = (comp.cooldownReduction + newBonuses.bonusCooldownReduction).coerceAtMost(0.5f)
-                        comp.area += newBonuses.bonusArea
-                        comp.projectileBonus += newBonuses.bonusProjectile
-                        comp.regenRate += newBonuses.bonusRegen
-                        comp.luck += newBonuses.bonusLuck
-                        lastSynergyWeapons = currentWeaponSet
-                        lastSynergyBonuses = newBonuses
                     }
 
                     // Update combo display
@@ -431,7 +508,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     val pH = player.get<HealthComponent>()
                     if (pH != null) {
                         relicSystem?.update(realDt, pPos, pComp, pH)
-                        _relicsCollected.value = relicSystem?.getActiveRelics() ?: emptyList()
+                        // CHANGED: inequality guard — the relics list only hits the
+                        // StateFlow when the collected set actually changed
+                        val activeRelics = relicSystem?.getActiveRelics() ?: emptyList()
+                        if (activeRelics != _relicsCollected.value) _relicsCollected.value = activeRelics
                     }
                 }
             }
@@ -457,22 +537,46 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             // Update combo visual
             val comboComp = player?.get<ComboComponent>()
             if (comboComp != null) {
-                _comboDisplay.value = ComboVisual.getComboDisplay(comboComp.count, comboComp.comboMultiplier)
+                // CHANGED: guarded — was a fresh ComboDisplay allocated + reassigned every frame
+                val dispCount = comboComp.count
+                val dispMult = comboComp.comboMultiplier
+                if (dispCount != lastComboDisplayCount || dispMult != lastComboDisplayMult) {
+                    lastComboDisplayCount = dispCount
+                    lastComboDisplayMult = dispMult
+                    _comboDisplay.value = ComboVisual.getComboDisplay(dispCount, dispMult)
+                }
             }
 
             // Update achievement progress
             if (player != null) {
                 val comp = player.get<PlayerComponent>()
                 if (comp != null) {
-                    AchievementProgress.updateProgress("kill", comp.totalKills)
-                    AchievementProgress.updateProgress("reach_level", comp.level)
-                    AchievementProgress.updateProgress("survive", engine.gameTime.toInt())
-                    AchievementProgress.updateProgress("combo", comboComp?.maxCombo ?: 0)
-                    _achievementProgress.value = AchievementProgress.getSortedByProgress()
+                    // CHANGED: guarded — was updateProgress×4 + a sorted-list allocation +
+                    // StateFlow assignment EVERY frame. Inputs move at most a few times
+                    // per second; now recomputed only when one actually changed.
+                    val tSec = engine.gameTime.toInt()
+                    val maxComboNow = comboComp?.maxCombo ?: 0
+                    if (comp.totalKills != lastAchKills || comp.level != lastAchLevel ||
+                        tSec != lastAchTimeSec || maxComboNow != lastAchCombo) {
+                        lastAchKills = comp.totalKills
+                        lastAchLevel = comp.level
+                        lastAchTimeSec = tSec
+                        lastAchCombo = maxComboNow
+                        AchievementProgress.updateProgress("kill", comp.totalKills)
+                        AchievementProgress.updateProgress("reach_level", comp.level)
+                        AchievementProgress.updateProgress("survive", tSec)
+                        AchievementProgress.updateProgress("combo", maxComboNow)
+                        _achievementProgress.value = AchievementProgress.getSortedByProgress()
+                    }
                 }
             }
 
-            // Update ability cooldown (sync with CharacterAbilities)
+            // Update ability cooldown (parallel VM-side timer — the gate useAbility()
+            // checks). NOTE: CharacterAbilities tracks its own cooldown too; both use
+            // the same max (type.cooldown) and the same realDt, so they stay in step.
+            // Consolidating into one system needs CharacterAbilities.kt — which also
+            // resolves whether getCooldownProgress() counts DOWN 1→0 or UP 0→1 (the
+            // HUD cooldown-wipe direction depends on it).
             if (!_abilityReady.value) {
                 abilityCooldownTimer -= realDt
                 _abilityCooldown.value = (abilityCooldownTimer / abilityCooldownMax).coerceIn(0f, 1f)
@@ -481,14 +585,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     _abilityCooldown.value = 0f
                 }
             }
-            // Sync with CharacterAbilities system
-            _charAbilityReady.value = characterAbilities?.isReady() ?: false
-            _charAbilityCooldown.value = characterAbilities?.getCooldownProgress() ?: 0f
 
             // Achievement popup auto-clear handled by UI
 
             // Track boss HP
-            val boss = engine.getActiveEntities().find { it.tag == "enemy" && it.get<EnemyComponent>()?.isBoss == true }
+            // CHANGED: indexed loop (was .find{} — per-frame lambda allocation)
+            var boss: Entity? = null
+            val bossCandidates = engine.getActiveEntities()
+            for (i in 0 until bossCandidates.size) {
+                val e = bossCandidates.get(i)
+                if (e.tag == "enemy" && e.get<EnemyComponent>()?.isBoss == true) { boss = e; break }
+            }
             if (boss != null) {
                 val bossHpComp = boss.get<HealthComponent>()
                 _bossHp.value = bossHpComp?.currentHp ?: 0f
@@ -661,7 +768,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (activated) {
             abilityCooldownTimer = characterAbilities?.getAbilityState()?.type?.cooldown ?: 15f
             _abilityReady.value = false
-            SoundManager.playLevelUp()
+            SoundManager.playLevelUp()  // NOTE: placeholder sound — swap for an ability-specific one
         }
     }
 
@@ -704,6 +811,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         bossKillCount = 0
         bossWasDeadLastFrame = false
         abilityCooldownTimer = 0f
+        // CHANGED: TD overlay flags (same stuck-overlay bug as startGame) + guard reset
+        _tdStageComplete.value = false
+        _tdIsVictory.value = false
+        lastWeaponsSize = 0
         companionPet?.reset()
         companionPet = null
         characterAbilities?.reset()
@@ -805,16 +916,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         SoundManager.release()
     }
 
-    private fun characterColor(w: WeaponType): Int = when (w) {
-        WeaponType.MAGIC_MISSILE -> 0xFF6BB6FF.toInt()
-        WeaponType.LIGHTNING_RING -> 0xFF80DEEA.toInt()
-        WeaponType.FIREBALL -> 0xFFFFAB91.toInt()
-        WeaponType.ICE_SHARD -> 0xFF80CBC4.toInt()
-        WeaponType.POISON_CLOUD -> 0xFFCE93D8.toInt()
-        WeaponType.BOOMERANG_DAGGER -> 0xFFFFDAC1.toInt()
-        WeaponType.ORBITING_SHIELD -> 0xFFB19CD9.toInt()
-        WeaponType.DIVINE_SPEAR -> 0xFFFFF5E1.toInt()
-    }
+    // CHANGED: was a 4th, DIVERGENT copy of the weapon colors (fireball salmon,
+    // poison purple here vs. mint everywhere else) — consolidated into
+    // WeaponColors. No visual change: the renderer draws the player as the 🧙
+    // emoji and never reads this color.
+    private fun characterColor(w: WeaponType): Int = WeaponColors.argb(w)
 }
 
 data class RunSummary(

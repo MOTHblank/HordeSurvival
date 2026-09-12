@@ -12,11 +12,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.hordesurvival.data.model.RunRecord
 import com.hordesurvival.data.model.UnlockedCharacter
+import com.hordesurvival.game.map.GameMap
 import com.hordesurvival.game.mode.GameModeType
 import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.ui.screens.characterselect.CharacterSelectScreen
 import com.hordesurvival.ui.screens.game.GameScreen
 import com.hordesurvival.ui.screens.gameover.GameOverScreen
+import com.hordesurvival.ui.screens.mapselect.MapSelectScreen
 import com.hordesurvival.ui.screens.menu.MainMenuScreen
 import com.hordesurvival.ui.screens.menu.ModeSelectScreen
 import com.hordesurvival.ui.screens.settings.SettingsScreen
@@ -51,6 +53,8 @@ fun HordeSurvivalGameNav() {
 
     var selChar by remember { mutableStateOf<UnlockedCharacter?>(null) }
     var selMode by remember { mutableStateOf(GameModeType.SURVIVAL) }
+    // CHANGED (NEW): selected map — feeds GameScreen (visuals + gameplay modifiers)
+    var selMap by remember { mutableStateOf<GameMap?>(null) }
     var lastSummary by remember { mutableStateOf(RunSummary(0f, 0, 0, 0, emptyList())) }
     var canContinue by remember { mutableStateOf(false) }
     var isContinuing by remember { mutableStateOf(false) }
@@ -102,10 +106,39 @@ fun HordeSurvivalGameNav() {
             )
         }
 
+        // CHANGED: Survival routes through map selection; other modes go straight
+        // to the game. Also marks a NEW run (canContinue/isContinuing reset —
+        // see the game composable note below).
         composable("mode_select") {
             ModeSelectScreen(
-                onModeSelected = { selMode = it; nav.navigate("game") { popUpTo("main_menu") { inclusive = false } } },
+                onModeSelected = { mode ->
+                    selMode = mode
+                    isContinuing = false
+                    canContinue = true
+                    if (mode == GameModeType.SURVIVAL) {
+                        nav.navigate("map_select")
+                    } else {
+                        nav.navigate("game") { popUpTo("main_menu") { inclusive = false } }
+                    }
+                },
                 onBack = { nav.popBackStack() }, languageCode = lang
+            )
+        }
+
+        composable("map_select") {
+            val playerMetaLevel = save.bestLevel
+            MapSelectScreen(
+                unlockedMapIds = save.unlockedMaps,
+                playerGold = save.totalGold,
+                playerLevel = playerMetaLevel,
+                onSelectMap = { map ->
+                    selMap = map
+                    nav.navigate("game") { popUpTo("main_menu") { inclusive = false } }
+                },
+                onUnlockMap = { map ->
+                    vm.unlockMap(map.id, map.unlockCost)
+                },
+                onBack = { nav.popBackStack() }
             )
         }
 
@@ -113,7 +146,14 @@ fun HordeSurvivalGameNav() {
             CharacterSelectScreen(
                 characters = chars, selectedId = selChar?.characterId ?: 0,
                 onSelect = { selChar = it },
-                onConfirm = { if (selChar != null) nav.navigate("game") { popUpTo("main_menu") { inclusive = false } } },
+                onConfirm = {
+                    if (selChar != null) {
+                        // CHANGED: new-run entry point — same resets as mode_select
+                        isContinuing = false
+                        canContinue = true
+                        nav.navigate("game") { popUpTo("main_menu") { inclusive = false } }
+                    }
+                },
                 onBack = { nav.popBackStack() },
                 onUnlock = { id, cost -> vm.unlockCharacter(id, cost) },
                 gold = save.totalGold, languageCode = lang
@@ -122,7 +162,11 @@ fun HordeSurvivalGameNav() {
 
         composable("game") {
             val c = selChar
-            canContinue = true
+            // CHANGED: REMOVED `canContinue = true` — it ran on every recomposition
+            // of this route, which immediately re-enabled Continue after
+            // onContinue set it false → infinite continues per run. New runs now
+            // set it at their entry points (mode_select / character_select /
+            // game_over.onPlayAgain).
             var gameSaved by remember { mutableStateOf(false) }
             GameScreen(
                 mode = selMode,
@@ -135,7 +179,10 @@ fun HordeSurvivalGameNav() {
                 metaHpLevel = save.metaHpLevel, metaGoldLevel = save.metaGoldLevel,
                 metaMightLevel = save.metaMightLevel, metaCooldownLevel = save.metaCooldownLevel,
                 metaSpeedLevel = save.metaSpeedLevel, metaLuckLevel = save.metaLuckLevel,
-                mapId = map.id,
+                // CHANGED: `map.id` didn't compile — no `map` in scope here. Uses the
+                // map chosen on the map_select route; guarded to SURVIVAL so a stale
+                // selMap can't leak survival modifiers into TD / Daily Challenge.
+                mapId = if (selMode == GameModeType.SURVIVAL) selMap?.id else null,
                 languageCode = lang,
                 bgMusicEnabled = save.bgMusicEnabled,
                 graphicsQuality = save.graphicsQuality,
@@ -186,6 +233,7 @@ fun HordeSurvivalGameNav() {
                 onPlayAgain = {
                     // Full reset — start a completely new game
                     isContinuing = false
+                    canContinue = true  // CHANGED: new run → one continue available again
                     gameVm.resetForNewGame()
                     nav.navigate("game") {
                         popUpTo("game") { inclusive = true }
@@ -202,7 +250,7 @@ fun HordeSurvivalGameNav() {
                     // Continue from death — revive BEFORE navigating
                     gameVm.continueGame()
                     isContinuing = true  // Tell GameScreen we're continuing, not restarting
-                    canContinue = false  // Only one continue per run
+                    canContinue = false  // Only one continue per run (now actually sticks — see game route)
                     nav.navigate("game") {
                         popUpTo("game") { inclusive = true }
                         launchSingleTop = true

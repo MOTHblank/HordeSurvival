@@ -357,12 +357,19 @@ fun GameRenderer(
                 val progress = (dn.timer / dn.lifetime).coerceIn(0f, 1f)
                 val alpha = 1f - progress
                 val text = dn.getDisplayText()
-                val cacheKey = if (dn.isCrit) "crit_$text" else "norm_$text"
-
+                val cacheKey = when {
+                    dn.isCrit -> "crit_$text"
+                    dn.isPlayerDamage -> "player_$text"
+                    else -> "norm_$text"
+                }
                 val textResult = damageTextCache.getOrPut(cacheKey) {
                     val scale = if (dn.isCrit) 1.3f else 1f
                     val fontSize = (14f * scale).sp
-                    val color = if (dn.isCrit) HordeColors.GoldColor else Color.White
+                    val color = when {
+                        dn.isCrit -> HordeColors.GoldColor
+                        dn.isPlayerDamage -> HordeColors.Danger
+                        else -> Color.White
+                    }
                     textMeasurer.measure(
                         text = AnnotatedString(text),
                         style = TextStyle(
@@ -591,10 +598,10 @@ private fun DrawScope.drawProjectile(
                 else -> 2
             }
             val trailColor = when (proj.weaponType) {
-                WeaponType.FIREBALL -> Color(0xFFFF8A65)
-                WeaponType.ICE_SHARD -> Color(0xFF80CBC4)
-                WeaponType.MAGIC_MISSILE -> HordeColors.SkyBlue
-                WeaponType.DIVINE_SPEAR -> Color(0xFFFFF5E1)
+                WeaponType.FIREBALL -> WeaponColors.Fireball
+                WeaponType.ICE_SHARD -> WeaponColors.IceShard
+                WeaponType.MAGIC_MISSILE -> WeaponColors.MagicMissile
+                WeaponType.DIVINE_SPEAR -> WeaponColors.DivineSpear
                 else -> color
             }
             val invSpeed = 1f / speed

@@ -1,5 +1,6 @@
 package com.hordesurvival.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -10,6 +11,9 @@ data class PlayerSave(
     val totalRuns: Int = 0,
     val totalKills: Int = 0,
     val bestTime: Float = 0f,
+    // NOTE: doubles as the map level-gate source — MapSelectScreen compares each
+    // map's minLevel against this (highest player level reached in any run).
+    // Already maintained by GameRepository.recordRun(); nothing extra needed.
     val bestLevel: Int = 0,
     val metaHpLevel: Int = 0,
     val metaGoldLevel: Int = 0,
@@ -22,6 +26,8 @@ data class PlayerSave(
     val sfxVolume: Float = 0.8f,
     val vibrationEnabled: Boolean = true,
     val languageCode: String = "en",
+    // DEAD SETTING: maps own background styles now — nothing consumes this at the
+    // GameScreen call site. Column kept (dropping needs another migration).
     val backgroundStyle: Int = 0,  // 0=grid, 1=stars, 2=nebula, 3=checkerboard, 4=solid
     val bgMusicEnabled: Boolean = true,
     val questsCompleted: String = "",
@@ -35,6 +41,10 @@ data class PlayerSave(
     val showParticles: Boolean = true,
     val showComboCounter: Boolean = true,
     val screenShakeEnabled: Boolean = true,
+    // CHANGED (NEW): unlocked map ids — persisted via the Set<String> TypeConverter
+    // in AppDatabase (CSV text). defaultValue must match the v4→v5 migration SQL.
+    @ColumnInfo(defaultValue = "")
+    val unlockedMaps: Set<String> = emptySet(),
     // Prestige
     val prestigeLevel: Int = 0,
     val totalGoldEarned: Int = 0,

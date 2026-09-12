@@ -36,9 +36,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // CHANGED: reads the persisted save directly instead of playerSave.value.
+    // The stateIn flow starts with the default PlayerSave() (empty lastLoginDate)
+    // until the repository emits — reading .value right after initializeSave()
+    // could see that placeholder and "grant" a day-1 reward / reset an existing
+    // streak. first() after initializeSave() completes gets the real save.
     private suspend fun checkDailyLogin() {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        val current = playerSave.value
+        val current = repository.playerSave.first() ?: PlayerSave()
         if (current.lastLoginDate != today) {
             val newStreak = if (isYesterday(current.lastLoginDate)) current.loginStreak + 1 else 1
             val reward = when {
@@ -68,6 +73,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun dismissDailyReward() { _dailyReward.value = null }
 
     fun addGold(amount: Int) = viewModelScope.launch { repository.addGold(amount) }
+
+    // CHANGED (NEW): map unlock — deducts gold and persists the unlocked id.
+    // Requires GameRepository.unlockMap (snippet below) and PlayerSave.unlockedMaps.
+    fun unlockMap(mapId: String, cost: Int, onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val ok = repository.unlockMap(mapId, cost)
+            onResult(ok)
+        }
+    }
 
     /** Returns true if upgrade succeeded (gold was enough) */
     fun upgradeMeta(stat: String, cost: Int, onResult: (Boolean) -> Unit = {}) {

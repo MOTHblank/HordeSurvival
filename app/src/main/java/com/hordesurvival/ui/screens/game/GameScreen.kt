@@ -180,7 +180,11 @@ fun GameScreen(
         } else {
             // Fresh start (also covers isContinuing with a reset engine)
             gameViewModel.runSaved = false
-            gameViewModel.startGame(mode, startingWeapon, characterHp, characterSpeed, characterMight, metaHpLevel, metaGoldLevel, metaMightLevel, metaCooldownLevel, metaSpeedLevel, metaLuckLevel)
+            gameViewModel.startGame(
+                mode, startingWeapon, characterHp, characterSpeed, characterMight,
+                metaHpLevel, metaGoldLevel, metaMightLevel, metaCooldownLevel, metaSpeedLevel, metaLuckLevel,
+                mapId = mapId
+            )
         }
         // Sync sound volumes from settings
         SoundManager.syncVolumes(musicVol, sfxVol)
@@ -250,7 +254,7 @@ fun GameScreen(
                 xpToNext = xpToNext,
                 gold = gold,
                 kills = kills,
-                gameTime = gameTime,
+                gameTime = kotlin.math.floor(gameTime),
                 currentWeapons = playerWeapons,
                 comboCount = comboCount,
                 comboMultiplier = comboMultiplier,

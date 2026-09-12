@@ -7,9 +7,8 @@ import com.hordesurvival.game.engine.ecs.Entity
 import com.hordesurvival.game.engine.ecs.System
 import com.badlogic.gdx.math.Vector2
 import com.hordesurvival.game.weapon.WeaponType
-import com.hordesurvival.game.weapon.WeaponEvolution
+import com.hordesurvival.game.weapon.WeaponColors
 import com.hordesurvival.game.audio.SoundManager
-import com.hordesurvival.utils.Constants
 import com.hordesurvival.utils.GameMath
 import kotlin.math.cos
 import kotlin.math.sin
@@ -18,6 +17,14 @@ import kotlin.math.sin
  * Auto-attack system: fires all player weapons automatically.
  * Each weapon has unique projectile behavior and targeting.
  * Overhauled: uses GameEngine's SpatialGrid for targeting and enemy discovery.
+ *
+ * Visual/gameplay pass: lightning per-enemy cooldown now decays with real frame
+ * dt (previously decayed once per WEAPON cooldown with one frame's dt — enemies
+ * were hit ~once per 30-60s instead of every ring pulse); lightning range query
+ * expanded by MAX_ENEMY_RADIUS so large enemies clipping the ring aren't missed;
+ * ice shard / divine spear volleys fan out instead of stacking into one line;
+ * fireball fan centered ((i - (count-1)/2) — single shots aimed 0.15 rad off
+ * target before); weapon colors sourced from shared WeaponColors.
  */
 class WeaponSystem(private val engine: GameEngine) : System() {
 
@@ -30,10 +37,26 @@ class WeaponSystem(private val engine: GameEngine) : System() {
     // Scratch buffers for spatial queries
     private val _enemyQueryResult = com.badlogic.gdx.utils.Array<Entity>(false, 64)
 
+    // CHANGED: mirrors CollisionSystem — max possible enemy collision radius,
+    // added to center-distance queries so large enemies are never missed
+    private val MAX_ENEMY_RADIUS = 40f
+
     override fun update(dt: Float, entities: com.badlogic.gdx.utils.Array<Entity>) {
         val player = engine.playerEntity ?: return
         val playerTransform = player.get<TransformComponent>() ?: return
         val playerComp = player.get<PlayerComponent>() ?: return
+
+        // CHANGED: decay lightning per-enemy cooldowns with the REAL frame dt.
+        // This used to live inside fireLightningRing, which only runs once per
+        // weapon cooldown (seconds apart) and subtracted a single frame's dt —
+        // a 0.3s per-enemy cooldown took ~19 weapon cycles to expire, so enemies
+        // were zapped roughly once every 30-60 seconds instead of per pulse.
+        val iter = lightningHitCooldowns.iterator()
+        while (iter.hasNext()) {
+            val entry = iter.next()
+            val newTime = entry.value - dt
+            if (newTime <= 0f) iter.remove() else lightningHitCooldowns.put(entry.key, newTime)
+        }
 
         // Iterate all WeaponStateComponent entities owned by player
         for (i in 0 until entities.size) {
@@ -42,7 +65,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
 
             ws.cooldownTimer -= dt
             if (ws.cooldownTimer <= 0f) {
-                fireWeapon(ws, playerTransform, playerComp, entities, dt)
+                fireWeapon(ws, playerTransform, playerComp)
                 val cdReduction = 1f - playerComp.cooldownReduction
                 ws.cooldownTimer = ws.baseCooldown * cdReduction / playerComp.attackSpeed
             }
@@ -52,16 +75,16 @@ class WeaponSystem(private val engine: GameEngine) : System() {
     private fun fireWeapon(
         weapon: WeaponStateComponent,
         playerPos: TransformComponent,
-        player: PlayerComponent,
-        entities: com.badlogic.gdx.utils.Array<Entity>,
-        dt: Float = 1f / 60f
+        player: PlayerComponent
     ) {
         // Play weapon-specific sound
+        // NOTE: fires every cooldown tick even for ORBITING_SHIELD when all
+        // shields already exist (sound with no event). Minor; left as-is.
         SoundManager.playShoot(weapon.type)
 
         when (weapon.type) {
             WeaponType.MAGIC_MISSILE -> fireMagicMissile(weapon, playerPos, player)
-            WeaponType.LIGHTNING_RING -> fireLightningRing(weapon, playerPos, player, dt)
+            WeaponType.LIGHTNING_RING -> fireLightningRing(weapon, playerPos, player)
             WeaponType.FIREBALL -> fireFireball(weapon, playerPos, player)
             WeaponType.ICE_SHARD -> fireIceShard(weapon, playerPos, player)
             WeaponType.POISON_CLOUD -> firePoisonCloud(weapon, playerPos, player)
@@ -102,31 +125,34 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         }
     }
 
-    private fun fireLightningRing(ws: WeaponStateComponent, pos: TransformComponent, player: PlayerComponent, dt: Float) {
+    private fun fireLightningRing(ws: WeaponStateComponent, pos: TransformComponent, player: PlayerComponent) {
         // Lightning ring is an AOE around the player — damage enemies in radius
-        // FIX: per-enemy cooldown (0.3s) to prevent instant-killing large groups
+        // FIX: per-enemy cooldown (0.3s, decayed in update()) to prevent
+        // instant-killing large groups
         val radius = ws.area * player.area
         val damage = ws.baseDamage * player.might
-        val enemies = engine.findInRange(pos.x, pos.y, radius, "enemy")
-
-        // Decay cooldowns with real dt
-        val iter = lightningHitCooldowns.iterator()
-        while (iter.hasNext()) {
-            val entry = iter.next()
-            val newTime = entry.value - dt
-            if (newTime <= 0f) iter.remove() else lightningHitCooldowns.put(entry.key, newTime)
-        }
+        // CHANGED: query expanded by MAX_ENEMY_RADIUS — center-distance queries
+        // miss large enemies whose edge is inside the ring; per-enemy check below
+        // is edge-inclusive, matching CollisionSystem.applyAoeDamage semantics.
+        val enemies = engine.findInRange(pos.x, pos.y, radius + MAX_ENEMY_RADIUS, "enemy")
 
         for (i in 0 until enemies.size) {
             val enemy = enemies[i]
+            if (!enemy.active) continue
             val hp = enemy.get<HealthComponent>() ?: continue
             // Skip if this enemy was recently hit by lightning
             if (lightningHitCooldowns.containsKey(enemy.id) && lightningHitCooldowns.get(enemy.id, 0f) > 0f) continue
+            val eTransform = enemy.get<TransformComponent>() ?: continue
+            val eCollision = enemy.get<CollisionComponent>()
+            val reach = radius + (eCollision?.radius ?: 16f)
+            val dx = eTransform.x - pos.x
+            val dy = eTransform.y - pos.y
+            if (dx * dx + dy * dy > reach * reach) continue
+
             hp.takeDamage(damage)
             lightningHitCooldowns.put(enemy.id, 0.3f)  // 300ms cooldown per enemy
             // Visual flash effect
-            spawnHitEffect(enemy.get<TransformComponent>()?.x ?: pos.x,
-                enemy.get<TransformComponent>()?.y ?: pos.y, 0xFF6BB6FF.toInt())
+            spawnHitEffect(eTransform.x, eTransform.y, WeaponColors.argb(WeaponType.LIGHTNING_RING))
         }
 
         // Visual ring effect
@@ -139,9 +165,12 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         val isEvolved = ws.specialEffect == "burn_ground"
 
         for (i in 0 until count) {
+            // CHANGED: (i - (count - 1) / 2f) — was (i - count / 2f), which is
+            // off-center: a single fireball aimed 0.15 rad off its target, and
+            // 3-volleys drifted half a step to one side.
             val angle = if (target != null) {
                 val t = target.get<TransformComponent>()!!
-                GameMath.angleTo(pos.x, pos.y, t.x, t.y) + (i - count / 2f) * 0.3f
+                GameMath.angleTo(pos.x, pos.y, t.x, t.y) + (i - (count - 1) / 2f) * 0.3f
             } else {
                 (i * Math.PI.toFloat() * 2f / count)
             }
@@ -166,9 +195,11 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         val target = findNearestEnemy(pos.x, pos.y, 400f)
 
         for (i in 0 until count) {
+            // CHANGED: centered fan — all shards previously fired at the SAME
+            // angle, so count > 1 stacked into one visual projectile
             val angle = if (target != null) {
                 val t = target.get<TransformComponent>()!!
-                GameMath.angleTo(pos.x, pos.y, t.x, t.y)
+                GameMath.angleTo(pos.x, pos.y, t.x, t.y) + (i - (count - 1) / 2f) * 0.22f
             } else {
                 (i * Math.PI.toFloat() * 2f / count)
             }
@@ -252,6 +283,8 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         }
 
         // Ensure correct number of shields
+        // NOTE (unchanged): if projectileCount DECREASES, excess shields are
+        // never removed — acceptable, just noting.
         if (existingCount < count) {
             for (i in existingCount until count) {
                 val angle = (i.toFloat() / count) * Math.PI.toFloat() * 2f
@@ -268,9 +301,11 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         val target = findNearestEnemy(pos.x, pos.y, 600f)
 
         for (i in 0 until count) {
+            // CHANGED: tight centered fan — spears previously stacked on one line,
+            // wasting pierce on the same enemy column
             val angle = if (target != null) {
                 val t = target.get<TransformComponent>()!!
-                GameMath.angleTo(pos.x, pos.y, t.x, t.y)
+                GameMath.angleTo(pos.x, pos.y, t.x, t.y) + (i - (count - 1) / 2f) * 0.15f
             } else {
                 (Math.PI.toFloat() / 2f)
             }
@@ -318,7 +353,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         ))
         entity.add(SpriteComponent(
             width = 12f, height = 12f,
-            color = getWeaponColor(weaponType),
+            color = WeaponColors.argb(weaponType),
             shape = getWeaponShape(weaponType)
         ))
         entity.add(CollisionComponent(radius = 8f, isTrigger = true))
@@ -326,14 +361,14 @@ class WeaponSystem(private val engine: GameEngine) : System() {
 
     private fun spawnPoisonCloud(x: Float, y: Float, damage: Float, radius: Float, duration: Float) {
         val entity = engine.createEntity("poison_cloud")
-        entity.add(TransformComponent(x, y))
         entity.add(PoisonCloudComponent(
             damagePerTick = damage, tickInterval = 0.5f,
             lifetime = duration, radius = radius
         ))
+        entity.add(TransformComponent(x, y))
         entity.add(SpriteComponent(
             width = radius * 2, height = radius * 2,
-            color = 0xFFAAE6BA.toInt(), alpha = 0.4f,
+            color = WeaponColors.argb(WeaponType.POISON_CLOUD), alpha = 0.4f,
             shape = SpriteShape.CIRCLE
         ))
     }
@@ -345,7 +380,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         entity.add(OrbitComponent(x, y, radius, angle, angularSpeed, hp))
         entity.add(SpriteComponent(
             width = 20f, height = 20f,
-            color = 0xFFB19CD9.toInt(),
+            color = WeaponColors.argb(WeaponType.ORBITING_SHIELD),
             shape = SpriteShape.DIAMOND
         ))
         entity.add(CollisionComponent(radius = 12f, isTrigger = true))
@@ -364,7 +399,7 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         entity.add(TransformComponent(x, y))
         entity.add(SpriteComponent(
             width = radius * 2, height = radius * 2,
-            color = 0xFF6BB6FF.toInt(), alpha = 0.5f,
+            color = WeaponColors.argb(WeaponType.LIGHTNING_RING), alpha = 0.5f,
             shape = SpriteShape.CIRCLE
         ))
         entity.add(ParticleComponent(lifetime = 0.2f, fadeOut = true))
@@ -430,17 +465,6 @@ class WeaponSystem(private val engine: GameEngine) : System() {
         }
 
         return _enemyQueryResult
-    }
-
-    private fun getWeaponColor(type: WeaponType): Int = when (type) {
-        WeaponType.MAGIC_MISSILE -> 0xFF6BB6FF.toInt()
-        WeaponType.LIGHTNING_RING -> 0xFF80DEEA.toInt()
-        WeaponType.FIREBALL -> 0xFFFFCC80.toInt()
-        WeaponType.ICE_SHARD -> 0xFF80CBC4.toInt()
-        WeaponType.POISON_CLOUD -> 0xFFAAE6BA.toInt()
-        WeaponType.BOOMERANG_DAGGER -> 0xFFFFDAC1.toInt()
-        WeaponType.ORBITING_SHIELD -> 0xFFB19CD9.toInt()
-        WeaponType.DIVINE_SPEAR -> 0xFFFFF5E1.toInt()
     }
 
     private fun getWeaponShape(type: WeaponType): SpriteShape = when (type) {

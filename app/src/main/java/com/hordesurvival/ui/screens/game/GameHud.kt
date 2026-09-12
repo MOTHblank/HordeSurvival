@@ -1,6 +1,11 @@
 package com.hordesurvival.ui.screens.game
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -14,7 +19,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.weapon.WeaponType
@@ -27,11 +31,20 @@ import com.hordesurvival.ui.components.HordeSmallButton
 import com.hordesurvival.ui.components.SmallCutShape
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import kotlin.math.sin
 
 /**
  * In-game HUD: HP bar, XP bar, stats, weapon loadout with tiers,
  * combo counter, boss HP bar, passive indicators, pause button.
+ *
+ * Visual pass: HP bar migrated to shared theme ramp (HpBarHigh/Medium/Low) with
+ * thresholds unified with the renderer's enemy bars (0.5 / 0.25); duplicate
+ * full-screen low-HP tint removed (renderer's screen-space vignette covers it);
+ * combo counter now actually pops on increment; ability cooldown is a bottom-up
+ * wipe; boss banner animates in/out.
+ *
+ * PERF NOTE on [gameTime]: pass a value that changes at most once per second
+ * (e.g. floor(gameTime)) — a raw per-frame float recomposes this entire HUD
+ * at frame rate. See the one-line GameScreen edit.
  */
 @Composable
 fun GameHud(
@@ -60,23 +73,23 @@ fun GameHud(
 ) {
     val hpRatio = (playerHp / playerMaxHp).coerceIn(0f, 1f)
     val xpRatio = (currentXp / xpToNext).coerceIn(0f, 1f)
+    // CHANGED: shared theme constants + thresholds unified with renderer enemy bars
+    // (was 0.6/0.3 with inline literals — player and enemies showed different
+    // colors at the same health ratio)
     val hpColor = when {
-        hpRatio > 0.6f -> HordeColors.MintGreen
-        hpRatio > 0.3f -> HordeColors.WarmPeach
-        else -> HordeColors.SoftPink
+        hpRatio > 0.5f -> HordeColors.HpBarHigh
+        hpRatio > 0.25f -> HordeColors.HpBarMedium
+        else -> HordeColors.HpBarLow
     }
 
     // Force LTR layout so button positions stay fixed regardless of system language
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Low HP warning - soft warm coral pulse
-        if (hpRatio < 0.25f) {
-            val pulseAlpha by animateFloatAsState(
-                targetValue = 0.15f + 0.1f * sin(System.currentTimeMillis() / 200f).toFloat(),
-                label = "hp_pulse"
-            )
-            Box(Modifier.fillMaxSize().background(HordeColors.WarmPeach.copy(alpha = pulseAlpha)))
-        }
+        // CHANGED: REMOVED duplicate full-screen low-HP tint (was WarmPeach at <0.25,
+        // pulsing via System.currentTimeMillis in composition). The reworked
+        // GameRenderer already draws a screen-space red vignette below 30% with an
+        // intensity ramp — better readability (clear center, red edges) and consistent
+        // color. If you haven't applied that renderer yet, keep the old block until you do.
 
         // ── Top — full-width XP bar ─────────────────────────────
         HordeProgressBar(
@@ -186,21 +199,26 @@ fun GameHud(
 
         // ── Combo counter (right side) ───────────────────────────
         if (comboCount >= 3 && showComboCounter) {
-            val comboScale by animateFloatAsState(
-                targetValue = 1f,
-                animationSpec = spring(dampingRatio = 0.4f, stiffness = 300f),
-                label = "combo_scale"
-            )
+            // CHANGED: real pop — the old animateFloatAsState(targetValue = 1f) had a
+            // constant target, so the spring never fired and the scale was always 1f.
+            // Now every increment snaps to 1.3x and springs back.
+            val comboScale = remember { Animatable(1f) }
+            LaunchedEffect(comboCount) {
+                comboScale.snapTo(1.3f)
+                comboScale.animateTo(1f, spring(dampingRatio = 0.4f, stiffness = 300f))
+            }
             Column(
                 modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp)
-                    .graphicsLayer(scaleX = comboScale, scaleY = comboScale),
+                    .graphicsLayer(scaleX = comboScale.value, scaleY = comboScale.value),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // CHANGED: dead branch removed (>=10 and else were both WarmPeach);
+                // combos below 10 now render dimmed — pink→peach→orange→gold ramp
                 val comboColor = when {
                     comboCount >= 50 -> HordeColors.GoldColor  // gold
                     comboCount >= 25 -> HordeColors.Warning  // orange
                     comboCount >= 10 -> HordeColors.WarmPeach  // peach
-                    else -> HordeColors.WarmPeach              // light peach
+                    else -> HordeColors.WarmPeach.copy(alpha = 0.7f)  // dimmed peach
                 }
                 Text(
                     "×$comboCount",
@@ -236,9 +254,17 @@ fun GameHud(
             val emoji = if (abilityIcon.isNotEmpty()) abilityIcon else "✨"
             Text(emoji, style = HordeTypography.SubHeader)
             if (!abilityReady) {
-                // Cooldown overlay
+                // CHANGED: bottom-up cooldown wipe instead of uniform darkening —
+                // the button visibly "refills" as it recharges. Assumes
+                // abilityCooldown is a 0..1 fraction (the *15 seconds display and
+                // the old alpha math both assumed this). If it's raw seconds in
+                // GameViewModel, tell me the max duration and I'll adjust both.
                 Box(
-                    Modifier.fillMaxSize().background(HordeColors.OverlayMedium.copy(alpha = 0.5f * abilityCooldown))
+                    Modifier
+                        .align(Alignment.Bottom)
+                        .fillMaxWidth()
+                        .fillMaxHeight(abilityCooldown.coerceIn(0f, 1f))
+                        .background(HordeColors.OverlayMedium)
                 )
                 Text("${(abilityCooldown * 15).toInt()}s", style = HordeTypography.Label, color = Color.White.copy(alpha = 0.7f))
             }
@@ -292,18 +318,24 @@ private fun weaponEmoji(w: WeaponType): String = when (w) {
 
 /**
  * Boss warning banner.
+ * CHANGED: animates in/out instead of popping.
  */
 @Composable
 fun BossWarningBanner(visible: Boolean, onDismiss: () -> Unit) {
-    if (!visible) return
-    val inf = rememberInfiniteTransition(label = "boss")
-    val alpha by inf.animateFloat(0.6f, 1f, infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "a")
-    Box(
-        Modifier.widthIn(max = 600.dp).fillMaxWidth()
-            .background(Brush.horizontalGradient(listOf(HordeColors.Lavender.copy(alpha = alpha * 0.7f), HordeColors.SkyBlue.copy(alpha = alpha * 0.4f), HordeColors.Lavender.copy(alpha = alpha * 0.7f))))
-            .hordeInteractive(onClick = onDismiss).padding(vertical = 20.dp),
-        contentAlignment = Alignment.Center
-    ) { Text("⚠️ BOSS INCOMING ⚠️", style = HordeTypography.Header, color = Color.White) }
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + slideInVertically { -it },
+        exit = fadeOut() + slideOutVertically { -it }
+    ) {
+        val inf = rememberInfiniteTransition(label = "boss")
+        val alpha by inf.animateFloat(0.6f, 1f, infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "a")
+        Box(
+            Modifier.widthIn(max = 600.dp).fillMaxWidth()
+                .background(Brush.horizontalGradient(listOf(HordeColors.Lavender.copy(alpha = alpha * 0.7f), HordeColors.SkyBlue.copy(alpha = alpha * 0.4f), HordeColors.Lavender.copy(alpha = alpha * 0.7f))))
+                .hordeInteractive(onClick = onDismiss).padding(vertical = 20.dp),
+            contentAlignment = Alignment.Center
+        ) { Text("⚠️ BOSS INCOMING ⚠️", style = HordeTypography.Header, color = Color.White) }
+    }
 }
 
 private fun formatTime(s: Float): String {

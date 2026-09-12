@@ -23,8 +23,22 @@ class SpatialGrid(val cellSize: Float = 128f) {
 
     /**
      * Clears all entities from all cells without releasing bucket list memory.
+     * CHANGED: prunes the key map. Survival mode wanders the plane indefinitely,
+     * and every newly-visited cell added an entry to `cells` that was never
+     * removed — slow unbounded growth over long runs. When the map dwarfs the
+     * live cell count, drop everything and return the bucket lists to the pool
+     * (they're cheap to re-create on demand). Rare path; negligible cost.
      */
     fun clear() {
+        if (cells.size > 2048 && cells.size > activeKeys.size * 4) {
+            val iter = cells.entries()
+            while (iter.hasNext()) {
+                listPool.add(iter.next().value)
+            }
+            cells.clear()
+            activeKeys.clear()
+            return
+        }
         for (i in 0 until activeKeys.size) {
             val key = activeKeys.get(i)
             cells.get(key)?.clear()
@@ -70,6 +84,18 @@ class SpatialGrid(val cellSize: Float = 128f) {
      * Queries entities within a radius around (x, y).
      * Populates [out] list to avoid garbage allocations. Always clears [out] before populating.
      * If [tagFilter] is specified, only entities matching that tag are returned.
+     *
+     * NOTE ON SEMANTICS: this is a CENTER-distance test. It does not account for
+     * the target entity's collision radius — callers must add the max target
+     * radius to [radius] (see CollisionSystem's MAX_ENEMY_RADIUS pattern) or large
+     * entities whose center sits just outside the radius are missed.
+     *
+     * WARNING: the default [out] is a SHARED scratch buffer. If you hold the
+     * returned list while calling anything that queries the grid (findNearest
+     * and findInRange reuse scratch buffers internally), your list is cleared
+     * mid-iteration. Always pass an explicit buffer when results must survive a
+     * nested query. Grep for `queryRange(` calls that omit `out` before relying
+     * on the default.
      */
     fun queryRange(
         x: Float,

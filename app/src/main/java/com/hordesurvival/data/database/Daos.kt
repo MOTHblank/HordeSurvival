@@ -42,6 +42,13 @@ interface PlayerDao {
     @Query("UPDATE player_save SET totalGold = totalGold - :cost WHERE id = 1 AND totalGold >= :cost")
     suspend fun deductGold(cost: Int): Int
 
+    // CHANGED (NEW): atomic map unlock — deducts gold AND persists the new set in
+    // one statement, only if affordable and not already unlocked (the instr() guard
+    // also makes double-taps idempotent instead of double-charging). Map ids
+    // contain no commas, so comma-delimited matching is exact.
+    @Query("UPDATE player_save SET unlockedMaps = :maps, totalGold = totalGold - :cost WHERE id = 1 AND totalGold >= :cost AND instr(',' || unlockedMaps || ',', ',' || :mapId || ',') = 0")
+    suspend fun unlockMap(mapId: String, maps: String, cost: Int): Int
+
     @Query("UPDATE player_save SET backgroundStyle = :style WHERE id = 1")
     suspend fun setBackgroundStyle(style: Int)
 
@@ -84,6 +91,9 @@ interface CharacterDao {
     @Query("SELECT * FROM characters WHERE isUnlocked = 1")
     fun getUnlockedCharacters(): Flow<List<UnlockedCharacter>>
 
+    // NOTE: misleading name — actually an arbitrary single row (LIMIT 1); used
+    // purely as an is-the-table-empty check by initializeDefaultCharacters().
+    // Rename when convenient; left as-is since I can't see every call site.
     @Query("SELECT * FROM characters LIMIT 1")
     suspend fun getUnlockedCharactersOnce(): List<UnlockedCharacter>
 

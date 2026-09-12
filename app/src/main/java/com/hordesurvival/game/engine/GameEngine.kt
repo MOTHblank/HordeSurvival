@@ -12,6 +12,11 @@ import java.util.concurrent.atomic.AtomicInteger
  * Core game engine managing the ECS world.
  * Overhauled: integrated 2D SpatialGrid for spatial queries (findNearest, findInRange, collisions),
  * and O(1) entityByIdMap lookup for targeted projectile tracking.
+ * Visual pass: screen-shake feel fixes (weaker shakes can no longer stomp stronger ones,
+ * amplitude is frame-rate normalized, pausing no longer freezes the camera at a random offset),
+ * boss intro flash respects game speed, gameSpeed resets with the engine, and the entity-cap
+ * recycler sacrifices particles/damage numbers first instead of silently deleting
+ * enemies or weapon states.
  */
 class GameEngine {
 
@@ -62,19 +67,42 @@ class GameEngine {
     var shakeOffsetX = 0f
     var shakeOffsetY = 0f
 
-    /** Trigger screen shake */
+    /**
+     * Trigger screen shake.
+     * CHANGED: a weaker shake no longer stomps a stronger one in progress —
+     * a 3f crit shake landing during an 8f boss-hit shake used to erase the
+     * boss impact entirely. Stronger (or equal) shakes restart; a weaker-but-
+     * longer one only extends the tail of the current shake.
+     */
     fun shake(intensity: Float = 8f, duration: Float = 0.15f) {
-        shakeIntensity = intensity
-        shakeDuration = duration
-        shakeTimer = 0f
+        if (intensity >= shakeIntensity || shakeTimer >= shakeDuration) {
+            shakeIntensity = intensity
+            shakeDuration = duration
+            shakeTimer = 0f
+        } else if (duration > shakeDuration - shakeTimer) {
+            // weaker, but outlasts what's left of the current shake — keep the
+            // stronger amplitude and let it ride for the longer duration
+            shakeDuration = shakeTimer + duration
+        }
     }
 
     fun createEntity(tag: String = ""): Entity {
-        // Safety: prevent entity explosion on low-end devices
+        // Safety: prevent entity explosion on low-end devices.
+        // CHANGED: victim selection. Previously firstOrNull over ANY active
+        // non-player entity — under particle load that could silently deactivate
+        // an enemy (vanishes with no death effect, drops no XP gem) or a
+        // WeaponStateComponent entity (recycleEntities protects those from
+        // recycling, but this path didn't — that weapon would stop firing for
+        // the rest of the run). Now particles/damage numbers are sacrificed
+        // first — they're numerous, short-lived, and their loss is invisible —
+        // and weapon state is never eligible.
         if (tag != "player" && entities.size + entitiesToAdd.size > 500) {
-            // At hard cap, recycle oldest non-player entity
-            val oldest = entities.firstOrNull { !it.has<com.hordesurvival.game.component.PlayerComponent>() && it.active }
-            if (oldest != null) oldest.active = false
+            val victim = entities.firstOrNull {
+                it.active && (it.tag == "particle" || it.tag == "damage_number")
+            } ?: entities.firstOrNull {
+                it.active && !it.has<PlayerComponent>() && !it.has<WeaponStateComponent>()
+            }
+            victim?.active = false
         }
         val entity = entityPool.obtain()
         entity.active = true
@@ -119,6 +147,13 @@ class GameEngine {
                     // Never recycle weapon state entities — they must persist for weapons to keep firing
                     if (!e.has<WeaponStateComponent>()) {
                         // Force-kill entities that lived too long (stale cleanup)
+                        // NOTE (unchanged): the 120s enemy force-kill removes the
+                        // enemy with NO death effect and NO XP/gold drop — an enemy
+                        // that chases you for 2 minutes just vanishes and the reward
+                        // is lost. Ideally this would route through the same death
+                        // pipeline the combat systems use; left as-is because the
+                        // engine can't reach those systems. Consider moving
+                        // stuck-enemy cleanup into the enemy/death system instead.
                         val maxAge = when (e.tag) {
                             "particle" -> 5f
                             "damage_number" -> 3f
@@ -187,7 +222,14 @@ class GameEngine {
     }
 
     fun update(dt: Float) {
-        if (isPaused || isGameOver) return
+        // CHANGED: zero shake offsets when paused/over — a shake interrupted by
+        // pause used to freeze the camera at its last random offset, leaving the
+        // entire world shifted a few px under the pause overlay indefinitely.
+        if (isPaused || isGameOver) {
+            shakeOffsetX = 0f
+            shakeOffsetY = 0f
+            return
+        }
 
         val scaledDt = dt * gameSpeed
         gameTime += scaledDt
@@ -197,16 +239,27 @@ class GameEngine {
             shakeTimer += dt
             val progress = (shakeTimer / shakeDuration).coerceIn(0f, 1f)
             val decay = 1f - progress
+            // CHANGED: frame-rate normalization — the offset magnitude used to be
+            // constant per FRAME, so a 120Hz screen showed literally twice the
+            // jitter frequency of a 60Hz screen for the same shake. Scaling by
+            // dt*60 (clamped, so lag spikes don't amplify) keeps perceived shake
+            // energy consistent across refresh rates. Timer still runs on
+            // unscaled dt: shake is a camera effect and should last the same
+            // wall-clock time at any game speed.
+            val amp = shakeIntensity * decay * (dt * 60f).coerceIn(0f, 1f)
             val angle = (Math.random() * Math.PI * 2).toFloat()
-            shakeOffsetX = kotlin.math.cos(angle) * shakeIntensity * decay
-            shakeOffsetY = kotlin.math.sin(angle) * shakeIntensity * decay
+            shakeOffsetX = kotlin.math.cos(angle) * amp
+            shakeOffsetY = kotlin.math.sin(angle) * amp
         } else {
             shakeOffsetX = 0f
             shakeOffsetY = 0f
         }
 
         // Update boss intro flash
-        if (bossIntroTimer > 0f) bossIntroTimer -= dt
+        // CHANGED: scaled by game speed — it's a gameplay-paced visual event, and
+        // at 3x speed the flash used to linger 3x longer relative to everything
+        // else happening on screen.
+        if (bossIntroTimer > 0f) bossIntroTimer -= scaledDt
 
         // Add pending entities BEFORE systems run (so they're visible this frame)
         if (entitiesToAdd.isNotEmpty()) {
@@ -253,6 +306,9 @@ class GameEngine {
         gameTime = 0f
         isPaused = false
         isGameOver = false
+        // CHANGED: was not reset — finishing a run at 3x speed leaked into the
+        // next run, which opened in fast-forward until something else reset it
+        gameSpeed = 1f
         playerEntity = null
         shakeIntensity = 0f; shakeDuration = 0f; shakeTimer = 0f
         shakeOffsetX = 0f; shakeOffsetY = 0f

@@ -10,11 +10,18 @@ import com.hordesurvival.game.weapon.WeaponType
 import com.hordesurvival.utils.Constants
 import com.hordesurvival.utils.GameMath
 import com.badlogic.gdx.utils.IntFloatMap
+import com.hordesurvival.game.weapon.WeaponColors
+import com.hordesurvival.ui.theme.HordeColors
+import androidx.compose.ui.graphics.toArgb
 
 /**
  * Handles all collision detection with proper cooldowns and damage batching.
  * Overhauled: rebuilds engine.spatialGrid after movements to ensure fresh positions,
  * and accounts for target entity radius when querying SpatialGrid so large entities/bosses are never missed.
+ * Visual pass: player damage numbers show post-armor values and render red (incoming),
+ * enemy-projectile hits and elite shield breaks now have on-screen feedback,
+ * effect colors sourced from HordeColors, AoE queries use a dedicated buffer
+ * (was engine.findInRange — allocation per call, no MAX_ENEMY_RADIUS expansion).
  */
 class CollisionSystem(private val engine: GameEngine) : System() {
 
@@ -36,6 +43,11 @@ class CollisionSystem(private val engine: GameEngine) : System() {
 
     // Scratch buffer for spatial queries
     private val _nearbyEnemiesBuffer = com.badlogic.gdx.utils.Array<Entity>(false, 64)
+
+    // CHANGED: dedicated AoE buffer — MUST be separate from _nearbyEnemiesBuffer because
+    // applyAoeDamage() is called from inside the projectile loop, which is iterating
+    // _nearbyEnemiesBuffer at that exact moment. Sharing it would corrupt that loop.
+    private val _aoeEnemiesBuffer = com.badlogic.gdx.utils.Array<Entity>(false, 64)
 
     // Maximum possible enemy collision radius (bosses can be up to 40f)
     private val MAX_ENEMY_RADIUS = 40f
@@ -102,13 +114,16 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             val minDist = playerCollision.radius + eCollision.radius
 
             if (distSq < minDist * minDist && eEnemy.contactTimer <= 0f && playerHealth.invincibleTimer <= 0f) {
-                val dmg = eEnemy.damage
-                playerHealth.takeDamage(dmg)
+                // CHANGED: number shows the post-armor value (was raw eEnemy.damage)
+                val hpBefore = playerHealth.currentHp
+                playerHealth.takeDamage(eEnemy.damage)
+                val actualDmg = hpBefore - playerHealth.currentHp
                 eEnemy.contactTimer = eEnemy.contactCooldown
                 playerHealth.invincibleTimer = Constants.PLAYER_INVINCIBILITY_TIME
-                spawnHitParticles(eTransform.x, eTransform.y, 0xFFFFB7B2.toInt())
+                // CHANGED: red burst at the PLAYER (was pink at the enemy — read as "enemy got hit")
+                spawnHitParticles(playerTransform.x, playerTransform.y, HordeColors.Danger.toArgb())
                 SoundManager.playDamage()
-                spawnDamageNumber(playerTransform.x, playerTransform.y - 20f, dmg, false)
+                spawnDamageNumber(playerTransform.x, playerTransform.y - 20f, actualDmg, false, isPlayerDamage = true)
                 engine.shake(intensity = 6f, duration = 0.12f)
             }
         }
@@ -133,9 +148,14 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             val minDist = playerCollision.radius + epCollision
 
             if (distSq < minDist * minDist && playerHealth.invincibleTimer <= 0f) {
+                // CHANGED: added particles + red damage number (hit previously had no on-screen feedback)
+                val hpBefore = playerHealth.currentHp
                 playerHealth.takeDamage(epComp.damage)
+                val actualDmg = hpBefore - playerHealth.currentHp
                 playerHealth.invincibleTimer = Constants.PLAYER_INVINCIBILITY_TIME
+                spawnHitParticles(playerTransform.x, playerTransform.y, HordeColors.Danger.toArgb())
                 SoundManager.playDamage()
+                spawnDamageNumber(playerTransform.x, playerTransform.y - 20f, actualDmg, false, isPlayerDamage = true)
                 engine.shake(intensity = 5f, duration = 0.1f)
                 eproj.active = false
             }
@@ -183,6 +203,9 @@ class CollisionSystem(private val engine: GameEngine) : System() {
                         if (elite.shieldHp <= 0f) {
                             elite.shieldActive = false
                             enemy.get<SpriteComponent>()?.alpha = 1f
+                            // CHANGED: shield break was silent/invisible — now a visible moment
+                            spawnShieldBreakEffect(eTransform.x, eTransform.y)
+                            engine.shake(intensity = 4f, duration = 0.08f)
                         }
                     }
                     val hpBefore = eHealth.currentHp
@@ -294,10 +317,13 @@ class CollisionSystem(private val engine: GameEngine) : System() {
                 if (distSq < minDist * minDist) {
                     val cooldownKey = enemy.id
                     if (shieldHitCooldowns.get(cooldownKey, 0f) <= 0f) {
+                        // CHANGED: shield hits now spawn damage numbers too (particles only before)
+                        val hpBefore = eHealth.currentHp
                         eHealth.takeDamage(shieldDamage)
                         sHealth.takeDamage(3f)
                         shieldHitCooldowns.put(cooldownKey, 0.3f)
-                        spawnHitParticles(eTransform.x, eTransform.y, 0xFFB19CD9.toInt())
+                        spawnHitParticles(eTransform.x, eTransform.y, HordeColors.Lavender.toArgb())
+                        spawnDamageNumber(eTransform.x, eTransform.y - 15f, hpBefore - eHealth.currentHp, false)
                     }
                 }
             }
@@ -387,10 +413,23 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         }
     }
 
+    // CHANGED: rewritten — was engine.findInRange (allocates per call, no MAX_ENEMY_RADIUS
+    // expansion, so large enemies/bosses whose center sat just outside the radius were missed).
+    // Uses the dedicated AoE buffer; see the field declaration for why it can't be shared.
     private fun applyAoeDamage(x: Float, y: Float, radius: Float, damage: Float) {
-        val nearby = engine.findInRange(x, y, radius, "enemy")
-        for (i in 0 until nearby.size) {
-            nearby[i].get<HealthComponent>()?.takeDamage(damage)
+        _aoeEnemiesBuffer.clear()
+        engine.spatialGrid.queryRange(x, y, radius + MAX_ENEMY_RADIUS, "enemy", _aoeEnemiesBuffer)
+        for (i in 0 until _aoeEnemiesBuffer.size) {
+            val enemy = _aoeEnemiesBuffer[i]
+            if (!enemy.active) continue
+            val eTransform = enemy.get<TransformComponent>() ?: continue
+            val eCollision = enemy.get<CollisionComponent>() ?: continue
+            val dx = eTransform.x - x
+            val dy = eTransform.y - y
+            val minDist = radius + eCollision.radius
+            if (dx * dx + dy * dy < minDist * minDist) {
+                enemy.get<HealthComponent>()?.takeDamage(damage)
+            }
         }
     }
 
@@ -409,6 +448,27 @@ class CollisionSystem(private val engine: GameEngine) : System() {
         }
     }
 
+    // CHANGED: new — elite shield break burst (lavender ring + shards)
+    private fun spawnShieldBreakEffect(x: Float, y: Float) {
+        val ring = engine.createEntity("particle")
+        ring.add(TransformComponent(x, y))
+        ring.add(SpriteComponent(width = 50f, height = 50f, color = HordeColors.Lavender.toArgb(), alpha = 0.7f, shape = SpriteShape.CIRCLE))
+        ring.add(ParticleComponent(lifetime = 0.35f, fadeOut = true))
+
+        repeat(8) {
+            val offset = GameMath.randomPointOnCircle(16f, tempVec2)
+            val shard = engine.createEntity("particle")
+            shard.add(TransformComponent(x + offset.x, y + offset.y))
+            shard.add(VelocityComponent(vx = offset.x * 4f, vy = offset.y * 4f, speed = 1f))
+            shard.add(SpriteComponent(
+                width = 5f + Math.random().toFloat() * 3f,
+                height = 5f + Math.random().toFloat() * 3f,
+                color = HordeColors.Lavender.toArgb(), alpha = 0.9f
+            ))
+            shard.add(ParticleComponent(lifetime = 0.4f, fadeOut = true, shrink = true))
+        }
+    }
+
     private fun spawnExplosion(x: Float, y: Float, radius: Float) {
         val ring = engine.createEntity("particle")
         ring.add(TransformComponent(x, y))
@@ -417,7 +477,7 @@ class CollisionSystem(private val engine: GameEngine) : System() {
 
         val flash = engine.createEntity("particle")
         flash.add(TransformComponent(x, y))
-        flash.add(SpriteComponent(width = radius, height = radius, color = 0xFFFFF5E1.toInt(), alpha = 0.8f, shape = SpriteShape.CIRCLE))
+        flash.add(SpriteComponent(width = radius, height = radius, color = HordeColors.Cream.toArgb(), alpha = 0.8f, shape = SpriteShape.CIRCLE))
         flash.add(ParticleComponent(lifetime = 0.15f, fadeOut = true, shrink = true))
 
         repeat(6) {
@@ -436,30 +496,22 @@ class CollisionSystem(private val engine: GameEngine) : System() {
             val p = engine.createEntity("particle")
             p.add(TransformComponent(x, y))
             p.add(VelocityComponent(vx = kotlin.math.cos(angle) * 80f, vy = kotlin.math.sin(angle) * 80f, speed = 1f))
-            p.add(SpriteComponent(width = 6f, height = 6f, color = 0xFFAAE6BA.toInt(), alpha = 0.9f))
+            p.add(SpriteComponent(width = 6f, height = 6f, color = HordeColors.MintGreen.toArgb(), alpha = 0.9f))
             p.add(ParticleComponent(lifetime = 0.3f, fadeOut = true, shrink = true))
         }
     }
 
-    private fun spawnDamageNumber(x: Float, y: Float, amount: Float, isCrit: Boolean) {
+    // CHANGED: isPlayerDamage passthrough — renderer tints incoming numbers red
+    private fun spawnDamageNumber(x: Float, y: Float, amount: Float, isCrit: Boolean, isPlayerDamage: Boolean = false) {
         val p = engine.createEntity("damage_number")
         p.add(TransformComponent(x, y))
         p.add(DamageNumberComponent(
             amount = amount,
             lifetime = 0.8f,
             isCrit = isCrit,
+            isPlayerDamage = isPlayerDamage,
             vy = -120f - Math.random().toFloat() * 40f
         ))
     }
-
-    private fun getWeaponHitColor(type: WeaponType): Int = when (type) {
-        WeaponType.MAGIC_MISSILE -> 0xFF6BB6FF.toInt()
-        WeaponType.LIGHTNING_RING -> 0xFF80DEEA.toInt()
-        WeaponType.FIREBALL -> 0xFFFFCC80.toInt()
-        WeaponType.ICE_SHARD -> 0xFF80CBC4.toInt()
-        WeaponType.POISON_CLOUD -> 0xFFAAE6BA.toInt()
-        WeaponType.BOOMERANG_DAGGER -> 0xFFFFDAC1.toInt()
-        WeaponType.ORBITING_SHIELD -> 0xFFB19CD9.toInt()
-        WeaponType.DIVINE_SPEAR -> 0xFFFFF5E1.toInt()
-    }
+    private fun getWeaponHitColor(type: WeaponType): Int = WeaponColors.argb(type)
 }

@@ -3,7 +3,9 @@ package com.hordesurvival.ui.screens.game
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hordesurvival.game.upgrade.Rarity
@@ -28,6 +31,8 @@ import com.hordesurvival.ui.components.hordeInteractive
 
 /**
  * Level-up screen with animated cards, rarity glow, and satisfying selection.
+ * Visual pass: upgrade cards horizontally scrollable (3 cards at 160dp overflow
+ * phone screens — text was clipping silently), name/desc ellipsized instead of hard-clipped.
  */
 @Composable
 fun LevelUpScreen(
@@ -79,10 +84,13 @@ fun LevelUpScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Upgrade cards with staggered animation
+            // Upgrade cards with staggered animation.
+            // CHANGED: horizontally scrollable — 3 cards × 160dp overflowed phone
+            // screens and clipped text. Cards keep their full size; swipe to see
+            // any beyond the first screenful.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.Top
             ) {
                 options.forEachIndexed { index, option ->
@@ -101,7 +109,9 @@ fun LevelUpScreen(
                     UpgradeCard(
                         option = option,
                         onClick = { onSelect(option) },
-                        modifier = Modifier.weight(1f, fill = false).widthIn(max = 160.dp).scale(cardScale),
+                        // CHANGED: weight() removed — it's meaningless inside a
+                        // horizontally scrollable (unbounded) Row
+                        modifier = Modifier.widthIn(max = 160.dp).scale(cardScale),
                         languageCode = languageCode
                     )
                 }
@@ -164,20 +174,24 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // CHANGED: ellipsis instead of silent clipping
             Text(
                 text = getLocalizedName(option, languageCode),
                 style = HordeTypography.Body,
                 textAlign = TextAlign.Center,
-                maxLines = 2
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // CHANGED: ellipsis instead of silent clipping
             Text(
                 text = getLocalizedDesc(option, languageCode),
                 style = HordeTypography.Label,
                 textAlign = TextAlign.Center,
-                maxLines = 3
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -193,6 +207,8 @@ private fun UpgradeCard(option: UpgradeOption, onClick: () -> Unit, modifier: Mo
             }
 
             // Rarity badge
+            // NOTE: always English — if Locales has rarity keys, swap in
+            // Locales.getString(option.rarity.name.lowercase(), languageCode)
             Box(
                 modifier = Modifier
                     .clip(SmallCutShape)

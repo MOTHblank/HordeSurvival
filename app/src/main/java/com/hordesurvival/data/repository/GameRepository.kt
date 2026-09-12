@@ -50,6 +50,16 @@ class GameRepository(context: Context) {
         return true
     }
 
+    // CHANGED (NEW): map unlock — the DAO's single UPDATE statement checks gold
+    // sufficiency AND not-already-unlocked atomically, so a double-tap can't
+    // double-charge and no read-modify-write race can occur.
+    suspend fun unlockMap(mapId: String, cost: Int): Boolean {
+        val save = playerDao.getPlayerSaveOnce() ?: return false
+        if (mapId in save.unlockedMaps) return false
+        val newMaps = (save.unlockedMaps + mapId).joinToString(",")
+        return playerDao.unlockMap(mapId, newMaps, cost) == 1
+    }
+
     suspend fun updateSave(save: PlayerSave) = playerDao.savePlayerData(save)
     suspend fun setBackgroundStyle(style: Int) = playerDao.setBackgroundStyle(style)
     suspend fun setGraphicsQuality(quality: Int) = playerDao.setGraphicsQuality(quality)
@@ -65,6 +75,7 @@ class GameRepository(context: Context) {
         withContext(NonCancellable) {
             runDao.insertRun(run)
             val save = playerDao.getPlayerSaveOnce() ?: return@withContext
+            // bestLevel below is the map level-gate source (MapSelectScreen)
             playerDao.savePlayerData(save.copy(
                 totalGold = save.totalGold + run.goldEarned,
                 totalRuns = save.totalRuns + 1,
