@@ -181,7 +181,7 @@ fun MapSelectScreen(
                     text = "Back",
                     icon = "←",
                     onClick = onBack,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f, fill = false)
                 )
 
                 val canPlay = selectedMap != null && (selectedMap!!.id in unlockedMapIds || selectedMap!!.unlockCost == 0)
@@ -191,7 +191,7 @@ fun MapSelectScreen(
                     color = HordeColors.Success,
                     enabled = canPlay,
                     onClick = { if (canPlay) selectedMap?.let { onSelectMap(it) } },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f, fill = false)
                 )
             }
         }
